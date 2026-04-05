@@ -12,11 +12,10 @@ Window {
     width:  820
     height: 640
     color:  Style.bg
-    flags:  Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+    flags:  Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
     property string contextName_: "Maya 2024 Base"
     property string projectName_: "VFX Pipeline"
-
 
     // ── Dummy resolved data ────────────────────────────────────
     readonly property var toolsList: [
@@ -69,16 +68,6 @@ Window {
                     }
                     Item { Layout.fillWidth: true }
                     Badge { text: "Resolved"; badgeColor: Style.success }
-                    Item { width: Style.sm }
-                    Rectangle {
-                        width: 26; height: 26; radius: 13
-                        color: closeHov_.containsMouse ? Style.border : "transparent"
-                        Text { anchors.centerIn: parent; text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd }
-                        MouseArea {
-                            id: closeHov_; anchors.fill: parent; hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor; onClicked: root.close()
-                        }
-                    }
                 }
                 Item { Layout.fillHeight: true }
             }

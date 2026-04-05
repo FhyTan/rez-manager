@@ -12,7 +12,7 @@ Window {
     width:  1100
     height: 720
     color:  Style.bg
-    flags:  Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+    flags:  Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
     property string contextName_: "Maya 2024 Base"
     property string projectName_: "VFX Pipeline"
@@ -88,16 +88,6 @@ Window {
                 }
                 Item { Layout.fillWidth: true }
                 Badge { text: currentPkgsModel.count + " packages"; badgeColor: Style.accent }
-                Item { width: Style.md }
-                Rectangle {
-                    width: 26; height: 26; radius: 13
-                    color: pkgCloseHov_.containsMouse ? Style.border : "transparent"
-                    Text { anchors.centerIn: parent; text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd }
-                    MouseArea {
-                        id: pkgCloseHov_; anchors.fill: parent; hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor; onClicked: root.close()
-                    }
-                }
             }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
         }

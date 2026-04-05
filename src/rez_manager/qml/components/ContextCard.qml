@@ -44,7 +44,7 @@ Rectangle {
     height: col_.implicitHeight + 3   // +3 for top accent strip
     radius: Style.radius
 
-    color: hoverArea_.containsMouse ? Style.cardHover : Style.card
+    color: hoverHandler_.hovered ? Style.cardHover : Style.card
     Behavior on color { ColorAnimation { duration: 100 } }
 
     // ── Border ────────────────────────────────────────────────
@@ -53,7 +53,7 @@ Rectangle {
         radius:       parent.radius
         color:        "transparent"
         border.width: 1
-        border.color: hoverArea_.containsMouse ? Style.borderBright : Style.border
+        border.color: hoverHandler_.hovered ? Style.borderBright : Style.border
     }
 
     // ── Top accent strip ─────────────────────────────────────
@@ -76,73 +76,138 @@ Rectangle {
     }
 
     // ── Hover & right-click capture ───────────────────────────
-    MouseArea {
-        id: hoverArea_
-        anchors.fill:    parent
-        hoverEnabled:    true
+    // Pointer handlers don't block the child CardButton hover/click behavior.
+    HoverHandler {
+        id: hoverHandler_
+    }
+    TapHandler {
         acceptedButtons: Qt.RightButton
-        onClicked: (mouse) => {
-            if (mouse.button === Qt.RightButton)
-                contextMenu_.popup()
+        onTapped: function(eventPoint, button) {
+            contextMenu_.popup(root, eventPoint.position.x, eventPoint.position.y)
         }
     }
 
     // Right-click context menu
     Menu {
         id: contextMenu_
+        topPadding: Style.xs
+        bottomPadding: Style.xs
+
         background: Rectangle {
-            color: Style.elevated; radius: Style.radiusSm
-            border.width: 1; border.color: Style.borderBright
+            implicitWidth: 184
+            implicitHeight: 40
+            color: Style.elevated
+            radius: Style.radiusSm
+            border.width: 1
+            border.color: Style.borderBright
         }
 
         MenuItem {
+            id: infoItem_
+            implicitWidth: 184
+            implicitHeight: 34
             text: "Edit Info…"
-            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            background: Rectangle {
+                implicitWidth: infoItem_.implicitWidth
+                implicitHeight: infoItem_.implicitHeight
+                color: infoItem_.highlighted ? Style.border : "transparent"
+            }
             contentItem: Text {
                 leftPadding: Style.md
-                text: parent.text; color: Style.textPrimary
-                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+                rightPadding: Style.md
+                text: infoItem_.text
+                color: Style.textPrimary
+                font.pixelSize: Style.fontMd
+                verticalAlignment: Text.AlignVCenter
             }
             onTriggered: root.editInfoRequested()
         }
         MenuItem {
+            id: packagesItem_
+            implicitWidth: 184
+            implicitHeight: 34
             text: "Edit Packages…"
-            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            background: Rectangle {
+                implicitWidth: packagesItem_.implicitWidth
+                implicitHeight: packagesItem_.implicitHeight
+                color: packagesItem_.highlighted ? Style.border : "transparent"
+            }
             contentItem: Text {
                 leftPadding: Style.md
-                text: parent.text; color: Style.textPrimary
-                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+                rightPadding: Style.md
+                text: packagesItem_.text
+                color: Style.textPrimary
+                font.pixelSize: Style.fontMd
+                verticalAlignment: Text.AlignVCenter
             }
             onTriggered: root.editPackagesRequested()
         }
         MenuItem {
+            id: previewItem_
+            implicitWidth: 184
+            implicitHeight: 34
             text: "Preview…"
-            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            background: Rectangle {
+                implicitWidth: previewItem_.implicitWidth
+                implicitHeight: previewItem_.implicitHeight
+                color: previewItem_.highlighted ? Style.border : "transparent"
+            }
             contentItem: Text {
                 leftPadding: Style.md
-                text: parent.text; color: Style.textPrimary
-                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+                rightPadding: Style.md
+                text: previewItem_.text
+                color: Style.textPrimary
+                font.pixelSize: Style.fontMd
+                verticalAlignment: Text.AlignVCenter
             }
             onTriggered: root.previewRequested()
         }
-        MenuSeparator {}
+        MenuSeparator {
+            contentItem: Rectangle {
+                implicitWidth: 184
+                implicitHeight: 1
+                color: Style.border
+            }
+        }
         MenuItem {
+            id: duplicateItem_
+            implicitWidth: 184
+            implicitHeight: 34
             text: "Duplicate"
-            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            background: Rectangle {
+                implicitWidth: duplicateItem_.implicitWidth
+                implicitHeight: duplicateItem_.implicitHeight
+                color: duplicateItem_.highlighted ? Style.border : "transparent"
+            }
             contentItem: Text {
                 leftPadding: Style.md
-                text: parent.text; color: Style.textPrimary
-                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+                rightPadding: Style.md
+                text: duplicateItem_.text
+                color: Style.textPrimary
+                font.pixelSize: Style.fontMd
+                verticalAlignment: Text.AlignVCenter
             }
             onTriggered: root.duplicateRequested()
         }
         MenuItem {
+            id: deleteItem_
+            implicitWidth: 184
+            implicitHeight: 34
             text: "Delete"
-            background: Rectangle { color: parent.highlighted ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.15) : "transparent" }
+            background: Rectangle {
+                implicitWidth: deleteItem_.implicitWidth
+                implicitHeight: deleteItem_.implicitHeight
+                color: deleteItem_.highlighted
+                    ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.15)
+                    : "transparent"
+            }
             contentItem: Text {
                 leftPadding: Style.md
-                text: parent.text; color: Style.error
-                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+                rightPadding: Style.md
+                text: deleteItem_.text
+                color: Style.error
+                font.pixelSize: Style.fontMd
+                verticalAlignment: Text.AlignVCenter
             }
             onTriggered: root.deleteRequested()
         }
