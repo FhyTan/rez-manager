@@ -34,6 +34,25 @@ ApplicationWindow {
     menuBar: MenuBar {
         background: Rectangle { color: Style.surface; height: 32 }
 
+        // Style the menu bar tab labels ("File", "Help", ...)
+        delegate: MenuBarItem {
+            id: mbi_
+            implicitHeight: 32
+            background: Rectangle {
+                color: mbi_.highlighted ? Style.elevated : "transparent"
+                radius: Style.radiusSm
+            }
+            contentItem: Text {
+                text:               mbi_.text
+                color:              Style.textPrimary
+                font.pixelSize:     Style.fontMd
+                verticalAlignment:  Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                leftPadding: Style.sm
+                rightPadding: Style.sm
+            }
+        }
+
         Menu {
             title: "File"
             background: Rectangle { color: Style.elevated; radius: Style.radiusSm; border.width: 1; border.color: Style.borderBright }
@@ -226,8 +245,6 @@ ApplicationWindow {
 
                         // Context actions
                         CardButton { icon: "+"; label: "New Context"; accent: true; onClicked: editorDlg.open() }
-                        CardButton { icon: "⧉"; label: "Duplicate" }
-                        CardButton { icon: "✕"; label: "Delete"; danger: true }
                     }
                     Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                 }

@@ -8,7 +8,7 @@ from rez_manager.app import create_app
 
 
 def main() -> None:
-    app = create_app(sys.argv)
+    app, engine = create_app(sys.argv)
     sys.exit(app.exec())
 
 

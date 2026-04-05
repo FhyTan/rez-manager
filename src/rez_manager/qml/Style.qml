@@ -13,9 +13,9 @@ QtObject {
     readonly property color sidebar:    "#101018"
 
     // ── Text ─────────────────────────────────────────────────
-    readonly property color textPrimary:   "#DDE0F2"
-    readonly property color textSecondary: "#6A6A96"
-    readonly property color textDisabled:  "#35354E"
+    readonly property color textPrimary:   "#E8EAFA"
+    readonly property color textSecondary: "#9090B8"
+    readonly property color textDisabled:  "#4E4E72"
     readonly property color white:         "#FFFFFF"
 
     // ── Accent ───────────────────────────────────────────────

@@ -4,7 +4,8 @@ import QtQuick.Layouts 1.15
 import ".."
 
 // Context card — the primary display unit for a Rez context.
-// Signals: editInfoRequested, editPackagesRequested, previewRequested, launchRequested
+// Signals: editInfoRequested, editPackagesRequested, previewRequested,
+//          launchRequested, duplicateRequested, deleteRequested (right-click menu)
 Rectangle {
     id: root
 
@@ -19,6 +20,8 @@ Rectangle {
     signal editPackagesRequested
     signal previewRequested
     signal launchRequested
+    signal duplicateRequested
+    signal deleteRequested
 
     // ── Internal ─────────────────────────────────────────────
 
@@ -72,12 +75,77 @@ Rectangle {
         }
     }
 
-    // ── Hover capture ─────────────────────────────────────────
+    // ── Hover & right-click capture ───────────────────────────
     MouseArea {
         id: hoverArea_
-        anchors.fill:   parent
-        hoverEnabled:   true
-        acceptedButtons: Qt.NoButton
+        anchors.fill:    parent
+        hoverEnabled:    true
+        acceptedButtons: Qt.RightButton
+        onClicked: (mouse) => {
+            if (mouse.button === Qt.RightButton)
+                contextMenu_.popup()
+        }
+    }
+
+    // Right-click context menu
+    Menu {
+        id: contextMenu_
+        background: Rectangle {
+            color: Style.elevated; radius: Style.radiusSm
+            border.width: 1; border.color: Style.borderBright
+        }
+
+        MenuItem {
+            text: "Edit Info…"
+            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            contentItem: Text {
+                leftPadding: Style.md
+                text: parent.text; color: Style.textPrimary
+                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+            }
+            onTriggered: root.editInfoRequested()
+        }
+        MenuItem {
+            text: "Edit Packages…"
+            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            contentItem: Text {
+                leftPadding: Style.md
+                text: parent.text; color: Style.textPrimary
+                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+            }
+            onTriggered: root.editPackagesRequested()
+        }
+        MenuItem {
+            text: "Preview…"
+            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            contentItem: Text {
+                leftPadding: Style.md
+                text: parent.text; color: Style.textPrimary
+                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+            }
+            onTriggered: root.previewRequested()
+        }
+        MenuSeparator {}
+        MenuItem {
+            text: "Duplicate"
+            background: Rectangle { color: parent.highlighted ? Style.border : "transparent" }
+            contentItem: Text {
+                leftPadding: Style.md
+                text: parent.text; color: Style.textPrimary
+                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+            }
+            onTriggered: root.duplicateRequested()
+        }
+        MenuItem {
+            text: "Delete"
+            background: Rectangle { color: parent.highlighted ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.15) : "transparent" }
+            contentItem: Text {
+                leftPadding: Style.md
+                text: parent.text; color: Style.error
+                font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter
+            }
+            onTriggered: root.deleteRequested()
+        }
     }
 
     // ── Content ───────────────────────────────────────────────

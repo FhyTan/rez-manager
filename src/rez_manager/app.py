@@ -14,7 +14,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 
-def create_app(argv: list[str]) -> QGuiApplication:
+def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]:
     app = QGuiApplication(argv)
     app.setApplicationName("rez-manager")
     app.setApplicationVersion("0.1.0")
@@ -29,4 +29,4 @@ def create_app(argv: list[str]) -> QGuiApplication:
         print("ERROR: Failed to load QML", file=sys.stderr)
         sys.exit(1)
 
-    return app
+    return app, engine
