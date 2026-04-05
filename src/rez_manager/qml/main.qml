@@ -14,7 +14,8 @@ ApplicationWindow {
     visible: true
     color: s_.bg
 
-    Style { id: s_ }
+    Style    { id: s_ }
+    AppStore { id: store }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog       { id: settingsDlg;  anchors.centerIn: root.contentItem }
@@ -23,112 +24,9 @@ ApplicationWindow {
     ContextPreviewWindow { id: previewWin;     visible: false }
 
     // ── State ─────────────────────────────────────────────────
-    property int  selectedProjectIndex: 0
-    property string selectedProject: projectsModel.count > 0
-        ? projectsModel.get(selectedProjectIndex).name : ""
-
-    // ── Data models ───────────────────────────────────────────
-    ListModel {
-        id: projectsModel
-        ListElement { name: "VFX Pipeline";      avatarColor: "#5F83FF" }
-        ListElement { name: "Maya Rigging";       avatarColor: "#4DB880" }
-        ListElement { name: "Houdini FX";         avatarColor: "#D98A38" }
-        ListElement { name: "USD Pipeline";       avatarColor: "#8A58D8" }
-    }
-
-    ListModel {
-        id: contextsModel
-
-        // VFX Pipeline
-        ListElement {
-            project:      "VFX Pipeline"
-            name:         "Maya 2024 Base"
-            description:  "Base Maya 2024 environment with Arnold renderer and USD support."
-            launchTarget: "maya"
-            packages:     "maya-2024,python-3.11,mtoa-5.3,usd-23.11,openexr-3.1"
-        }
-        ListElement {
-            project:      "VFX Pipeline"
-            name:         "Nuke 14 Comp"
-            description:  "Compositing environment with Nuke 14, NukeX and OCIO 2 support."
-            launchTarget: "custom"
-            packages:     "nuke-14.0,python-3.10,nukex-14.0,ocio-2.2,ffmpeg-6.0"
-        }
-        ListElement {
-            project:      "VFX Pipeline"
-            name:         "Shell Dev"
-            description:  "Development shell with Python tools and build utilities."
-            launchTarget: "shell"
-            packages:     "python-3.11,cmake-3.27,git-2.42,ninja-1.11,ruff-0.1"
-        }
-
-        // Maya Rigging
-        ListElement {
-            project:      "Maya Rigging"
-            name:         "Rigging Tools"
-            description:  "Full rigging environment with mGear, CGM tools and Pyblish."
-            launchTarget: "maya"
-            packages:     "maya-2024,python-3.11,mgear-4.1,cgm-2.0,pyblish-2.0,pyqt5-5.15"
-        }
-        ListElement {
-            project:      "Maya Rigging"
-            name:         "QC Validation"
-            description:  "Quality control and validation toolchain."
-            launchTarget: "shell"
-            packages:     "python-3.11,pytest-7.4,mypy-1.5,ruff-0.1"
-        }
-
-        // Houdini FX
-        ListElement {
-            project:      "Houdini FX"
-            name:         "Houdini 20.5"
-            description:  "Standard Houdini FX environment with Karma renderer and MaterialX."
-            launchTarget: "houdini"
-            packages:     "houdini-20.5,python-3.11,karma-1.0,materialx-1.38"
-        }
-        ListElement {
-            project:      "Houdini FX"
-            name:         "Houdini + Redshift"
-            description:  "Houdini environment with Redshift GPU renderer plugin."
-            launchTarget: "houdini"
-            packages:     "houdini-20.5,python-3.11,redshift-3.5,redshift-houdini-3.5"
-        }
-
-        // USD Pipeline
-        ListElement {
-            project:      "USD Pipeline"
-            name:         "USD Tools"
-            description:  "Universal Scene Description toolset for pipeline integration."
-            launchTarget: "shell"
-            packages:     "python-3.11,usd-23.11,hdstorm-23.11,materialx-1.38,openexr-3.1"
-        }
-    }
-
-    // ── Helpers ───────────────────────────────────────────────
-    function filteredContexts() {
-        var result = []
-        for (var i = 0; i < contextsModel.count; i++) {
-            var c = contextsModel.get(i)
-            if (c.project === selectedProject) {
-                result.push({
-                    project:      c.project,
-                    name:         c.name,
-                    description:  c.description,
-                    launchTarget: c.launchTarget,
-                    packages:     c.packages
-                })
-            }
-        }
-        return result
-    }
-
-    function contextCountFor(projectName) {
-        var count = 0
-        for (var i = 0; i < contextsModel.count; i++) {
-            if (contextsModel.get(i).project === projectName) count++
-        }
-        return count
-    }
+    property int    selectedProjectIndex: 0
+    property string selectedProject: store.projects.count > 0
+        ? store.projects.get(selectedProjectIndex).name : ""
 
     // ── Menu bar ──────────────────────────────────────────────
     menuBar: MenuBar {
@@ -244,7 +142,7 @@ ApplicationWindow {
                     Layout.fillWidth:  true
                     Layout.fillHeight: true
                     clip: true
-                    model: projectsModel
+                    model: store.projects
                     spacing: 2
 
                     ScrollIndicator.vertical: ScrollIndicator {}
@@ -258,7 +156,7 @@ ApplicationWindow {
                             projectName:  name
                             avatarColor:  model.avatarColor
                             selected:     root.selectedProjectIndex === index
-                            contextCount: root.contextCountFor(name)
+                            contextCount: store.contextCountFor(name)
                             onClicked:    root.selectedProjectIndex = index
                         }
                     }
@@ -316,7 +214,7 @@ ApplicationWindow {
                                 font.bold:      true
                             }
                             Text {
-                                text:           root.filteredContexts().length + " contexts"
+                                text:           store.filteredContexts(root.selectedProject).length + " contexts"
                                 color:          s_.textSecondary
                                 font.pixelSize: s_.fontSm
                             }
@@ -350,7 +248,7 @@ ApplicationWindow {
                             spacing: s_.lg
 
                             Repeater {
-                                model: root.filteredContexts()
+                                model: store.filteredContexts(root.selectedProject)
 
                                 ContextCard {
                                     contextName:  modelData.name
@@ -383,7 +281,7 @@ ApplicationWindow {
 
                             // Empty state
                             Rectangle {
-                                visible: root.filteredContexts().length === 0
+                                visible: store.filteredContexts(root.selectedProject).length === 0
                                 width:   300
                                 height:  160
                                 radius:  s_.radiusLg

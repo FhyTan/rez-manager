@@ -1,0 +1,5 @@
+# RezManager reusable UI components
+Badge 1.0 Badge.qml
+CardButton 1.0 CardButton.qml
+ContextCard 1.0 ContextCard.qml
+ProjectListItem 1.0 ProjectListItem.qml
