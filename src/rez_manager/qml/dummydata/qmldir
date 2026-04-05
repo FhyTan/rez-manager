@@ -1,0 +1,5 @@
+# Dummy data module — placeholder implementations of Python-backed model types.
+# Each type here mirrors a Python QAbstractListModel registered via @QmlElement.
+# To replace: register the Python class under the same name and remove this import.
+ProjectListModel 1.0 ProjectListModel.qml
+RezContextListModel 1.0 RezContextListModel.qml

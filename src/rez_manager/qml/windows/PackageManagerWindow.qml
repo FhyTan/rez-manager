@@ -11,13 +11,12 @@ Window {
     title: "Packages — " + projectName_ + "  /  " + contextName_
     width:  1100
     height: 720
-    color:  s_.bg
+    color:  Style.bg
     flags:  Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
 
     property string contextName_: "Maya 2024 Base"
     property string projectName_: "VFX Pipeline"
 
-    Style { id: s_ }
 
     // ── Dummy data ────────────────────────────────────────────
     ListModel {
@@ -79,18 +78,18 @@ Window {
         // ── Header ────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 56; color: s_.surface
+            height: 56; color: Style.surface
             RowLayout {
-                anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.xl }
+                anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
                 ColumnLayout {
                     spacing: 2
-                    Text { text: root.projectName_; color: s_.textSecondary; font.pixelSize: s_.fontSm }
-                    Text { text: root.contextName_; color: s_.textPrimary; font.pixelSize: s_.fontLg; font.bold: true }
+                    Text { text: root.projectName_; color: Style.textSecondary; font.pixelSize: Style.fontSm }
+                    Text { text: root.contextName_; color: Style.textPrimary; font.pixelSize: Style.fontLg; font.bold: true }
                 }
                 Item { Layout.fillWidth: true }
-                Badge { text: currentPkgsModel.count + " packages"; badgeColor: s_.accent }
+                Badge { text: currentPkgsModel.count + " packages"; badgeColor: Style.accent }
             }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
         }
 
         // ── Three-panel split ─────────────────────────────────
@@ -99,11 +98,11 @@ Window {
             Layout.fillHeight: true
             orientation: Qt.Horizontal
             handle: Rectangle {
-                implicitWidth: 1; color: s_.border
+                implicitWidth: 1; color: Style.border
                 Rectangle {
                     anchors.centerIn: parent
                     width: 1; height: parent.height
-                    color: SplitHandle.hovered || SplitHandle.pressed ? s_.accent : s_.border
+                    color: SplitHandle.hovered || SplitHandle.pressed ? Style.accent : Style.border
                     Behavior on color { ColorAnimation { duration: 100 } }
                 }
             }
@@ -112,7 +111,7 @@ Window {
             Rectangle {
                 SplitView.preferredWidth: 240
                 SplitView.minimumWidth:   160
-                color: s_.surface
+                color: Style.surface
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -122,11 +121,11 @@ Window {
                     Rectangle {
                         Layout.fillWidth: true; height: 40; color: "transparent"
                         RowLayout {
-                            anchors { fill: parent; leftMargin: s_.md; rightMargin: s_.sm }
-                            Text { text: "Current Packages"; color: s_.textSecondary; font.pixelSize: s_.fontSm; font.bold: true; Layout.fillWidth: true }
+                            anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.sm }
+                            Text { text: "Current Packages"; color: Style.textSecondary; font.pixelSize: Style.fontSm; font.bold: true; Layout.fillWidth: true }
                             CardButton { icon: "+"; onClicked: {} }
                         }
-                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                     }
 
                     ListView {
@@ -137,17 +136,17 @@ Window {
 
                         delegate: Rectangle {
                             width: ListView.view.width; height: 42
-                            color: delHov_.containsMouse ? s_.elevated : "transparent"
+                            color: delHov_.containsMouse ? Style.elevated : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
-                                anchors { fill: parent; leftMargin: s_.md; rightMargin: s_.sm }
-                                spacing: s_.sm
-                                Rectangle { width: 6; height: 6; radius: 3; color: s_.accent; Layout.alignment: Qt.AlignVCenter }
+                                anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.sm }
+                                spacing: Style.sm
+                                Rectangle { width: 6; height: 6; radius: 3; color: Style.accent; Layout.alignment: Qt.AlignVCenter }
                                 ColumnLayout {
                                     Layout.fillWidth: true; spacing: 1
-                                    Text { text: pkgName; color: s_.textPrimary; font.pixelSize: s_.fontMd; font.bold: true }
-                                    Text { text: version; color: s_.textSecondary; font.pixelSize: s_.fontXs; font.family: "Consolas, Courier New, monospace" }
+                                    Text { text: pkgName; color: Style.textPrimary; font.pixelSize: Style.fontMd; font.bold: true }
+                                    Text { text: version; color: Style.textSecondary; font.pixelSize: Style.fontXs; font.family: "Consolas, Courier New, monospace" }
                                 }
                                 CardButton { icon: "✕"; danger: true }
                             }
@@ -161,7 +160,7 @@ Window {
             Rectangle {
                 SplitView.preferredWidth: 260
                 SplitView.minimumWidth:   180
-                color: s_.bg
+                color: Style.bg
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -169,8 +168,8 @@ Window {
 
                     Rectangle {
                         Layout.fillWidth: true; height: 40; color: "transparent"
-                        Text { anchors.left: parent.left; anchors.leftMargin: s_.md; anchors.verticalCenter: parent.verticalCenter; text: "Repository Browser"; color: s_.textSecondary; font.pixelSize: s_.fontSm; font.bold: true }
-                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+                        Text { anchors.left: parent.left; anchors.leftMargin: Style.md; anchors.verticalCenter: parent.verticalCenter; text: "Repository Browser"; color: Style.textSecondary; font.pixelSize: Style.fontSm; font.bold: true }
+                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                     }
 
                     ScrollView {
@@ -193,22 +192,22 @@ Window {
                                     // Repository header
                                     Rectangle {
                                         Layout.fillWidth: true; height: 36
-                                        color: repoHov_.containsMouse ? s_.elevated : s_.surface
+                                        color: repoHov_.containsMouse ? Style.elevated : Style.surface
                                         Behavior on color { ColorAnimation { duration: 80 } }
 
                                         RowLayout {
-                                            anchors { fill: parent; leftMargin: s_.sm; rightMargin: s_.sm }
-                                            spacing: s_.xs
+                                            anchors { fill: parent; leftMargin: Style.sm; rightMargin: Style.sm }
+                                            spacing: Style.xs
                                             Text {
                                                 text: root.selectedRepoIndex === index ? "▾" : "▸"
-                                                color: s_.accent; font.pixelSize: s_.fontXs
+                                                color: Style.accent; font.pixelSize: Style.fontXs
                                                 Layout.alignment: Qt.AlignVCenter
                                             }
                                             Text {
                                                 Layout.fillWidth: true
                                                 text:            modelData.label
-                                                color:           s_.textPrimary
-                                                font.pixelSize:  s_.fontSm
+                                                color:           Style.textPrimary
+                                                font.pixelSize:  Style.fontSm
                                                 font.bold:       true
                                                 elide:           Text.ElideRight
                                             }
@@ -221,7 +220,7 @@ Window {
                                                 root.selectedPkgIndex = -1
                                             }
                                         }
-                                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+                                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                                     }
 
                                     // Package items (shown when repo is expanded)
@@ -236,18 +235,18 @@ Window {
                                             property bool isSelected: root.selectedRepoIndex === parent.index
                                                                    && root.selectedPkgIndex  === index
                                             color: isSelected
-                                                ? Qt.rgba(s_.accent.r, s_.accent.g, s_.accent.b, 0.12)
-                                                : (pkgHov_.containsMouse ? s_.elevated : "transparent")
+                                                ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
+                                                : (pkgHov_.containsMouse ? Style.elevated : "transparent")
                                             Behavior on color { ColorAnimation { duration: 80 } }
 
                                             RowLayout {
-                                                anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.md }
-                                                Rectangle { width: 4; height: 4; radius: 2; color: isSelected ? s_.accent : s_.textDisabled; Layout.alignment: Qt.AlignVCenter }
+                                                anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.md }
+                                                Rectangle { width: 4; height: 4; radius: 2; color: isSelected ? Style.accent : Style.textDisabled; Layout.alignment: Qt.AlignVCenter }
                                                 Text {
                                                     Layout.fillWidth: true
                                                     text:            modelData
-                                                    color:           isSelected ? s_.accent : s_.textSecondary
-                                                    font.pixelSize:  s_.fontMd
+                                                    color:           isSelected ? Style.accent : Style.textSecondary
+                                                    font.pixelSize:  Style.fontMd
                                                     font.family:     "Consolas, Courier New, monospace"
                                                     elide:           Text.ElideRight
                                                 }
@@ -274,7 +273,7 @@ Window {
             Rectangle {
                 SplitView.fillWidth: true
                 SplitView.minimumWidth: 280
-                color: s_.surface
+                color: Style.surface
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -282,8 +281,8 @@ Window {
 
                     Rectangle {
                         Layout.fillWidth: true; height: 40; color: "transparent"
-                        Text { anchors.left: parent.left; anchors.leftMargin: s_.md; anchors.verticalCenter: parent.verticalCenter; text: "Package Detail"; color: s_.textSecondary; font.pixelSize: s_.fontSm; font.bold: true }
-                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+                        Text { anchors.left: parent.left; anchors.leftMargin: Style.md; anchors.verticalCenter: parent.verticalCenter; text: "Package Detail"; color: Style.textSecondary; font.pixelSize: Style.fontSm; font.bold: true }
+                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                     }
 
                     ScrollView {
@@ -292,30 +291,30 @@ Window {
                         visible: root.selectedPkgName.length > 0
 
                         ColumnLayout {
-                            width: parent.parent.width - s_.xl
-                            x: s_.lg; y: s_.lg
-                            spacing: s_.lg
+                            width: parent.parent.width - Style.xl
+                            x: Style.lg; y: Style.lg
+                            spacing: Style.lg
 
                             // Name + version
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: root.pkgDetail.name; color: s_.textPrimary; font.pixelSize: s_.fontXl; font.bold: true; Layout.fillWidth: true }
+                                Text { text: root.pkgDetail.name; color: Style.textPrimary; font.pixelSize: Style.fontXl; font.bold: true; Layout.fillWidth: true }
                                 ComboBox {
                                     id: versionCombo_
                                     model: root.pkgDetail.versions
                                     width: 120
                                     currentIndex: root.selectedDetailVersion
                                     onCurrentIndexChanged: root.selectedDetailVersion = currentIndex
-                                    background: Rectangle { color: s_.elevated; radius: s_.radiusSm; border.width: 1; border.color: s_.border }
-                                    contentItem: Text { leftPadding: s_.sm; text: parent.displayText; color: s_.textPrimary; font.pixelSize: s_.fontMd; verticalAlignment: Text.AlignVCenter }
+                                    background: Rectangle { color: Style.elevated; radius: Style.radiusSm; border.width: 1; border.color: Style.border }
+                                    contentItem: Text { leftPadding: Style.sm; text: parent.displayText; color: Style.textPrimary; font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter }
                                     delegate: ItemDelegate {
                                         width: parent ? parent.width : 0; height: 32
-                                        background: Rectangle { color: parent.hovered ? s_.elevated : "transparent" }
-                                        contentItem: Text { leftPadding: s_.sm; text: modelData; color: s_.textPrimary; font.pixelSize: s_.fontMd; verticalAlignment: Text.AlignVCenter }
+                                        background: Rectangle { color: parent.hovered ? Style.elevated : "transparent" }
+                                        contentItem: Text { leftPadding: Style.sm; text: modelData; color: Style.textPrimary; font.pixelSize: Style.fontMd; verticalAlignment: Text.AlignVCenter }
                                     }
                                     popup: Popup {
                                         y: parent.height + 2; width: parent.width
-                                        background: Rectangle { color: s_.card; radius: s_.radiusSm; border.width: 1; border.color: s_.borderBright }
+                                        background: Rectangle { color: Style.card; radius: Style.radiusSm; border.width: 1; border.color: Style.borderBright }
                                         contentItem: ListView { implicitHeight: Math.min(contentHeight, 200); model: parent.parent.delegateModel; clip: true }
                                     }
                                 }
@@ -370,9 +369,9 @@ Window {
                         visible: root.selectedPkgName.length === 0
                         ColumnLayout {
                             anchors.centerIn: parent
-                            spacing: s_.md
-                            Text { Layout.alignment: Qt.AlignHCenter; text: "⊟"; font.pixelSize: 40; color: s_.textDisabled }
-                            Text { Layout.alignment: Qt.AlignHCenter; text: "Select a package to see details"; color: s_.textDisabled; font.pixelSize: s_.fontMd }
+                            spacing: Style.md
+                            Text { Layout.alignment: Qt.AlignHCenter; text: "⊟"; font.pixelSize: 40; color: Style.textDisabled }
+                            Text { Layout.alignment: Qt.AlignHCenter; text: "Select a package to see details"; color: Style.textDisabled; font.pixelSize: Style.fontMd }
                         }
                     }
                 }
@@ -382,16 +381,16 @@ Window {
         // ── Footer ────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; height: 52
-            color: s_.surface
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: s_.border }
+            color: Style.surface
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Style.border }
             RowLayout {
-                anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.xl }
+                anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
                 CardButton { icon: "◉"; label: "Preview Resolve" }
-                Item { width: s_.sm }
+                Item { width: Style.sm }
                 CardButton { icon: "⌘"; label: "Launch Console" }
                 Item { Layout.fillWidth: true }
                 CardButton { label: "Cancel"; onClicked: root.close() }
-                Item { width: s_.sm }
+                Item { width: Style.sm }
                 CardButton { label: "Save"; accent: true }
             }
         }
@@ -403,36 +402,35 @@ Window {
         property string body:      ""
         property bool   monospace: false
         property bool   codeStyle: false
-        Style { id: s_ }
-        spacing: s_.xs
+        spacing: Style.xs
         Layout.fillWidth: true
 
         Text {
             text:           title
-            color:          s_.textSecondary
-            font.pixelSize: s_.fontXs
+            color:          Style.textSecondary
+            font.pixelSize: Style.fontXs
             font.bold:      true
             font.letterSpacing: 0.5
         }
         Rectangle {
             Layout.fillWidth: true
-            height:       bodyText_.implicitHeight + (codeStyle ? s_.md * 2 : 0)
-            radius:       codeStyle ? s_.radiusSm : 0
-            color:        codeStyle ? s_.elevated : "transparent"
+            height:       bodyText_.implicitHeight + (codeStyle ? Style.md * 2 : 0)
+            radius:       codeStyle ? Style.radiusSm : 0
+            color:        codeStyle ? Style.elevated : "transparent"
             border.width: codeStyle ? 1 : 0
-            border.color: s_.border
+            border.color: Style.border
             Text {
                 id: bodyText_
                 anchors {
                     fill: parent
-                    leftMargin:  codeStyle ? s_.md : 0
-                    rightMargin: codeStyle ? s_.md : 0
-                    topMargin:   codeStyle ? s_.sm : 0
-                    bottomMargin: codeStyle ? s_.sm : 0
+                    leftMargin:  codeStyle ? Style.md : 0
+                    rightMargin: codeStyle ? Style.md : 0
+                    topMargin:   codeStyle ? Style.sm : 0
+                    bottomMargin: codeStyle ? Style.sm : 0
                 }
                 text:           body.length > 0 ? body : "—"
-                color:          body.length > 0 ? s_.textPrimary : s_.textDisabled
-                font.pixelSize: s_.fontSm
+                color:          body.length > 0 ? Style.textPrimary : Style.textDisabled
+                font.pixelSize: Style.fontSm
                 font.family:    monospace ? "Consolas, Courier New, monospace" : font.family
                 wrapMode:       Text.WordWrap
             }

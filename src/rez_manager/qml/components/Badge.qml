@@ -6,9 +6,8 @@ import ".."
 Rectangle {
     id: root
     property string text: ""
-    property color  badgeColor: s_.accent
+    property color  badgeColor: Style.accent
 
-    Style { id: s_ }
 
     height: 20
     width:  Math.max(badgeLabel.implicitWidth + 14, 36)
@@ -22,7 +21,7 @@ Rectangle {
         anchors.centerIn: parent
         text:  root.text
         color: root.badgeColor
-        font.pixelSize: s_.fontXs
+        font.pixelSize: Style.fontXs
         font.bold: true
     }
 }

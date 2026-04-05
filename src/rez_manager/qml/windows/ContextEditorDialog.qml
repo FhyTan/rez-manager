@@ -18,49 +18,48 @@ Dialog {
     property string launchTargetValue: "shell"
 
     background: Rectangle {
-        color:        s_.elevated
-        radius:       s_.radiusLg
+        color:        Style.elevated
+        radius:       Style.radiusLg
         border.width: 1
-        border.color: s_.borderBright
+        border.color: Style.borderBright
     }
 
     header: Rectangle {
         height: 56; color: "transparent"
         RowLayout {
-            anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.lg }
+            anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.lg }
             Text {
                 text:           root.contextNameValue.length > 0 ? "Edit Context" : "New Context"
-                color:          s_.textPrimary
-                font.pixelSize: s_.fontXl
+                color:          Style.textPrimary
+                font.pixelSize: Style.fontXl
                 font.bold:      true
             }
             Item { Layout.fillWidth: true }
             Rectangle {
                 width: 28; height: 28; radius: 14
-                color: xHov_.containsMouse ? s_.border : "transparent"
-                Text { anchors.centerIn: parent; text: "✕"; color: s_.textSecondary; font.pixelSize: s_.fontMd }
+                color: xHov_.containsMouse ? Style.border : "transparent"
+                Text { anchors.centerIn: parent; text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd }
                 MouseArea { id: xHov_; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.close() }
             }
         }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
     }
 
     footer: Rectangle {
         height: 56; color: "transparent"
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: s_.border }
+        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Style.border }
         RowLayout {
-            anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.xl }
+            anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
             Item { Layout.fillWidth: true }
             CardButton { label: "Cancel"; onClicked: root.close() }
-            Item { width: s_.sm }
+            Item { width: Style.sm }
             CardButton { label: "Save"; accent: true; onClicked: root.close() }
         }
     }
 
-    Style { id: s_ }
 
     contentItem: ColumnLayout {
-        spacing: s_.lg
+        spacing: Style.lg
 
         // ── Name ──────────────────────────────────────────────
         FormField {
@@ -89,15 +88,15 @@ Dialog {
             Layout.fillWidth: true
             Rectangle {
                 Layout.fillWidth: true
-                height: 72; radius: s_.radiusSm
-                color: s_.surface; border.width: 1; border.color: s_.border
+                height: 72; radius: Style.radiusSm
+                color: Style.surface; border.width: 1; border.color: Style.border
                 TextArea {
                     anchors.fill: parent
-                    leftPadding: s_.md; rightPadding: s_.md
-                    topPadding: s_.sm; bottomPadding: s_.sm
+                    leftPadding: Style.md; rightPadding: Style.md
+                    topPadding: Style.sm; bottomPadding: Style.sm
                     text:            root.descriptionValue.length > 0 ? root.descriptionValue : "A short description of this context."
-                    color:           s_.textPrimary
-                    font.pixelSize:  s_.fontMd
+                    color:           Style.textPrimary
+                    font.pixelSize:  Style.fontMd
                     wrapMode:        TextArea.WordWrap
                     background: null
                 }
@@ -109,18 +108,18 @@ Dialog {
             label: "Launch Target"
             Layout.fillWidth: true
             RowLayout {
-                spacing: s_.sm
+                spacing: Style.sm
                 Repeater {
                     model: [
-                        { label: "Shell",   val: "shell",   col: s_.colorShell   },
-                        { label: "Maya",    val: "maya",    col: s_.colorMaya    },
-                        { label: "Houdini", val: "houdini", col: s_.colorHoudini },
-                        { label: "Custom",  val: "custom",  col: s_.colorCustom  }
+                        { label: "Shell",   val: "shell",   col: Style.colorShell   },
+                        { label: "Maya",    val: "maya",    col: Style.colorMaya    },
+                        { label: "Houdini", val: "houdini", col: Style.colorHoudini },
+                        { label: "Custom",  val: "custom",  col: Style.colorCustom  }
                     ]
                     delegate: Rectangle {
                         required property var modelData
                         height: 32; width: selLbl_.implicitWidth + 24
-                        radius: s_.radiusSm
+                        radius: Style.radiusSm
                         property bool isSelected: root.launchTargetValue === modelData.val
                         color: isSelected
                             ? Qt.rgba(modelData.col.r, modelData.col.g, modelData.col.b, 0.15)
@@ -128,14 +127,14 @@ Dialog {
                         border.width: 1
                         border.color: isSelected
                             ? Qt.rgba(modelData.col.r, modelData.col.g, modelData.col.b, 0.5)
-                            : s_.border
+                            : Style.border
                         Behavior on color { ColorAnimation { duration: 80 } }
                         Text {
                             id: selLbl_
                             anchors.centerIn: parent
                             text:           modelData.label
-                            color:          isSelected ? modelData.col : s_.textSecondary
-                            font.pixelSize: s_.fontMd
+                            color:          isSelected ? modelData.col : Style.textSecondary
+                            font.pixelSize: Style.fontMd
                             font.bold:      isSelected
                         }
                         MouseArea {
@@ -166,8 +165,8 @@ Dialog {
             Layout.fillWidth: true
             RowLayout {
                 Rectangle {
-                    width: 64; height: 64; radius: s_.radiusSm
-                    color: s_.surface; border.width: 1; border.color: s_.border
+                    width: 64; height: 64; radius: Style.radiusSm
+                    color: Style.surface; border.width: 1; border.color: Style.border
                     Text { anchors.centerIn: parent; text: "🖼"; font.pixelSize: 24 }
                 }
                 CardButton { label: "Choose Image…" }
@@ -180,12 +179,11 @@ Dialog {
     component FormField: ColumnLayout {
         property string label: ""
         default property alias content: contentHolder_.data
-        Style { id: s_ }
-        spacing: s_.xs
+        spacing: Style.xs
         Text {
             text:           parent.label
-            color:          s_.textSecondary
-            font.pixelSize: s_.fontSm
+            color:          Style.textSecondary
+            font.pixelSize: Style.fontSm
         }
         ColumnLayout { id: contentHolder_; spacing: 0 }
     }
@@ -193,41 +191,39 @@ Dialog {
     component FieldInput: Rectangle {
         property alias text:     ti_.text
         property bool  monospace: false
-        Style { id: s_ }
-        height: 36; radius: s_.radiusSm
-        color: s_.surface; border.width: 1; border.color: s_.border
+        height: 36; radius: Style.radiusSm
+        color: Style.surface; border.width: 1; border.color: Style.border
         TextInput {
             id: ti_
             anchors.left: parent.left; anchors.right: parent.right
-            anchors.leftMargin: s_.md; anchors.rightMargin: s_.md
+            anchors.leftMargin: Style.md; anchors.rightMargin: Style.md
             anchors.verticalCenter: parent.verticalCenter
-            color:           s_.textPrimary
-            font.pixelSize:  s_.fontMd
+            color:           Style.textPrimary
+            font.pixelSize:  Style.fontMd
             font.family:     monospace ? "Consolas, Courier New, monospace" : font.family
             selectByMouse:   true
         }
     }
 
     component FieldCombo: ComboBox {
-        Style { id: s_ }
         height: 36
         background: Rectangle {
-            color: s_.surface; radius: s_.radiusSm
-            border.width: 1; border.color: s_.border
+            color: Style.surface; radius: Style.radiusSm
+            border.width: 1; border.color: Style.border
         }
         contentItem: Text {
-            leftPadding: s_.md
+            leftPadding: Style.md
             text:            parent.displayText
-            color:           s_.textPrimary
-            font.pixelSize:  s_.fontMd
+            color:           Style.textPrimary
+            font.pixelSize:  Style.fontMd
             verticalAlignment: Text.AlignVCenter
         }
         popup: Popup {
             y: parent.height + 4
             width: parent.width
             background: Rectangle {
-                color: s_.elevated; radius: s_.radiusSm
-                border.width: 1; border.color: s_.borderBright
+                color: Style.elevated; radius: Style.radiusSm
+                border.width: 1; border.color: Style.borderBright
             }
             contentItem: ListView {
                 implicitHeight: Math.min(contentHeight, 200)
@@ -240,13 +236,13 @@ Dialog {
             width: parent ? parent.width : 0
             height: 36
             background: Rectangle {
-                color: parent.hovered ? s_.elevated : "transparent"
+                color: parent.hovered ? Style.elevated : "transparent"
             }
             contentItem: Text {
-                leftPadding:     s_.md
+                leftPadding:     Style.md
                 text:            modelData
-                color:           s_.textPrimary
-                font.pixelSize:  s_.fontMd
+                color:           Style.textPrimary
+                font.pixelSize:  Style.fontMd
                 verticalAlignment: Text.AlignVCenter
             }
         }

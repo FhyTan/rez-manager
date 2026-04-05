@@ -11,13 +11,12 @@ Window {
     title: "Preview — " + contextName_
     width:  820
     height: 640
-    color:  s_.bg
+    color:  Style.bg
     flags:  Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
 
     property string contextName_: "Maya 2024 Base"
     property string projectName_: "VFX Pipeline"
 
-    Style { id: s_ }
 
     // ── Dummy resolved data ────────────────────────────────────
     readonly property var toolsList: [
@@ -56,31 +55,31 @@ Window {
         Rectangle {
             Layout.fillWidth: true
             height: 56
-            color:  s_.surface
+            color:  Style.surface
             ColumnLayout {
-                anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.xl }
+                anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
                 spacing: 2
                 Item { Layout.fillHeight: true }
                 RowLayout {
                     Text {
                         text:           root.projectName_ + "  /  " + root.contextName_
-                        color:          s_.textPrimary
-                        font.pixelSize: s_.fontLg
+                        color:          Style.textPrimary
+                        font.pixelSize: Style.fontLg
                         font.bold:      true
                     }
                     Item { Layout.fillWidth: true }
-                    Badge { text: "Resolved"; badgeColor: s_.success }
+                    Badge { text: "Resolved"; badgeColor: Style.success }
                 }
                 Item { Layout.fillHeight: true }
             }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
         }
 
         // ── Tab bar ───────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             height: 42
-            color:  s_.surface
+            color:  Style.surface
 
             TabBar {
                 id: tabBar_
@@ -97,14 +96,14 @@ Window {
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 width: parent.width; height: 2
-                                color: parent.parent.checked ? s_.accent : "transparent"
+                                color: parent.parent.checked ? Style.accent : "transparent"
                                 Behavior on color { ColorAnimation { duration: 100 } }
                             }
                         }
                         contentItem: Text {
                             text:            parent.text
-                            color:           parent.checked ? s_.accent : s_.textSecondary
-                            font.pixelSize:  s_.fontMd
+                            color:           parent.checked ? Style.accent : Style.textSecondary
+                            font.pixelSize:  Style.fontMd
                             font.bold:       parent.checked
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment:   Text.AlignVCenter
@@ -113,7 +112,7 @@ Window {
                     }
                 }
             }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
         }
 
         // ── Tab content ───────────────────────────────────────
@@ -126,28 +125,28 @@ Window {
             ScrollView {
                 clip: true
                 Flow {
-                    width: root.width - s_.xl * 2
-                    anchors.margins: s_.xl
-                    x: s_.xl; y: s_.xl
-                    spacing: s_.sm
+                    width: root.width - Style.xl * 2
+                    anchors.margins: Style.xl
+                    x: Style.xl; y: Style.xl
+                    spacing: Style.sm
 
                     Repeater {
                         model: root.toolsList
                         Rectangle {
                             height: 36; width: toolName_.implicitWidth + 24
-                            radius: s_.radiusSm
-                            color:  s_.card
-                            border.width: 1; border.color: s_.border
+                            radius: Style.radiusSm
+                            color:  Style.card
+                            border.width: 1; border.color: Style.border
 
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 8
-                                Text { text: "⚙"; color: s_.accent;        font.pixelSize: s_.fontSm; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: "⚙"; color: Style.accent;        font.pixelSize: Style.fontSm; anchors.verticalCenter: parent.verticalCenter }
                                 Text {
                                     id: toolName_
                                     text:           modelData
-                                    color:          s_.textPrimary
-                                    font.pixelSize: s_.fontMd
+                                    color:          Style.textPrimary
+                                    font.pixelSize: Style.fontMd
                                     font.family:    "Consolas, Courier New, monospace"
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
@@ -161,8 +160,8 @@ Window {
             ScrollView {
                 clip: true
                 ColumnLayout {
-                    width: root.width - s_.xl * 2
-                    x: s_.xl; y: s_.xl
+                    width: root.width - Style.xl * 2
+                    x: Style.xl; y: Style.xl
                     spacing: 2
 
                     Repeater {
@@ -170,28 +169,28 @@ Window {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 40
-                            radius: s_.radiusSm
-                            color:  pkgHov_.containsMouse ? s_.card : "transparent"
+                            radius: Style.radiusSm
+                            color:  pkgHov_.containsMouse ? Style.card : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
-                                anchors { fill: parent; leftMargin: s_.md; rightMargin: s_.md }
-                                spacing: s_.lg
+                                anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.md }
+                                spacing: Style.lg
 
-                                Rectangle { width: 8; height: 8; radius: 4; color: s_.success; Layout.alignment: Qt.AlignVCenter }
+                                Rectangle { width: 8; height: 8; radius: 4; color: Style.success; Layout.alignment: Qt.AlignVCenter }
 
                                 Text {
                                     text:           modelData.name
-                                    color:          s_.textPrimary
-                                    font.pixelSize: s_.fontMd
+                                    color:          Style.textPrimary
+                                    font.pixelSize: Style.fontMd
                                     font.family:    "Consolas, Courier New, monospace"
                                     font.bold:      true
                                     Layout.preferredWidth: 160
                                 }
                                 Text {
                                     text:           modelData.version
-                                    color:          s_.textSecondary
-                                    font.pixelSize: s_.fontMd
+                                    color:          Style.textSecondary
+                                    font.pixelSize: Style.fontMd
                                     font.family:    "Consolas, Courier New, monospace"
                                 }
                                 Item { Layout.fillWidth: true }
@@ -206,8 +205,8 @@ Window {
             ScrollView {
                 clip: true
                 ColumnLayout {
-                    width: root.width - s_.xl * 2
-                    x: s_.xl; y: s_.xl
+                    width: root.width - Style.xl * 2
+                    x: Style.xl; y: Style.xl
                     spacing: 2
 
                     Repeater {
@@ -215,18 +214,18 @@ Window {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 42
-                            radius: s_.radiusSm
-                            color:  envHov_.containsMouse ? s_.card : "transparent"
+                            radius: Style.radiusSm
+                            color:  envHov_.containsMouse ? Style.card : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
-                                anchors { fill: parent; leftMargin: s_.md; rightMargin: s_.md }
-                                spacing: s_.lg
+                                anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.md }
+                                spacing: Style.lg
 
                                 Text {
                                     text:           modelData.name
-                                    color:          s_.accent
-                                    font.pixelSize: s_.fontSm
+                                    color:          Style.accent
+                                    font.pixelSize: Style.fontSm
                                     font.family:    "Consolas, Courier New, monospace"
                                     font.bold:      true
                                     Layout.preferredWidth: 200
@@ -235,8 +234,8 @@ Window {
                                 Text {
                                     Layout.fillWidth: true
                                     text:           modelData.value
-                                    color:          s_.textSecondary
-                                    font.pixelSize: s_.fontSm
+                                    color:          Style.textSecondary
+                                    font.pixelSize: Style.fontSm
                                     font.family:    "Consolas, Courier New, monospace"
                                     elide:          Text.ElideRight
                                 }

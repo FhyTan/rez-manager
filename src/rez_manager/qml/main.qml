@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "components"
 import "windows"
+import "dummydata"
 
 ApplicationWindow {
     id: root
@@ -12,10 +13,11 @@ ApplicationWindow {
     minimumWidth:  960
     minimumHeight: 600
     visible: true
-    color: s_.bg
+    color: Style.bg
 
-    Style    { id: s_ }
-    AppStore { id: store }
+    // ── Data models (dummy — swap imports for Python-backed types) ────────────
+    ProjectListModel    { id: projectModel }
+    RezContextListModel { id: contextModel }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog       { id: settingsDlg;  anchors.centerIn: root.contentItem }
@@ -25,24 +27,24 @@ ApplicationWindow {
 
     // ── State ─────────────────────────────────────────────────
     property int    selectedProjectIndex: 0
-    property string selectedProject: store.projects.count > 0
-        ? store.projects.get(selectedProjectIndex).name : ""
+    property string selectedProject: projectModel.count > 0
+        ? projectModel.get(selectedProjectIndex).name : ""
 
     // ── Menu bar ──────────────────────────────────────────────
     menuBar: MenuBar {
-        background: Rectangle { color: s_.surface; height: 32 }
+        background: Rectangle { color: Style.surface; height: 32 }
 
         Menu {
             title: "File"
-            background: Rectangle { color: s_.elevated; radius: s_.radiusSm; border.width: 1; border.color: s_.borderBright }
+            background: Rectangle { color: Style.elevated; radius: Style.radiusSm; border.width: 1; border.color: Style.borderBright }
             delegate: MenuItem {
                 id: menuItem_
-                background: Rectangle { color: menuItem_.highlighted ? s_.border : "transparent" }
+                background: Rectangle { color: menuItem_.highlighted ? Style.border : "transparent" }
                 contentItem: Text {
                     leftPadding: 16
                     text:  menuItem_.text
-                    color: s_.textPrimary
-                    font.pixelSize: s_.fontMd
+                    color: Style.textPrimary
+                    font.pixelSize: Style.fontMd
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -53,15 +55,15 @@ ApplicationWindow {
 
         Menu {
             title: "Help"
-            background: Rectangle { color: s_.elevated; radius: s_.radiusSm; border.width: 1; border.color: s_.borderBright }
+            background: Rectangle { color: Style.elevated; radius: Style.radiusSm; border.width: 1; border.color: Style.borderBright }
             delegate: MenuItem {
                 id: helpItem_
-                background: Rectangle { color: helpItem_.highlighted ? s_.border : "transparent" }
+                background: Rectangle { color: helpItem_.highlighted ? Style.border : "transparent" }
                 contentItem: Text {
                     leftPadding: 16
                     text:  helpItem_.text
-                    color: s_.textPrimary
-                    font.pixelSize: s_.fontMd
+                    color: Style.textPrimary
+                    font.pixelSize: Style.fontMd
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -81,7 +83,7 @@ ApplicationWindow {
             id: sidebar_
             Layout.fillHeight: true
             width: 240
-            color: s_.sidebar
+            color: Style.sidebar
 
             ColumnLayout {
                 anchors.fill: parent
@@ -94,32 +96,32 @@ ApplicationWindow {
                     color: "transparent"
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: s_.lg; rightMargin: s_.lg }
-                        spacing: s_.sm
+                        anchors { fill: parent; leftMargin: Style.lg; rightMargin: Style.lg }
+                        spacing: Style.sm
 
                         Rectangle {
-                            width: 30; height: 30; radius: s_.radiusSm
+                            width: 30; height: 30; radius: Style.radiusSm
                             gradient: Gradient {
                                 orientation: Gradient.Horizontal
-                                GradientStop { position: 0.0; color: s_.accent }
-                                GradientStop { position: 1.0; color: "#8A58D8" }
+                                GradientStop { position: 0.0; color: Style.accent }
+                                GradientStop { position: 1.0; color: Style.accentSecondary }
                             }
                             Text {
                                 anchors.centerIn: parent
-                                text: "R"; color: "white"
-                                font.pixelSize: s_.fontLg; font.bold: true
+                                text: "R"; color: Style.white
+                                font.pixelSize: Style.fontLg; font.bold: true
                             }
                         }
 
                         Text {
                             text:           "rez-manager"
-                            color:          s_.textPrimary
-                            font.pixelSize: s_.fontLg
+                            color:          Style.textPrimary
+                            font.pixelSize: Style.fontLg
                             font.bold:      true
                         }
                         Item { Layout.fillWidth: true }
                     }
-                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                 }
 
                 // Section label
@@ -127,10 +129,10 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     height: 32
                     Text {
-                        anchors { left: parent.left; leftMargin: s_.lg; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: Style.lg; verticalCenter: parent.verticalCenter }
                         text:           "PROJECTS"
-                        color:          s_.textDisabled
-                        font.pixelSize: s_.fontXs
+                        color:          Style.textDisabled
+                        font.pixelSize: Style.fontXs
                         font.bold:      true
                         font.letterSpacing: 1.5
                     }
@@ -142,7 +144,7 @@ ApplicationWindow {
                     Layout.fillWidth:  true
                     Layout.fillHeight: true
                     clip: true
-                    model: store.projects
+                    model: projectModel
                     spacing: 2
 
                     ScrollIndicator.vertical: ScrollIndicator {}
@@ -156,7 +158,7 @@ ApplicationWindow {
                             projectName:  name
                             avatarColor:  model.avatarColor
                             selected:     root.selectedProjectIndex === index
-                            contextCount: store.contextCountFor(name)
+                            contextCount: contextModel.contextCountFor(name)
                             onClicked:    root.selectedProjectIndex = index
                         }
                     }
@@ -167,11 +169,11 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     height: 52
                     color: "transparent"
-                    Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: s_.border }
+                    Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Style.border }
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: s_.md; rightMargin: s_.md }
-                        spacing: s_.xs
+                        anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.md }
+                        spacing: Style.xs
                         CardButton { icon: "+"; label: "Project" }
                         Item { Layout.fillWidth: true }
                         CardButton { icon: "⚙"; onClicked: settingsDlg.open() }
@@ -181,7 +183,7 @@ ApplicationWindow {
         }
 
         // Sidebar right border
-        Rectangle { width: 1; Layout.fillHeight: true; color: s_.border }
+        Rectangle { width: 1; Layout.fillHeight: true; color: Style.border }
 
         // ──────────────────────────────────────────────────────
         // CONTENT AREA
@@ -189,7 +191,7 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth:  true
             Layout.fillHeight: true
-            color: s_.bg
+            color: Style.bg
 
             ColumnLayout {
                 anchors.fill: parent
@@ -199,24 +201,24 @@ ApplicationWindow {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 56
-                    color: s_.surface
+                    color: Style.surface
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: s_.xl; rightMargin: s_.xl }
-                        spacing: s_.md
+                        anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
+                        spacing: Style.md
 
                         ColumnLayout {
                             spacing: 1
                             Text {
                                 text:           root.selectedProject.length > 0 ? root.selectedProject : "No project selected"
-                                color:          s_.textPrimary
-                                font.pixelSize: s_.fontXl
+                                color:          Style.textPrimary
+                                font.pixelSize: Style.fontXl
                                 font.bold:      true
                             }
                             Text {
-                                text:           store.filteredContexts(root.selectedProject).length + " contexts"
-                                color:          s_.textSecondary
-                                font.pixelSize: s_.fontSm
+                                text:           contextModel.filteredContexts(root.selectedProject).length + " contexts"
+                                color:          Style.textSecondary
+                                font.pixelSize: Style.fontSm
                             }
                         }
 
@@ -227,7 +229,7 @@ ApplicationWindow {
                         CardButton { icon: "⧉"; label: "Duplicate" }
                         CardButton { icon: "✕"; label: "Delete"; danger: true }
                     }
-                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: s_.border }
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                 }
 
                 // Context cards grid
@@ -238,17 +240,17 @@ ApplicationWindow {
 
                     Flickable {
                         contentWidth:  width
-                        contentHeight: cardsFlow_.implicitHeight + s_.xl * 2
+                        contentHeight: cardsFlow_.implicitHeight + Style.xl * 2
 
                         Flow {
                             id: cardsFlow_
-                            x: s_.xl
-                            y: s_.xl
-                            width:   parent.width - s_.xl * 2
-                            spacing: s_.lg
+                            x: Style.xl
+                            y: Style.xl
+                            width:   parent.width - Style.xl * 2
+                            spacing: Style.lg
 
                             Repeater {
-                                model: store.filteredContexts(root.selectedProject)
+                                model: contextModel.filteredContexts(root.selectedProject)
 
                                 ContextCard {
                                     contextName:  modelData.name
@@ -281,20 +283,20 @@ ApplicationWindow {
 
                             // Empty state
                             Rectangle {
-                                visible: store.filteredContexts(root.selectedProject).length === 0
+                                visible: contextModel.filteredContexts(root.selectedProject).length === 0
                                 width:   300
                                 height:  160
-                                radius:  s_.radiusLg
+                                radius:  Style.radiusLg
                                 color:   "transparent"
                                 border.width: 1
-                                border.color: s_.border
+                                border.color: Style.border
 
                                 ColumnLayout {
                                     anchors.centerIn: parent
-                                    spacing: s_.md
-                                    Text { Layout.alignment: Qt.AlignHCenter; text: "⊞"; font.pixelSize: 36; color: s_.textDisabled }
-                                    Text { Layout.alignment: Qt.AlignHCenter; text: "No contexts yet"; color: s_.textSecondary; font.pixelSize: s_.fontLg; font.bold: true }
-                                    Text { Layout.alignment: Qt.AlignHCenter; text: "Create your first context to get started."; color: s_.textDisabled; font.pixelSize: s_.fontMd }
+                                    spacing: Style.md
+                                    Text { Layout.alignment: Qt.AlignHCenter; text: "⊞"; font.pixelSize: 36; color: Style.textDisabled }
+                                    Text { Layout.alignment: Qt.AlignHCenter; text: "No contexts yet"; color: Style.textSecondary; font.pixelSize: Style.fontLg; font.bold: true }
+                                    Text { Layout.alignment: Qt.AlignHCenter; text: "Create your first context to get started."; color: Style.textDisabled; font.pixelSize: Style.fontMd }
                                     CardButton {
                                         Layout.alignment: Qt.AlignHCenter
                                         label: "New Context"; accent: true
@@ -320,13 +322,13 @@ ApplicationWindow {
             hideTimer_.restart()
         }
 
-        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: s_.xl }
-        width:   toastRow_.implicitWidth + s_.xl
+        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: Style.xl }
+        width:   toastRow_.implicitWidth + Style.xl
         height:  44
-        radius:  s_.radius
-        color:   s_.elevated
+        radius:  Style.radius
+        color:   Style.elevated
         border.width: 1
-        border.color: s_.borderBright
+        border.color: Style.borderBright
         visible: false
         opacity: visible ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -336,13 +338,13 @@ ApplicationWindow {
         Row {
             id: toastRow_
             anchors.centerIn: parent
-            spacing: s_.sm
-            Rectangle { width: 8; height: 8; radius: 4; color: s_.success; anchors.verticalCenter: parent.verticalCenter }
+            spacing: Style.sm
+            Rectangle { width: 8; height: 8; radius: 4; color: Style.success; anchors.verticalCenter: parent.verticalCenter }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text:           "Launching: " + launchToast_.projectName + " / " + launchToast_.contextName
-                color:          s_.textPrimary
-                font.pixelSize: s_.fontMd
+                color:          Style.textPrimary
+                font.pixelSize: Style.fontMd
             }
         }
     }

@@ -7,18 +7,17 @@ import ".."
 Rectangle {
     id: root
     property string projectName:  "Project"
-    property color  avatarColor:  s_.accent
+    property color  avatarColor:  Style.accent
     property int    contextCount: 0
     property bool   selected:     false
 
     signal clicked
 
-    Style { id: s_ }
 
     height: 44
-    radius: s_.radiusSm
+    radius: Style.radiusSm
     color:  selected
-        ? Qt.rgba(s_.accent.r, s_.accent.g, s_.accent.b, 0.10)
+        ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.10)
         : (ma_.containsMouse ? Qt.rgba(1,1,1,0.03) : "transparent")
 
     Behavior on color { ColorAnimation { duration: 100 } }
@@ -30,7 +29,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         width:   3
         radius:  2
-        color:   root.selected ? s_.accent : "transparent"
+        color:   root.selected ? Style.accent : "transparent"
     }
 
     RowLayout {
@@ -52,7 +51,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text:            root.projectName.length > 0 ? root.projectName[0].toUpperCase() : "?"
                 color:           root.avatarColor
-                font.pixelSize:  s_.fontSm
+                font.pixelSize:  Style.fontSm
                 font.bold:       true
             }
         }
@@ -60,8 +59,8 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             text:            root.projectName
-            color:           root.selected ? s_.textPrimary : s_.textSecondary
-            font.pixelSize:  s_.fontMd
+            color:           root.selected ? Style.textPrimary : Style.textSecondary
+            font.pixelSize:  Style.fontMd
             font.weight:     root.selected ? Font.Medium : Font.Normal
             elide:           Text.ElideRight
         }
@@ -73,15 +72,15 @@ Rectangle {
             height:  18
             radius:  9
             color:   root.selected
-                ? Qt.rgba(s_.accent.r, s_.accent.g, s_.accent.b, 0.25)
+                ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.25)
                 : Qt.rgba(1,1,1,0.06)
 
             Text {
                 id: countText_
                 anchors.centerIn: parent
                 text:            root.contextCount
-                color:           root.selected ? s_.accent : s_.textDisabled
-                font.pixelSize:  s_.fontXs
+                color:           root.selected ? Style.accent : Style.textDisabled
+                font.pixelSize:  Style.fontXs
                 font.bold:       true
             }
         }

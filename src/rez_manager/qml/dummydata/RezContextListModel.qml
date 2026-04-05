@@ -1,13 +1,14 @@
-// AppStore.qml — Centralised application data store (dummy implementation).
+// RezContextListModel.qml — dummy implementation of the Python RezContextListModel.
 //
-// Exposes the same surface as the future Python-backed QObject:
-//   • projects  : ListModel  — list of {name, avatarColor}
-//   • contexts  : ListModel  — list of {project, name, description, launchTarget, packages}
-//   • filteredContexts(projectName) → JS array
-//   • contextCountFor(projectName)  → int
+// Python equivalent (to be implemented in src/rez_manager/ui/):
+//   class RezContextListModel(QAbstractListModel):
+//       Roles: project (str), name (str), description (str), launchTarget (str), packages (str)
 //
-// To replace with real data: register a Python QObject under the name "AppStore"
-// via qmlRegisterType / @QmlElement and expose the same properties + slots.
+// Also exposes two JS helper functions that will eventually be replaced by a
+// QSortFilterProxyModel or equivalent Python-side filtering mechanism.
+//
+// Replace by registering the Python class as QML type "RezContextListModel"
+// and removing the dummydata import in main.qml.
 
 import QtQuick 2.15
 
@@ -15,11 +16,13 @@ Item {
     id: root
     visible: false
 
-    // ── Public API ────────────────────────────────────────────────────────────
+    // ── Public API (mirrors Python model surface) ─────────────────────────────
 
-    property alias projects: projectsModel_
-    property alias contexts: contextsModel_
+    // Direct access to the underlying ListModel (same as Python model itself).
+    property alias count: contextsModel_.count
+    function get(i) { return contextsModel_.get(i) }
 
+    // Filtering helpers — replace with QSortFilterProxyModel on the Python side.
     function filteredContexts(projectName) {
         var result = []
         for (var i = 0; i < contextsModel_.count; i++) {
@@ -46,14 +49,6 @@ Item {
     }
 
     // ── Dummy data ────────────────────────────────────────────────────────────
-
-    ListModel {
-        id: projectsModel_
-        ListElement { name: "VFX Pipeline"; avatarColor: "#5F83FF" }
-        ListElement { name: "Maya Rigging"; avatarColor: "#4DB880" }
-        ListElement { name: "Houdini FX";   avatarColor: "#D98A38" }
-        ListElement { name: "USD Pipeline"; avatarColor: "#8A58D8" }
-    }
 
     ListModel {
         id: contextsModel_

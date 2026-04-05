@@ -1,6 +1,8 @@
+pragma Singleton
 import QtQuick 2.15
 
-// Style singleton — instantiate as `Style { id: s }` in any component.
+// Singleton style sheet — access as Style.accent, Style.fontMd etc. from any QML file.
+// Import the parent module (import "..") to activate this singleton in sub-directories.
 QtObject {
     // ── Backgrounds ──────────────────────────────────────────
     readonly property color bg:         "#0E0E16"
@@ -14,11 +16,13 @@ QtObject {
     readonly property color textPrimary:   "#DDE0F2"
     readonly property color textSecondary: "#6A6A96"
     readonly property color textDisabled:  "#35354E"
+    readonly property color white:         "#FFFFFF"
 
     // ── Accent ───────────────────────────────────────────────
-    readonly property color accent:      "#5F83FF"
-    readonly property color accentHover: "#7094FF"
-    readonly property color accentDim:   "#1A2550"
+    readonly property color accent:          "#5F83FF"
+    readonly property color accentHover:     "#7094FF"
+    readonly property color accentDim:       "#1A2550"
+    readonly property color accentSecondary: "#8A58D8"   // purple gradient partner
 
     // ── Borders ──────────────────────────────────────────────
     readonly property color border:       "#1E1E32"

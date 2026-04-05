@@ -21,7 +21,6 @@ Rectangle {
     signal launchRequested
 
     // ── Internal ─────────────────────────────────────────────
-    Style { id: s_ }
 
     property string initials: {
         var words = contextName.trim().split(/\s+/)
@@ -35,14 +34,14 @@ Rectangle {
         return raw.filter(function(p) { return p.length > 0 })
     }
 
-    property color accentColor: s_.launchColor(launchTarget)
+    property color accentColor: Style.launchColor(launchTarget)
 
     // ── Geometry ─────────────────────────────────────────────
     width:  365
     height: col_.implicitHeight + 3   // +3 for top accent strip
-    radius: s_.radius
+    radius: Style.radius
 
-    color: hoverArea_.containsMouse ? s_.cardHover : s_.card
+    color: hoverArea_.containsMouse ? Style.cardHover : Style.card
     Behavior on color { ColorAnimation { duration: 100 } }
 
     // ── Border ────────────────────────────────────────────────
@@ -51,7 +50,7 @@ Rectangle {
         radius:       parent.radius
         color:        "transparent"
         border.width: 1
-        border.color: hoverArea_.containsMouse ? s_.borderBright : s_.border
+        border.color: hoverArea_.containsMouse ? Style.borderBright : Style.border
     }
 
     // ── Top accent strip ─────────────────────────────────────
@@ -61,14 +60,14 @@ Rectangle {
         anchors.left:  parent.left
         anchors.right: parent.right
         height: 3
-        radius: s_.radius
+        radius: Style.radius
         color:  root.accentColor
         // Flatten the bottom two corners of the strip
         Rectangle {
             anchors.bottom: parent.bottom
             anchors.left:   parent.left
             anchors.right:  parent.right
-            height: s_.radius
+            height: Style.radius
             color:  parent.color
         }
     }
@@ -94,17 +93,17 @@ Rectangle {
         // Header: avatar + info + launch badge
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin:    s_.lg
-            Layout.leftMargin:   s_.lg
-            Layout.rightMargin:  s_.lg
-            Layout.bottomMargin: s_.md
-            spacing: s_.md
+            Layout.topMargin:    Style.lg
+            Layout.leftMargin:   Style.lg
+            Layout.rightMargin:  Style.lg
+            Layout.bottomMargin: Style.md
+            spacing: Style.md
 
             // Avatar
             Rectangle {
                 width:        58
                 height:       58
-                radius:       s_.radiusSm
+                radius:       Style.radiusSm
                 color:        Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
                 border.width: 1
                 border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
@@ -126,8 +125,8 @@ Rectangle {
                 // Project label
                 Text {
                     text:            root.projectName
-                    color:           s_.textSecondary
-                    font.pixelSize:  s_.fontXs
+                    color:           Style.textSecondary
+                    font.pixelSize:  Style.fontXs
                     font.letterSpacing: 0.4
                 }
 
@@ -135,8 +134,8 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     text:            root.contextName
-                    color:           s_.textPrimary
-                    font.pixelSize:  s_.fontLg
+                    color:           Style.textPrimary
+                    font.pixelSize:  Style.fontLg
                     font.bold:       true
                     elide:           Text.ElideRight
                 }
@@ -145,8 +144,8 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     text:            root.description
-                    color:           s_.textSecondary
-                    font.pixelSize:  s_.fontMd
+                    color:           Style.textSecondary
+                    font.pixelSize:  Style.fontMd
                     wrapMode:        Text.WordWrap
                     maximumLineCount: 2
                     elide:           Text.ElideRight
@@ -166,24 +165,24 @@ Rectangle {
                 Text {
                     id: badgeText_
                     anchors.centerIn: parent
-                    text:            s_.launchLabel(root.launchTarget)
+                    text:            Style.launchLabel(root.launchTarget)
                     color:           root.accentColor
-                    font.pixelSize:  s_.fontXs
+                    font.pixelSize:  Style.fontXs
                     font.bold:       true
                 }
             }
         }
 
         // ── Separator ─────────────────────────────────────────
-        Rectangle { Layout.fillWidth: true; height: 1; color: s_.border }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Style.border }
 
         // Package chips row
         Item {
             Layout.fillWidth:    true
-            Layout.topMargin:    s_.sm
-            Layout.bottomMargin: s_.sm
-            Layout.leftMargin:   s_.lg
-            Layout.rightMargin:  s_.lg
+            Layout.topMargin:    Style.sm
+            Layout.bottomMargin: Style.sm
+            Layout.leftMargin:   Style.lg
+            Layout.rightMargin:  Style.lg
             height: 26
 
             Flickable {
@@ -204,17 +203,17 @@ Rectangle {
                             height:       22
                             width:        chip_.implicitWidth + 12
                             radius:       11
-                            color:        s_.elevated
+                            color:        Style.elevated
                             border.width: 1
-                            border.color: s_.borderBright
+                            border.color: Style.borderBright
                             anchors.verticalCenter: parent.verticalCenter
 
                             Text {
                                 id: chip_
                                 anchors.centerIn: parent
                                 text:            modelData
-                                color:           s_.textSecondary
-                                font.pixelSize:  s_.fontXs
+                                color:           Style.textSecondary
+                                font.pixelSize:  Style.fontXs
                                 font.family:     "Consolas, Courier New, monospace"
                             }
                         }
@@ -224,8 +223,8 @@ Rectangle {
                     Text {
                         visible:         root.packageList.length === 0
                         text:            "No packages"
-                        color:           s_.textDisabled
-                        font.pixelSize:  s_.fontXs
+                        color:           Style.textDisabled
+                        font.pixelSize:  Style.fontXs
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -233,16 +232,16 @@ Rectangle {
         }
 
         // ── Separator ─────────────────────────────────────────
-        Rectangle { Layout.fillWidth: true; height: 1; color: s_.border }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Style.border }
 
         // Action buttons
         RowLayout {
             Layout.fillWidth:    true
-            Layout.leftMargin:   s_.sm
-            Layout.rightMargin:  s_.sm
-            Layout.topMargin:    s_.sm
-            Layout.bottomMargin: s_.sm
-            spacing: s_.xs
+            Layout.leftMargin:   Style.sm
+            Layout.rightMargin:  Style.sm
+            Layout.topMargin:    Style.sm
+            Layout.bottomMargin: Style.sm
+            spacing: Style.xs
 
             CardButton { icon: "✎"; label: "Info";     onClicked: root.editInfoRequested()     }
             CardButton { icon: "⊟"; label: "Packages"; onClicked: root.editPackagesRequested() }
