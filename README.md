@@ -2,6 +2,8 @@
 
 A GUI tool for managing [Rez](https://rez.readthedocs.io/en/stable/) package environments.
 
+![MainWindow](./images/MainWindow.png)
+
 ## Setup
 
 Requires [uv](https://docs.astral.sh/uv/).

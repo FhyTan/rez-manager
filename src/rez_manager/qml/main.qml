@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick.Layouts 2.15
 import "components"
 import "windows"
 import "dummydata"
@@ -47,60 +47,8 @@ ApplicationWindow {
 
     // ── Menu bar ──────────────────────────────────────────────
     menuBar: MenuBar {
-        background: Rectangle {
-            color: Style.surface
-            height: 32
-        }
-
-        // Style the menu bar tab labels ("File", "Help", ...)
-        delegate: MenuBarItem {
-            id: mbi_
-            implicitHeight: 32
-            background: Rectangle {
-                color: mbi_.highlighted ? Style.elevated : "transparent"
-                radius: Style.radiusSm
-            }
-            contentItem: Text {
-                text: mbi_.text
-                color: Style.textPrimary
-                font.pixelSize: Style.fontMd
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                leftPadding: Style.sm
-                rightPadding: Style.sm
-            }
-        }
-
         Menu {
             title: "File"
-            topPadding: Style.xs
-            bottomPadding: Style.xs
-            background: Rectangle {
-                implicitWidth: 180
-                implicitHeight: 40
-                color: Style.elevated
-                radius: Style.radiusSm
-                border.width: 1
-                border.color: Style.borderBright
-            }
-            delegate: MenuItem {
-                id: menuItem_
-                implicitWidth: Math.max(180, implicitContentWidth + 32)
-                implicitHeight: 34
-                background: Rectangle {
-                    implicitWidth: menuItem_.implicitWidth
-                    implicitHeight: menuItem_.implicitHeight
-                    color: menuItem_.highlighted ? Style.border : "transparent"
-                }
-                contentItem: Text {
-                    leftPadding: 16
-                    rightPadding: 16
-                    text: menuItem_.text
-                    color: Style.textPrimary
-                    font.pixelSize: Style.fontMd
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
             Action {
                 text: "Settings…"
                 onTriggered: settingsDlg.open()
@@ -114,34 +62,6 @@ ApplicationWindow {
 
         Menu {
             title: "Help"
-            topPadding: Style.xs
-            bottomPadding: Style.xs
-            background: Rectangle {
-                implicitWidth: 180
-                implicitHeight: 40
-                color: Style.elevated
-                radius: Style.radiusSm
-                border.width: 1
-                border.color: Style.borderBright
-            }
-            delegate: MenuItem {
-                id: helpItem_
-                implicitWidth: Math.max(180, implicitContentWidth + 32)
-                implicitHeight: 34
-                background: Rectangle {
-                    implicitWidth: helpItem_.implicitWidth
-                    implicitHeight: helpItem_.implicitHeight
-                    color: helpItem_.highlighted ? Style.border : "transparent"
-                }
-                contentItem: Text {
-                    leftPadding: 16
-                    rightPadding: 16
-                    text: helpItem_.text
-                    color: Style.textPrimary
-                    font.pixelSize: Style.fontMd
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
             Action {
                 text: "About rez-manager"
             }
@@ -293,14 +213,14 @@ ApplicationWindow {
                         }
                         spacing: Style.xs
                         CardButton {
-                            icon: "+"
+                            glyph: "+"
                             label: "Project"
                         }
                         Item {
                             Layout.fillWidth: true
                         }
                         CardButton {
-                            icon: "⚙"
+                            glyph: "⚙"
                             onClicked: settingsDlg.open()
                         }
                     }
@@ -362,7 +282,7 @@ ApplicationWindow {
 
                         // Context actions
                         CardButton {
-                            icon: "+"
+                            glyph: "+"
                             label: "New Context"
                             accent: true
                             onClicked: editorDlg.open()

@@ -123,7 +123,7 @@ Window {
                         RowLayout {
                             anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.sm }
                             Text { text: "Current Packages"; color: Style.textSecondary; font.pixelSize: Style.fontSm; font.bold: true; Layout.fillWidth: true }
-                            CardButton { icon: "+"; onClicked: {} }
+                            CardButton { glyph: "+"; onClicked: {} }
                         }
                         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
                     }
@@ -148,7 +148,7 @@ Window {
                                     Text { text: pkgName; color: Style.textPrimary; font.pixelSize: Style.fontMd; font.bold: true }
                                     Text { text: version; color: Style.textSecondary; font.pixelSize: Style.fontXs; font.family: "Consolas, Courier New, monospace" }
                                 }
-                                CardButton { icon: "✕"; danger: true }
+                                CardButton { glyph: "✕"; danger: true }
                             }
                             HoverHandler { id: delHov_ }
                         }
@@ -391,9 +391,9 @@ Window {
             Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Style.border }
             RowLayout {
                 anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
-                CardButton { icon: "◉"; label: "Preview Resolve" }
+                CardButton { glyph: "◉"; label: "Preview Resolve" }
                 Item { width: Style.sm }
-                CardButton { icon: "⌘"; label: "Launch Console" }
+                CardButton { glyph: "⌘"; label: "Launch Console" }
                 Item { Layout.fillWidth: true }
                 CardButton { label: "Cancel"; onClicked: root.close() }
                 Item { width: Style.sm }

@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
-
-# Must be set before QGuiApplication is created.
-os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
+
+import rez_manager.rc_resources  # noqa: F401
 
 
 def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]:

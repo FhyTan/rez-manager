@@ -17,47 +17,10 @@ Dialog {
     property string descriptionValue:  ""
     property string launchTargetValue: "shell"
 
-    background: Rectangle {
-        color:        Style.elevated
-        radius:       Style.radiusLg
-        border.width: 1
-        border.color: Style.borderBright
-    }
-
-    header: Rectangle {
-        height: 56; color: "transparent"
-        RowLayout {
-            anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.lg }
-            Text {
-                text:           root.contextNameValue.length > 0 ? "Edit Context" : "New Context"
-                color:          Style.textPrimary
-                font.pixelSize: Style.fontXl
-                font.bold:      true
-            }
-            Item { Layout.fillWidth: true }
-            Rectangle {
-                width: 28; height: 28; radius: 14
-                color: xHov_.hovered ? Style.border : "transparent"
-                Text { anchors.centerIn: parent; text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd }
-                HoverHandler { id: xHov_; cursorShape: Qt.PointingHandCursor }
-                TapHandler { acceptedButtons: Qt.LeftButton; onTapped: root.close() }
-            }
-        }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
-    }
-
-    footer: Rectangle {
-        height: 56; color: "transparent"
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Style.border }
-        RowLayout {
-            anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
-            Item { Layout.fillWidth: true }
-            CardButton { label: "Cancel"; onClicked: root.close() }
-            Item { width: Style.sm }
-            CardButton { label: "Save"; accent: true; onClicked: root.close() }
-        }
-    }
-
+    padding: Style.xl
+    standardButtons: Dialog.Save | Dialog.Cancel
+    onAccepted: root.close()
+    onRejected: root.close()
 
     contentItem: ColumnLayout {
         spacing: Style.lg
@@ -87,20 +50,13 @@ Dialog {
         FormField {
             label: "Description"
             Layout.fillWidth: true
-            Rectangle {
+            TextArea {
                 Layout.fillWidth: true
-                height: 72; radius: Style.radiusSm
-                color: Style.surface; border.width: 1; border.color: Style.border
-                TextArea {
-                    anchors.fill: parent
-                    leftPadding: Style.md; rightPadding: Style.md
-                    topPadding: Style.sm; bottomPadding: Style.sm
-                    text:            root.descriptionValue.length > 0 ? root.descriptionValue : "A short description of this context."
-                    color:           Style.textPrimary
-                    font.pixelSize:  Style.fontMd
-                    wrapMode:        TextArea.WordWrap
-                    background: null
-                }
+                implicitHeight: 88
+                text: root.descriptionValue.length > 0
+                    ? root.descriptionValue
+                    : "A short description of this context."
+                wrapMode: TextArea.WordWrap
             }
         }
 
@@ -189,63 +145,15 @@ Dialog {
         ColumnLayout { id: contentHolder_; spacing: 0 }
     }
 
-    component FieldInput: Rectangle {
-        property alias text:     ti_.text
+    component FieldInput: TextField {
         property bool  monospace: false
-        height: 36; radius: Style.radiusSm
-        color: Style.surface; border.width: 1; border.color: Style.border
-        TextInput {
-            id: ti_
-            anchors.left: parent.left; anchors.right: parent.right
-            anchors.leftMargin: Style.md; anchors.rightMargin: Style.md
-            anchors.verticalCenter: parent.verticalCenter
-            color:           Style.textPrimary
-            font.pixelSize:  Style.fontMd
-            font.family:     monospace ? "Consolas, Courier New, monospace" : font.family
-            selectByMouse:   true
-        }
+        implicitHeight: 36
+        font.pixelSize: Style.fontMd
+        font.family: monospace ? "Consolas, Courier New, monospace" : font.family
+        selectByMouse: true
     }
 
     component FieldCombo: ComboBox {
-        height: 36
-        background: Rectangle {
-            color: Style.surface; radius: Style.radiusSm
-            border.width: 1; border.color: Style.border
-        }
-        contentItem: Text {
-            leftPadding: Style.md
-            text:            parent.displayText
-            color:           Style.textPrimary
-            font.pixelSize:  Style.fontMd
-            verticalAlignment: Text.AlignVCenter
-        }
-        popup: Popup {
-            y: parent.height + 4
-            width: parent.width
-            background: Rectangle {
-                color: Style.elevated; radius: Style.radiusSm
-                border.width: 1; border.color: Style.borderBright
-            }
-            contentItem: ListView {
-                implicitHeight: Math.min(contentHeight, 200)
-                model: parent.parent.delegateModel
-                clip: true
-                ScrollIndicator.vertical: ScrollIndicator {}
-            }
-        }
-        delegate: ItemDelegate {
-            width: parent ? parent.width : 0
-            height: 36
-            background: Rectangle {
-                color: parent.hovered ? Style.elevated : "transparent"
-            }
-            contentItem: Text {
-                leftPadding:     Style.md
-                text:            modelData
-                color:           Style.textPrimary
-                font.pixelSize:  Style.fontMd
-                verticalAlignment: Text.AlignVCenter
-            }
-        }
+        implicitHeight: 36
     }
 }

@@ -11,59 +11,10 @@ Dialog {
     modal: true
     width:  620
     height: 480
-
-    background: Rectangle {
-        color:        Style.elevated
-        radius:       Style.radiusLg
-        border.width: 1
-        border.color: Style.borderBright
-    }
-
-    header: Rectangle {
-        height: 56
-        color:  "transparent"
-        RowLayout {
-            anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.lg }
-            Text {
-                text:           "Settings"
-                color:          Style.textPrimary
-                font.pixelSize: Style.fontXl
-                font.bold:      true
-            }
-            Item { Layout.fillWidth: true }
-            Rectangle {
-                width: 28; height: 28; radius: 14
-                color: closeHover_.hovered ? Style.border : "transparent"
-                Text {
-                    anchors.centerIn: parent
-                    text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd
-                }
-                HoverHandler {
-                    id: closeHover_
-                    cursorShape: Qt.PointingHandCursor
-                }
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton
-                    onTapped: root.close()
-                }
-            }
-        }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
-    }
-
-    footer: Rectangle {
-        height: 56
-        color:  "transparent"
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Style.border }
-        RowLayout {
-            anchors { fill: parent; leftMargin: Style.xl; rightMargin: Style.xl }
-            Item { Layout.fillWidth: true }
-            CardButton { label: "Cancel"; onClicked: root.close() }
-            Item { width: Style.sm }
-            CardButton { label: "Save"; accent: true; onClicked: root.close() }
-        }
-    }
-
+    padding: Style.xl
+    standardButtons: Dialog.Save | Dialog.Cancel
+    onAccepted: root.close()
+    onRejected: root.close()
 
     contentItem: ScrollView {
         clip: true
@@ -134,7 +85,7 @@ Dialog {
                                         font.family:    "Consolas, Courier New, monospace"
                                         elide:          Text.ElideLeft
                                     }
-                                    CardButton { icon: "✕"; danger: true }
+                                    CardButton { glyph: "✕"; danger: true }
                                 }
                                 HoverHandler { id: repoHover_ }
                             }
@@ -146,22 +97,12 @@ Dialog {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Style.sm
-                    Rectangle {
+                    TextField {
                         Layout.fillWidth: true
-                        height: 36; radius: Style.radiusSm
-                        color: Style.surface; border.width: 1; border.color: Style.border
-                        TextInput {
-                            anchors.left: parent.left; anchors.right: parent.right
-                            anchors.leftMargin: Style.md; anchors.rightMargin: Style.md
-                            anchors.verticalCenter: parent.verticalCenter
-                            text:            "/packages/new"
-                            color:           Style.textSecondary
-                            font.pixelSize:  Style.fontMd
-                            font.family:     "Consolas, Courier New, monospace"
-                            selectByMouse:   true
-                        }
+                        text: "/packages/new"
+                        placeholderText: "Repository path"
                     }
-                    CardButton { icon: "+"; label: "Add"; accent: true }
+                    CardButton { glyph: "+"; label: "Add"; accent: true }
                 }
             }
 
@@ -186,20 +127,9 @@ Dialog {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Style.sm
-                    Rectangle {
+                    TextField {
                         Layout.fillWidth: true
-                        height: 36; radius: Style.radiusSm
-                        color: Style.surface; border.width: 1; border.color: Style.border
-                        TextInput {
-                            anchors.left: parent.left; anchors.right: parent.right
-                            anchors.leftMargin: Style.md; anchors.rightMargin: Style.md
-                            anchors.verticalCenter: parent.verticalCenter
-                            text:           "/home/user/rez-contexts"
-                            color:          Style.textPrimary
-                            font.pixelSize: Style.fontMd
-                            font.family:    "Consolas, Courier New, monospace"
-                            selectByMouse:  true
-                        }
+                        text: "/home/user/rez-contexts"
                     }
                     CardButton { label: "Browse…" }
                 }
