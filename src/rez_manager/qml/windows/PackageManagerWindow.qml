@@ -136,7 +136,7 @@ Window {
 
                         delegate: Rectangle {
                             width: ListView.view.width; height: 42
-                            color: delHov_.containsMouse ? Style.elevated : "transparent"
+                            color: delHov_.hovered ? Style.elevated : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
@@ -150,7 +150,7 @@ Window {
                                 }
                                 CardButton { icon: "✕"; danger: true }
                             }
-                            MouseArea { id: delHov_; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                            HoverHandler { id: delHov_ }
                         }
                     }
                 }
@@ -192,7 +192,7 @@ Window {
                                     // Repository header
                                     Rectangle {
                                         Layout.fillWidth: true; height: 36
-                                        color: repoHov_.containsMouse ? Style.elevated : Style.surface
+                                        color: repoHov_.hovered ? Style.elevated : Style.surface
                                         Behavior on color { ColorAnimation { duration: 80 } }
 
                                         RowLayout {
@@ -212,10 +212,13 @@ Window {
                                                 elide:           Text.ElideRight
                                             }
                                         }
-                                        MouseArea {
-                                            id: repoHov_; anchors.fill: parent; hoverEnabled: true
+                                        HoverHandler {
+                                            id: repoHov_
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
+                                        }
+                                        TapHandler {
+                                            acceptedButtons: Qt.LeftButton
+                                            onTapped: {
                                                 root.selectedRepoIndex = root.selectedRepoIndex === index ? -1 : index
                                                 root.selectedPkgIndex = -1
                                             }
@@ -236,7 +239,7 @@ Window {
                                                                    && root.selectedPkgIndex  === index
                                             color: isSelected
                                                 ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
-                                                : (pkgHov_.containsMouse ? Style.elevated : "transparent")
+                                                : (pkgHov_.hovered ? Style.elevated : "transparent")
                                             Behavior on color { ColorAnimation { duration: 80 } }
 
                                             RowLayout {
@@ -251,10 +254,13 @@ Window {
                                                     elide:           Text.ElideRight
                                                 }
                                             }
-                                            MouseArea {
-                                                id: pkgHov_; anchors.fill: parent; hoverEnabled: true
+                                            HoverHandler {
+                                                id: pkgHov_
                                                 cursorShape: Qt.PointingHandCursor
-                                                onClicked: {
+                                            }
+                                            TapHandler {
+                                                acceptedButtons: Qt.LeftButton
+                                                onTapped: {
                                                     // parent = this Rectangle; parent.parent = outer ColumnLayout
                                                     root.selectedRepoIndex = parent.parent.index
                                                     root.selectedPkgIndex  = parent.index

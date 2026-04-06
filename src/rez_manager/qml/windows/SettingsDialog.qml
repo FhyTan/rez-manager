@@ -33,17 +33,18 @@ Dialog {
             Item { Layout.fillWidth: true }
             Rectangle {
                 width: 28; height: 28; radius: 14
-                color: closeHover_.containsMouse ? Style.border : "transparent"
+                color: closeHover_.hovered ? Style.border : "transparent"
                 Text {
                     anchors.centerIn: parent
                     text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd
                 }
-                MouseArea {
+                HoverHandler {
                     id: closeHover_
-                    anchors.fill: parent
-                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.close()
+                }
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onTapped: root.close()
                 }
             }
         }
@@ -115,7 +116,7 @@ Dialog {
                                 Layout.fillWidth: true
                                 height:       38
                                 radius:       Style.radiusSm
-                                color:        repoHover_.containsMouse ? Style.elevated : "transparent"
+                                color:        repoHover_.hovered ? Style.elevated : "transparent"
                                 Behavior on color { ColorAnimation { duration: 80 } }
 
                                 RowLayout {
@@ -135,7 +136,7 @@ Dialog {
                                     }
                                     CardButton { icon: "✕"; danger: true }
                                 }
-                                MouseArea { id: repoHover_; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                                HoverHandler { id: repoHover_ }
                             }
                         }
                     }

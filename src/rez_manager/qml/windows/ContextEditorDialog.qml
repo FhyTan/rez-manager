@@ -37,9 +37,10 @@ Dialog {
             Item { Layout.fillWidth: true }
             Rectangle {
                 width: 28; height: 28; radius: 14
-                color: xHov_.containsMouse ? Style.border : "transparent"
+                color: xHov_.hovered ? Style.border : "transparent"
                 Text { anchors.centerIn: parent; text: "✕"; color: Style.textSecondary; font.pixelSize: Style.fontMd }
-                MouseArea { id: xHov_; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.close() }
+                HoverHandler { id: xHov_; cursorShape: Qt.PointingHandCursor }
+                TapHandler { acceptedButtons: Qt.LeftButton; onTapped: root.close() }
             }
         }
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Style.border }
@@ -123,7 +124,7 @@ Dialog {
                         property bool isSelected: root.launchTargetValue === modelData.val
                         color: isSelected
                             ? Qt.rgba(modelData.col.r, modelData.col.g, modelData.col.b, 0.15)
-                            : (selHov_.containsMouse ? Qt.rgba(1,1,1,0.04) : "transparent")
+                            : (selHov_.hovered ? Qt.rgba(1,1,1,0.04) : "transparent")
                         border.width: 1
                         border.color: isSelected
                             ? Qt.rgba(modelData.col.r, modelData.col.g, modelData.col.b, 0.5)
@@ -137,10 +138,10 @@ Dialog {
                             font.pixelSize: Style.fontMd
                             font.bold:      isSelected
                         }
-                        MouseArea {
-                            id: selHov_; anchors.fill: parent; hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.launchTargetValue = modelData.val
+                        HoverHandler { id: selHov_; cursorShape: Qt.PointingHandCursor }
+                        TapHandler {
+                            acceptedButtons: Qt.LeftButton
+                            onTapped: root.launchTargetValue = modelData.val
                         }
                     }
                 }

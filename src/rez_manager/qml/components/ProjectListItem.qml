@@ -18,7 +18,7 @@ Rectangle {
     radius: Style.radiusSm
     color:  selected
         ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.10)
-        : (ma_.containsMouse ? Qt.rgba(1,1,1,0.03) : "transparent")
+        : (hover_.hovered ? Qt.rgba(1,1,1,0.03) : "transparent")
 
     Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -86,11 +86,13 @@ Rectangle {
         }
     }
 
-    MouseArea {
-        id: ma_
-        anchors.fill: parent
-        hoverEnabled: true
+    HoverHandler {
+        id: hover_
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+    }
+
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+        onTapped: root.clicked()
     }
 }

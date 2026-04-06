@@ -73,7 +73,11 @@ ApplicationWindow {
 
         Menu {
             title: "File"
+            topPadding: Style.xs
+            bottomPadding: Style.xs
             background: Rectangle {
+                implicitWidth: 180
+                implicitHeight: 40
                 color: Style.elevated
                 radius: Style.radiusSm
                 border.width: 1
@@ -81,11 +85,16 @@ ApplicationWindow {
             }
             delegate: MenuItem {
                 id: menuItem_
+                implicitWidth: Math.max(180, implicitContentWidth + 32)
+                implicitHeight: 34
                 background: Rectangle {
+                    implicitWidth: menuItem_.implicitWidth
+                    implicitHeight: menuItem_.implicitHeight
                     color: menuItem_.highlighted ? Style.border : "transparent"
                 }
                 contentItem: Text {
                     leftPadding: 16
+                    rightPadding: 16
                     text: menuItem_.text
                     color: Style.textPrimary
                     font.pixelSize: Style.fontMd
@@ -105,7 +114,11 @@ ApplicationWindow {
 
         Menu {
             title: "Help"
+            topPadding: Style.xs
+            bottomPadding: Style.xs
             background: Rectangle {
+                implicitWidth: 180
+                implicitHeight: 40
                 color: Style.elevated
                 radius: Style.radiusSm
                 border.width: 1
@@ -113,11 +126,16 @@ ApplicationWindow {
             }
             delegate: MenuItem {
                 id: helpItem_
+                implicitWidth: Math.max(180, implicitContentWidth + 32)
+                implicitHeight: 34
                 background: Rectangle {
+                    implicitWidth: helpItem_.implicitWidth
+                    implicitHeight: helpItem_.implicitHeight
                     color: helpItem_.highlighted ? Style.border : "transparent"
                 }
                 contentItem: Text {
                     leftPadding: 16
+                    rightPadding: 16
                     text: helpItem_.text
                     color: Style.textPrimary
                     font.pixelSize: Style.fontMd
@@ -234,6 +252,9 @@ ApplicationWindow {
                     ScrollIndicator.vertical: ScrollIndicator {}
 
                     delegate: Item {
+                        required property int index
+                        required property string name
+                        required property color avatarColor
                         width: ListView.view.width
                         height: 44
 
@@ -243,11 +264,11 @@ ApplicationWindow {
                                 leftMargin: 6
                                 rightMargin: 6
                             }
-                            projectName: name
-                            avatarColor: model.avatarColor
-                            selected: root.selectedProjectIndex === index
-                            contextCount: contextModel.contextCountFor(name)
-                            onClicked: root.selectedProjectIndex = index
+                            projectName: parent.name
+                            avatarColor: parent.avatarColor
+                            selected: root.selectedProjectIndex === parent.index
+                            contextCount: contextModel.contextCountFor(parent.name)
+                            onClicked: root.selectedProjectIndex = parent.index
                         }
                     }
                 }
@@ -376,6 +397,7 @@ ApplicationWindow {
                                 model: contextModel.filteredContexts(root.selectedProject)
 
                                 ContextCard {
+                                    required property var modelData
                                     contextName: modelData.name
                                     projectName: modelData.project
                                     description: modelData.description

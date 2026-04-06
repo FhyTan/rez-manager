@@ -88,6 +88,7 @@ Window {
                 Repeater {
                     model: ["Tools", "Packages", "Environment"]
                     TabButton {
+                        id: tabButton_
                         text: modelData
                         width: implicitWidth + 32
                         background: Rectangle {
@@ -95,15 +96,15 @@ Window {
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 width: parent.width; height: 2
-                                color: parent.parent.checked ? Style.accent : "transparent"
+                                color: tabButton_.checked ? Style.accent : "transparent"
                                 Behavior on color { ColorAnimation { duration: 100 } }
                             }
                         }
                         contentItem: Text {
-                            text:            parent.text
-                            color:           parent.checked ? Style.accent : Style.textSecondary
+                            text:            tabButton_.text
+                            color:           tabButton_.checked ? Style.accent : Style.textSecondary
                             font.pixelSize:  Style.fontMd
-                            font.bold:       parent.checked
+                            font.bold:       tabButton_.checked
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment:   Text.AlignVCenter
                             Behavior on color { ColorAnimation { duration: 100 } }
@@ -169,7 +170,7 @@ Window {
                             Layout.fillWidth: true
                             height: 40
                             radius: Style.radiusSm
-                            color:  pkgHov_.containsMouse ? Style.card : "transparent"
+                            color:  pkgHov_.hovered ? Style.card : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
@@ -194,7 +195,7 @@ Window {
                                 }
                                 Item { Layout.fillWidth: true }
                             }
-                            MouseArea { id: pkgHov_; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                            HoverHandler { id: pkgHov_ }
                         }
                     }
                 }
@@ -214,7 +215,7 @@ Window {
                             Layout.fillWidth: true
                             height: 42
                             radius: Style.radiusSm
-                            color:  envHov_.containsMouse ? Style.card : "transparent"
+                            color:  envHov_.hovered ? Style.card : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
@@ -239,7 +240,7 @@ Window {
                                     elide:          Text.ElideRight
                                 }
                             }
-                            MouseArea { id: envHov_; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                            HoverHandler { id: envHov_ }
                         }
                     }
                 }
