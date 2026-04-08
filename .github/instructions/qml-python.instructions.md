@@ -18,10 +18,12 @@ Use these rules when creating or modifying QML in a Python + Qt Quick project.
 
 - Add a `qmldir` file for every reusable or imported QML directory.
 - Keep shared design tokens in `Style.qml` as a `pragma Singleton`; use `Style.xxx` directly and never instantiate it.
-- Prefer built-in Qt Quick Controls and Qt Quick Layouts before building custom controls from `Rectangle + Text`.
+- Prefer built-in Qt Quick Controls and Qt Quick Layouts before building custom controls.
+- When creating reusable styled controls, prefer deriving from `QtQuick.Templates` types and customizing their template parts before building a control from scratch.
 - Prefer application-wide theming through the active Qt Quick Controls style and `qtquickcontrols2.conf` before hardcoding colors into individual built-in controls.
 - If no style is explicitly required, default to the newest available `FluentWinUI3` and set a `FallbackStyle`.
 - If a built-in control needs small visual adjustments, local overrides are acceptable; if the same override pattern is repeated across many instances, create a custom style for that control instead of duplicating the override everywhere.
+- Keep control-local presentation and interaction logic in QML when styling template-based components; only fall back to a `Rectangle`-from-scratch component when the control has special behavior or structure that templates and built-in controls cannot express cleanly.
 - Prefer `ListView`/`Repeater` + delegate patterns for lists and cards.
 - Prefer bundled Qt resources (`qrc:/` or `:/`) over raw filesystem paths for QML, icons, and images.
 - Store `qtquickcontrols2.conf` in Qt resources and load it from there so the application can switch or initialize styles reliably at runtime.
@@ -32,6 +34,7 @@ Use these rules when creating or modifying QML in a Python + Qt Quick project.
 - In Qt 6 projects, prefer unversioned imports such as `import QtQuick` and `import QtQuick.Controls` so QML can use the latest available API by default.
 - Add an import version only when a dependency, deployment target, or feature constraint specifically requires it.
 - Always set both `Style` and `FallbackStyle` in `qtquickcontrols2.conf`; do not rely on implicit platform defaults.
+- When implementing a custom styled control, it is acceptable to inspect the user's local Qt installation under `qml\\QtQuick\\Controls\\...` to follow the built-in style patterns for `QtQuick.Templates` usage.
 
 ## Input and state
 

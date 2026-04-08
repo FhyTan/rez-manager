@@ -97,21 +97,17 @@ Rectangle {
     }
 
     // ── Context menu (right-click) ─────────────────────────────
-    Menu {
+    AppMenu {
         id: contextMenu_
-        MenuItem {
+        AppMenuItem {
             text: "Duplicate"
             onTriggered: root.duplicateRequested()
         }
-        MenuItem {
-            id: contextDelete_
-            contentItem: Text {
-                text: "Delete"
-                color: Style.error
-                font: contextDelete_.font
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-            }
+        AppMenuItem {
+            itemColor: Style.error
+            hoverColor: Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.16)
+            pressedColor: Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.22)
+            text: "Delete"
             onTriggered: root.deleteRequested()
         }
     }
