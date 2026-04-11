@@ -1,6 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import ".."
 import "../components"
 
@@ -9,12 +11,12 @@ Dialog {
     id: root
     title: "Edit Context"
     modal: true
-    width:  520
+    width: 520
     height: 520
 
-    property string contextNameValue:  "New Context"
-    property string projectValue:      "VFX Pipeline"
-    property string descriptionValue:  ""
+    property string contextNameValue: "New Context"
+    property string projectValue: "VFX Pipeline"
+    property string descriptionValue: ""
     property string launchTargetValue: "shell"
 
     padding: Style.xl
@@ -53,9 +55,7 @@ Dialog {
             TextArea {
                 Layout.fillWidth: true
                 implicitHeight: 88
-                text: root.descriptionValue.length > 0
-                    ? root.descriptionValue
-                    : "A short description of this context."
+                text: root.descriptionValue.length > 0 ? root.descriptionValue : "A short description of this context."
                 wrapMode: TextArea.WordWrap
             }
         }
@@ -68,36 +68,57 @@ Dialog {
                 spacing: Style.sm
                 Repeater {
                     model: [
-                        { label: "Shell",   val: "shell",   col: Style.colorShell   },
-                        { label: "Maya",    val: "maya",    col: Style.colorMaya    },
-                        { label: "Houdini", val: "houdini", col: Style.colorHoudini },
-                        { label: "Custom",  val: "custom",  col: Style.colorCustom  }
+                        {
+                            label: "Shell",
+                            val: "shell",
+                            col: Style.colorShell
+                        },
+                        {
+                            label: "Maya",
+                            val: "maya",
+                            col: Style.colorMaya
+                        },
+                        {
+                            label: "Houdini",
+                            val: "houdini",
+                            col: Style.colorHoudini
+                        },
+                        {
+                            label: "Custom",
+                            val: "custom",
+                            col: Style.colorCustom
+                        }
                     ]
                     delegate: Rectangle {
+                        id: launchOption_
                         required property var modelData
-                        height: 32; width: selLbl_.implicitWidth + 24
+                        height: 32
+                        width: selLbl_.implicitWidth + 24
                         radius: Style.radiusSm
-                        property bool isSelected: root.launchTargetValue === modelData.val
-                        color: isSelected
-                            ? Qt.rgba(modelData.col.r, modelData.col.g, modelData.col.b, 0.15)
-                            : (selHov_.hovered ? Qt.rgba(1,1,1,0.04) : "transparent")
+                        property bool isSelected: root.launchTargetValue === launchOption_.modelData.val
+                        color: launchOption_.isSelected ? Qt.rgba(launchOption_.modelData.col.r, launchOption_.modelData.col.g, launchOption_.modelData.col.b, 0.15) : (selHov_.hovered ? Qt.rgba(1, 1, 1, 0.04) : "transparent")
                         border.width: 1
-                        border.color: isSelected
-                            ? Qt.rgba(modelData.col.r, modelData.col.g, modelData.col.b, 0.5)
-                            : Style.border
-                        Behavior on color { ColorAnimation { duration: 80 } }
+                        border.color: launchOption_.isSelected ? Qt.rgba(launchOption_.modelData.col.r, launchOption_.modelData.col.g, launchOption_.modelData.col.b, 0.5) : Style.border
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 80
+                            }
+                        }
                         Text {
                             id: selLbl_
                             anchors.centerIn: parent
-                            text:           modelData.label
-                            color:          isSelected ? modelData.col : Style.textSecondary
+                            text: launchOption_.modelData.label
+                            color: launchOption_.isSelected ? launchOption_.modelData.col : Style.textSecondary
                             font.pixelSize: Style.fontMd
-                            font.bold:      isSelected
+                            font.bold: launchOption_.isSelected
                         }
-                        HoverHandler { id: selHov_; cursorShape: Qt.PointingHandCursor }
+                        HoverHandler {
+                            id: selHov_
+                            cursorShape: Qt.PointingHandCursor
+                        }
                         TapHandler {
                             acceptedButtons: Qt.LeftButton
-                            onTapped: root.launchTargetValue = modelData.val
+                            onTapped: root.launchTargetValue = launchOption_.modelData.val
                         }
                     }
                 }
@@ -122,31 +143,48 @@ Dialog {
             Layout.fillWidth: true
             RowLayout {
                 Rectangle {
-                    width: 64; height: 64; radius: Style.radiusSm
-                    color: Style.surface; border.width: 1; border.color: Style.border
-                    Text { anchors.centerIn: parent; text: "🖼"; font.pixelSize: 24 }
+                    width: 64
+                    height: 64
+                    radius: Style.radiusSm
+                    color: Style.surface
+                    border.width: 1
+                    border.color: Style.border
+                    Text {
+                        anchors.centerIn: parent
+                        text: "🖼"
+                        font.pixelSize: 24
+                    }
                 }
-                CardButton { label: "Choose Image…" }
-                CardButton { label: "Clear"; danger: true }
+                CardButton {
+                    label: "Choose Image…"
+                }
+                CardButton {
+                    label: "Clear"
+                    danger: true
+                }
             }
         }
     }
 
     // Inline helper components ────────────────────────────────
     component FormField: ColumnLayout {
+        id: formField_
         property string label: ""
         default property alias content: contentHolder_.data
         spacing: Style.xs
         Text {
-            text:           parent.label
-            color:          Style.textSecondary
+            text: formField_.label
+            color: Style.textSecondary
             font.pixelSize: Style.fontSm
         }
-        ColumnLayout { id: contentHolder_; spacing: 0 }
+        ColumnLayout {
+            id: contentHolder_
+            spacing: 0
+        }
     }
 
     component FieldInput: TextField {
-        property bool  monospace: false
+        property bool monospace: false
         implicitHeight: 36
         font.pixelSize: Style.fontMd
         font.family: monospace ? "Consolas, Courier New, monospace" : font.family

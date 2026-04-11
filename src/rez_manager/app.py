@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -13,11 +14,12 @@ import rez_manager.rc_resources  # noqa: F401
 
 
 def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]:
+    qml_dir = Path(__file__).parent / "qml"
+    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE_PATH", str(qml_dir))
+
     app = QGuiApplication(argv)
     app.setApplicationName("rez-manager")
     app.setApplicationVersion("0.1.0")
-
-    qml_dir = Path(__file__).parent / "qml"
 
     engine = QQmlApplicationEngine()
     engine.addImportPath(str(qml_dir))

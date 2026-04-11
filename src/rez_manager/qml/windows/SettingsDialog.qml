@@ -9,7 +9,7 @@ Dialog {
     id: root
     title: "Settings"
     modal: true
-    width:  620
+    width: 620
     height: 480
     padding: Style.xl
     standardButtons: Dialog.Save | Dialog.Cancel
@@ -28,14 +28,14 @@ Dialog {
                 spacing: Style.sm
 
                 Text {
-                    text:           "Package Repositories"
-                    color:          Style.textPrimary
+                    text: "Package Repositories"
+                    color: Style.textPrimary
                     font.pixelSize: Style.fontLg
-                    font.bold:      true
+                    font.bold: true
                 }
                 Text {
-                    text:           "Each folder is treated as a named package group."
-                    color:          Style.textSecondary
+                    text: "Each folder is treated as a named package group."
+                    color: Style.textSecondary
                     font.pixelSize: Style.fontMd
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
@@ -44,50 +44,66 @@ Dialog {
                 // Repo list
                 Rectangle {
                     Layout.fillWidth: true
-                    height:       repoCol_.implicitHeight + Style.md
-                    radius:       Style.radius
-                    color:        Style.surface
+                    height: repoCol_.implicitHeight + Style.md
+                    radius: Style.radius
+                    color: Style.surface
                     border.width: 1
                     border.color: Style.border
 
                     ColumnLayout {
                         id: repoCol_
-                        anchors { fill: parent; margins: Style.sm }
+                        anchors {
+                            fill: parent
+                            margins: Style.sm
+                        }
                         spacing: 2
 
                         Repeater {
-                            model: [
-                                "/packages/maya",
-                                "/packages/houdini",
-                                "/packages/base"
-                            ]
+                            model: ["/packages/maya", "/packages/houdini", "/packages/base"]
                             delegate: Rectangle {
+                                id: repoRow_
                                 required property string modelData
-                                required property int    index
+                                required property int index
                                 Layout.fillWidth: true
-                                height:       38
-                                radius:       Style.radiusSm
-                                color:        repoHover_.hovered ? Style.elevated : "transparent"
-                                Behavior on color { ColorAnimation { duration: 80 } }
+                                height: 38
+                                radius: Style.radiusSm
+                                color: repoHover_.hovered ? Style.elevated : "transparent"
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 80
+                                    }
+                                }
 
                                 RowLayout {
-                                    anchors { fill: parent; leftMargin: Style.md; rightMargin: Style.sm }
+                                    anchors {
+                                        fill: parent
+                                        leftMargin: Style.md
+                                        rightMargin: Style.sm
+                                    }
                                     spacing: Style.sm
                                     Rectangle {
-                                        width: 6; height: 6; radius: 3; color: Style.accent
+                                        width: 6
+                                        height: 6
+                                        radius: 3
+                                        color: Style.accent
                                         Layout.alignment: Qt.AlignVCenter
                                     }
                                     Text {
                                         Layout.fillWidth: true
-                                        text:           modelData
-                                        color:          Style.textPrimary
+                                        text: repoRow_.modelData
+                                        color: Style.textPrimary
                                         font.pixelSize: Style.fontMd
-                                        font.family:    "Consolas, Courier New, monospace"
-                                        elide:          Text.ElideLeft
+                                        font.family: "Consolas, Courier New, monospace"
+                                        elide: Text.ElideLeft
                                     }
-                                    CardButton { glyph: "✕"; danger: true }
+                                    CardButton {
+                                        glyph: "✕"
+                                        danger: true
+                                    }
                                 }
-                                HoverHandler { id: repoHover_ }
+                                HoverHandler {
+                                    id: repoHover_
+                                }
                             }
                         }
                     }
@@ -102,7 +118,11 @@ Dialog {
                         text: "/packages/new"
                         placeholderText: "Repository path"
                     }
-                    CardButton { glyph: "+"; label: "Add"; accent: true }
+                    CardButton {
+                        glyph: "+"
+                        label: "Add"
+                        accent: true
+                    }
                 }
             }
 
@@ -112,14 +132,14 @@ Dialog {
                 spacing: Style.sm
 
                 Text {
-                    text:           "Contexts Location"
-                    color:          Style.textPrimary
+                    text: "Contexts Location"
+                    color: Style.textPrimary
                     font.pixelSize: Style.fontLg
-                    font.bold:      true
+                    font.bold: true
                 }
                 Text {
-                    text:           "Root directory where project/context data is stored on disk."
-                    color:          Style.textSecondary
+                    text: "Root directory where project/context data is stored on disk."
+                    color: Style.textSecondary
                     font.pixelSize: Style.fontMd
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
@@ -131,7 +151,9 @@ Dialog {
                         Layout.fillWidth: true
                         text: "/home/user/rez-contexts"
                     }
-                    CardButton { label: "Browse…" }
+                    CardButton {
+                        label: "Browse…"
+                    }
                 }
             }
         }

@@ -68,7 +68,7 @@ T.Menu {
     }
 
     background: Rectangle {
-        implicitWidth: 176
+        implicitWidth: control.minimumWidth
         implicitHeight: 40
         radius: Style.radius
         color: Style.elevated

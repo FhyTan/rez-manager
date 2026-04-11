@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -31,7 +33,7 @@ Rectangle {
             return "??";
         if (words.length === 1)
             return words[0].slice(0, 2).toUpperCase();
-        return (words[0][0] + words[1][0]).toUpperCase();
+        return String(words[0]).charAt(0) + String(words[1]).charAt(0);
     }
 
     property var packageList: {
@@ -97,16 +99,13 @@ Rectangle {
     }
 
     // ── Context menu (right-click) ─────────────────────────────
-    AppMenu {
+    Menu {
         id: contextMenu_
-        AppMenuItem {
+        MenuItem {
             text: "Duplicate"
             onTriggered: root.duplicateRequested()
         }
-        AppMenuItem {
-            itemColor: Style.error
-            hoverColor: Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.16)
-            pressedColor: Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.22)
+        MenuItem {
             text: "Delete"
             onTriggered: root.deleteRequested()
         }
@@ -236,6 +235,8 @@ Rectangle {
                         model: root.packageList
 
                         Rectangle {
+                            id: chipContainer_
+                            required property string modelData
                             height: 22
                             width: chip_.implicitWidth + 12
                             radius: 11
@@ -247,7 +248,7 @@ Rectangle {
                             Text {
                                 id: chip_
                                 anchors.centerIn: parent
-                                text: modelData
+                                text: chipContainer_.modelData
                                 color: Style.textSecondary
                                 font.pixelSize: Style.fontXs
                                 font.family: "Consolas, Courier New, monospace"

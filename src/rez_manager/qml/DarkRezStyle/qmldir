@@ -1,0 +1,10 @@
+module DarkRezStyle
+Button 2.15 Button.qml
+ComboBox 2.15 ComboBox.qml
+Dialog 2.15 Dialog.qml
+Menu 2.15 Menu.qml
+MenuItem 2.15 MenuItem.qml
+MenuSeparator 2.15 MenuSeparator.qml
+TextArea 2.15 TextArea.qml
+TextField 2.15 TextField.qml
+import QtQuick.Controls.Fusion auto
