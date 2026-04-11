@@ -4,4 +4,7 @@ AppMenu 1.0 AppMenu.qml
 AppMenuItem 1.0 AppMenuItem.qml
 CardButton 1.0 CardButton.qml
 ContextCard 1.0 ContextCard.qml
+PackageDetailPanel 1.0 PackageDetailPanel.qml
+PackageRepositoryPanel 1.0 PackageRepositoryPanel.qml
 ProjectListItem 1.0 ProjectListItem.qml
+RequiredPackagesPanel 1.0 RequiredPackagesPanel.qml
