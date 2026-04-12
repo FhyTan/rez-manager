@@ -12,7 +12,7 @@ Dialog {
     title: "Edit Context"
     modal: true
     width: 520
-    height: 520
+    height: Math.max(520, implicitHeight)
 
     property string contextNameValue: "New Context"
     property string projectValue: "VFX Pipeline"
@@ -118,6 +118,7 @@ Dialog {
                         }
                         TapHandler {
                             acceptedButtons: Qt.LeftButton
+                            gesturePolicy: TapHandler.WithinBounds
                             onTapped: root.launchTargetValue = launchOption_.modelData.val
                         }
                     }

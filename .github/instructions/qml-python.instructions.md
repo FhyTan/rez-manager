@@ -58,6 +58,7 @@ Use these rules when creating or modifying QML in a Python + Qt Quick project.
 - Prefer declarative bindings over `Component.onCompleted` assignments and other imperative property setup.
 - Prefer concrete property types over `var` when the type is known.
 - Avoid unqualified access and fragile `parent.xxx` references in custom delegates; give items explicit IDs when needed.
+- Avoid nested conditional expressions for visual state styling; prefer explicit `states` + `PropertyChanges` state machines so control states stay easy to inspect and revise.
 - Keep inline JavaScript small and view-local. If logic becomes stateful, reusable, or data-oriented, move it to Python.
 - If using Qt Design Studio, keep `.ui.qml` files visual-only and move unsupported logic into plain `.qml` files.
 - If customizing controls, base them on a non-native customizable style such as `Basic` or `Fusion`, not a native platform style.

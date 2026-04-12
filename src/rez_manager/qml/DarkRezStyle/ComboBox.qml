@@ -8,6 +8,10 @@ import ".."
 T.ComboBox {
     id: control
 
+    readonly property color delegateHoverColor: Qt.tint(Style.elevated, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.22))
+    readonly property color delegatePressedColor: Qt.tint(Style.elevated, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.30))
+    readonly property color hoverBackgroundColor: Qt.lighter(Style.card, 1.08)
+
     implicitWidth: Math.max(148, implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(38, implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
 
@@ -23,7 +27,6 @@ T.ComboBox {
         required property int index
         required property var modelData
         readonly property string textValue: control.textRole.length > 0 && typeof comboDelegate_.modelData === "object" ? comboDelegate_.modelData[control.textRole] : comboDelegate_.modelData
-        readonly property color fillColor: comboDelegate_.down ? Style.accentFillPressed : Style.accentFillHover
 
         width: ListView.view ? ListView.view.width : control.width
         height: 36
@@ -34,17 +37,19 @@ T.ComboBox {
         bottomPadding: Style.sm
 
         contentItem: Text {
+            id: delegateLabel_
             text: comboDelegate_.textValue
-            color: comboDelegate_.down || comboDelegate_.hovered || comboDelegate_.highlighted ? Style.white : Style.textPrimary
+            color: Style.textPrimary
             font.pixelSize: Style.fontMd
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
         }
 
         background: Rectangle {
+            id: delegateBackground_
             radius: Style.radiusSm
-            color: comboDelegate_.fillColor
-            opacity: comboDelegate_.down || comboDelegate_.hovered || comboDelegate_.highlighted ? 1.0 : 0.0
+            color: control.delegateHoverColor
+            opacity: 0.0
 
             Behavior on opacity {
                 NumberAnimation {
@@ -52,6 +57,39 @@ T.ComboBox {
                 }
             }
         }
+
+        states: [
+            State {
+                name: "pressed"
+                when: comboDelegate_.down
+
+                PropertyChanges {
+                    target: delegateLabel_
+                    color: Style.white
+                }
+
+                PropertyChanges {
+                    target: delegateBackground_
+                    color: control.delegatePressedColor
+                    opacity: 1.0
+                }
+            },
+            State {
+                name: "hover"
+                when: comboDelegate_.hovered || comboDelegate_.highlighted
+
+                PropertyChanges {
+                    target: delegateLabel_
+                    color: Style.white
+                }
+
+                PropertyChanges {
+                    target: delegateBackground_
+                    color: control.delegateHoverColor
+                    opacity: 1.0
+                }
+            }
+        ]
 
         onClicked: {
             control.currentIndex = index;
@@ -61,30 +99,33 @@ T.ComboBox {
     }
 
     indicator: Text {
+        id: indicator_
         x: control.width - width - Style.md
         y: (control.height - height) / 2
         text: "▾"
-        color: control.popup.visible ? Style.textPrimary : control.enabled ? Style.textSecondary : Style.textDisabled
+        color: Style.textSecondary
         font.pixelSize: Style.fontLg
     }
 
     contentItem: Text {
+        id: displayText_
         leftPadding: 0
         rightPadding: 0
         text: control.displayText
         font.pixelSize: Style.fontMd
-        color: control.enabled ? Style.textPrimary : Style.textDisabled
+        color: Style.textPrimary
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
 
     background: Rectangle {
+        id: background_
         implicitWidth: 148
         implicitHeight: 38
         radius: Style.radiusSm
-        color: control.down || control.popup.visible ? Style.elevated : control.hovered ? Style.controlHover : Style.card
+        color: Style.card
         border.width: 1
-        border.color: control.visualFocus || control.popup.visible ? Style.accentHover : control.hovered ? Style.borderBright : Style.border
+        border.color: Style.border
 
         Behavior on color {
             ColorAnimation {
@@ -98,6 +139,109 @@ T.ComboBox {
             }
         }
     }
+
+    states: [
+        State {
+            name: "disabled"
+            when: !control.enabled
+
+            PropertyChanges {
+                target: displayText_
+                color: Style.textDisabled
+            }
+
+            PropertyChanges {
+                target: indicator_
+                color: Style.textDisabled
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.card
+                border.color: Style.border
+            }
+        },
+        State {
+            name: "popupOpen"
+            when: control.popup.visible
+
+            PropertyChanges {
+                target: displayText_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: indicator_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.elevated
+                border.color: Style.accentHover
+            }
+        },
+        State {
+            name: "pressed"
+            when: control.enabled && control.down
+
+            PropertyChanges {
+                target: displayText_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: indicator_
+                color: Style.textSecondary
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.elevated
+                border.color: Style.borderBright
+            }
+        },
+        State {
+            name: "focus"
+            when: control.enabled && control.visualFocus
+
+            PropertyChanges {
+                target: displayText_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: indicator_
+                color: Style.textSecondary
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.card
+                border.color: Style.accentHover
+            }
+        },
+        State {
+            name: "hover"
+            when: control.enabled && control.hovered
+
+            PropertyChanges {
+                target: displayText_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: indicator_
+                color: Style.textSecondary
+            }
+
+            PropertyChanges {
+                target: background_
+                color: control.hoverBackgroundColor
+                border.color: Style.borderBright
+            }
+        }
+    ]
 
     popup: Popup {
         y: control.height + Style.xs

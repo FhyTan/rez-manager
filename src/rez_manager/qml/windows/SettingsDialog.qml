@@ -1,6 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import ".."
 import "../components"
 
@@ -10,7 +12,7 @@ Dialog {
     title: "Settings"
     modal: true
     width: 620
-    height: 480
+    height: Math.max(480, implicitHeight)
     padding: Style.xl
     standardButtons: Dialog.Save | Dialog.Cancel
     onAccepted: root.close()

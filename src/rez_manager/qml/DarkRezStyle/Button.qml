@@ -7,6 +7,10 @@ T.Button {
     id: control
 
     readonly property bool accentButton: control.highlighted
+    readonly property color accentPressedColor: Qt.darker(Style.accent, 1.16)
+    readonly property color accentBorderColor: Qt.tint(Style.border, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.55))
+    readonly property color neutralHoverColor: Qt.lighter(Style.card, 1.08)
+    readonly property color neutralPressedColor: Qt.lighter(Style.card, 1.14)
 
     implicitWidth: Math.max(92, implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(36, implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
@@ -19,8 +23,9 @@ T.Button {
     bottomPadding: Style.sm
 
     contentItem: Text {
+        id: label_
         text: control.text
-        color: control.accentButton ? Style.white : control.enabled ? Style.textPrimary : Style.textDisabled
+        color: Style.textPrimary
         font.pixelSize: Style.fontMd
         font.weight: Font.DemiBold
         horizontalAlignment: Text.AlignHCenter
@@ -29,12 +34,13 @@ T.Button {
     }
 
     background: Rectangle {
+        id: background_
         implicitWidth: 92
         implicitHeight: 36
         radius: Style.radiusSm
-        color: control.accentButton ? control.down ? Qt.darker(Style.accent, 1.16) : control.hovered ? Style.accentHover : Style.accent : control.down ? Style.controlPressed : control.hovered ? Style.controlHover : Style.card
+        color: Style.card
         border.width: 1
-        border.color: control.accentButton ? Style.borderAccent : control.visualFocus ? Style.accentHover : control.hovered ? Style.borderBright : Style.border
+        border.color: Style.border
 
         Behavior on color {
             ColorAnimation {
@@ -48,4 +54,97 @@ T.Button {
             }
         }
     }
+
+    states: [
+        State {
+            name: "disabled"
+            when: !control.enabled
+
+            PropertyChanges {
+                target: label_
+                color: Style.textDisabled
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.card
+                border.color: Style.border
+            }
+        },
+        State {
+            name: "accentPressed"
+            when: control.enabled && control.accentButton && control.down
+
+            PropertyChanges {
+                target: label_
+                color: Style.white
+            }
+
+            PropertyChanges {
+                target: background_
+                color: control.accentPressedColor
+                border.color: control.accentBorderColor
+            }
+        },
+        State {
+            name: "accentHover"
+            when: control.enabled && control.accentButton && control.hovered
+
+            PropertyChanges {
+                target: label_
+                color: Style.white
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.accentHover
+                border.color: control.accentBorderColor
+            }
+        },
+        State {
+            name: "accent"
+            when: control.enabled && control.accentButton
+
+            PropertyChanges {
+                target: label_
+                color: Style.white
+            }
+
+            PropertyChanges {
+                target: background_
+                color: Style.accent
+                border.color: control.accentBorderColor
+            }
+        },
+        State {
+            name: "pressed"
+            when: control.enabled && control.down
+
+            PropertyChanges {
+                target: label_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: background_
+                color: control.neutralPressedColor
+                border.color: Style.borderBright
+            }
+        },
+        State {
+            name: "hover"
+            when: control.enabled && control.hovered
+
+            PropertyChanges {
+                target: label_
+                color: Style.textPrimary
+            }
+
+            PropertyChanges {
+                target: background_
+                color: control.neutralHoverColor
+                border.color: Style.borderBright
+            }
+        }
+    ]
 }

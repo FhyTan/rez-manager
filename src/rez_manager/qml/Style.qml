@@ -27,13 +27,6 @@ QtObject {
     // ── Borders ──────────────────────────────────────────────
     readonly property color border: "#1E1E32"
     readonly property color borderBright: "#2A2A44"
-    readonly property color borderAccent: blendColors(border, accent, 0.55)
-
-    // ── Interactive states ───────────────────────────────────
-    readonly property color controlHover: blendColors(card, white, 0.10)
-    readonly property color controlPressed: blendColors(card, white, 0.14)
-    readonly property color accentFillHover: blendColors(elevated, accent, 0.34)
-    readonly property color accentFillPressed: blendColors(elevated, accent, 0.42)
 
     // ── Semantic ─────────────────────────────────────────────
     readonly property color success: "#4DB880"
@@ -67,16 +60,6 @@ QtObject {
     readonly property int fontLg: 15
     readonly property int fontXl: 18
     readonly property int fontXxl: 22
-
-    // ── Helpers ──────────────────────────────────────────────
-    function withAlpha(baseColor, alpha) {
-        return Qt.rgba(baseColor.r, baseColor.g, baseColor.b, alpha);
-    }
-
-    function blendColors(baseColor, overlayColor, amount) {
-        var inverse = 1.0 - amount;
-        return Qt.rgba(baseColor.r * inverse + overlayColor.r * amount, baseColor.g * inverse + overlayColor.g * amount, baseColor.b * inverse + overlayColor.b * amount, 1.0);
-    }
 
     function launchColor(target) {
         if (target === "maya")
