@@ -10,6 +10,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
+import rez_manager.exception_hook  # noqa: F401
 import rez_manager.rc_resources  # noqa: F401
 import rez_manager.ui  # noqa: F401
 

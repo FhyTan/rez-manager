@@ -96,8 +96,8 @@ class _BaseListModel(QAbstractListModel):
 
 @QmlElement
 class ProjectListModel(_BaseListModel):
-    NameRole = Qt.UserRole + 1
-    AvatarColorRole = Qt.UserRole + 2
+    NameRole = Qt.ItemDataRole.UserRole + 1
+    AvatarColorRole = Qt.ItemDataRole.UserRole + 2
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -109,7 +109,7 @@ class ProjectListModel(_BaseListModel):
             self.AvatarColorRole: QByteArray(b"avatarColor"),
         }
 
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole):  # noqa: ANN201
         if not index.isValid() or index.row() < 0 or index.row() >= len(self._items):
             return None
         project = self._items[index.row()]
@@ -135,7 +135,7 @@ class ProjectListModel(_BaseListModel):
             "avatarColor": _project_color(project.name),
         }
 
-    @Property("QVariantList", notify=_BaseListModel.countChanged)
+    @Property("QVariantList", notify="countChanged")
     def projectNames(self) -> list[str]:
         return [project.name for project in self._items]
 

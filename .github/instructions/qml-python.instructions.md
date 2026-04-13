@@ -57,6 +57,8 @@ Use these rules when creating or modifying QML in a Python + Qt Quick project.
 
 - Prefer declarative bindings over `Component.onCompleted` assignments and other imperative property setup.
 - Prefer concrete property types over `var` when the type is known.
+- In PySide6 `@Property(...)`, when a subclass property reuses a notify signal declared on a base class,
+  reference it by name string such as `notify="countChanged"` rather than `notify=BaseClass.countChanged`.
 - Avoid unqualified access and fragile `parent.xxx` references in custom delegates; give items explicit IDs when needed.
 - Avoid nested conditional expressions for visual state styling; prefer explicit `states` + `PropertyChanges` state machines so control states stay easy to inspect and revise.
 - Keep inline JavaScript small and view-local. If logic becomes stateful, reusable, or data-oriented, move it to Python.

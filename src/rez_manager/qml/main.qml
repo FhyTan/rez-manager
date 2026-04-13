@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import RezManager 1.0
+import RezManager
 import "components"
 import "windows"
 
@@ -31,17 +31,8 @@ ApplicationWindow {
         id: editorDlg
         anchors.centerIn: root.contentItem
         projectOptions: projectModel.projectNames
-        onSaveRequested: function(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages) {
-            const saved = contextModel.saveContext(
-                originalProjectName,
-                originalContextName,
-                projectName,
-                contextName,
-                description,
-                launchTarget,
-                customCommand,
-                packages
-            );
+        onSaveRequested: function (originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages) {
+            const saved = contextModel.saveContext(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages);
             if (saved) {
                 editorDlg.close();
                 root.selectProjectByName(projectName);
@@ -54,7 +45,7 @@ ApplicationWindow {
     ProjectNameDialog {
         id: projectNameDlg
         anchors.centerIn: root.contentItem
-        onSubmitted: function(projectName) {
+        onSubmitted: function (projectName) {
             let success = false;
             if (root.projectDialogMode === "create")
                 success = projectModel.createProject(projectName);
@@ -77,13 +68,8 @@ ApplicationWindow {
         id: contextDuplicateDlg
         anchors.centerIn: root.contentItem
         projectOptions: projectModel.projectNames
-        onSubmitted: function(projectName, contextName) {
-            const duplicated = contextModel.duplicateContext(
-                root.duplicateSourceProjectName,
-                root.duplicateSourceContextName,
-                projectName,
-                contextName
-            );
+        onSubmitted: function (projectName, contextName) {
+            const duplicated = contextModel.duplicateContext(root.duplicateSourceProjectName, root.duplicateSourceContextName, projectName, contextName);
             if (duplicated) {
                 contextDuplicateDlg.close();
                 root.selectProjectByName(projectName);
@@ -107,13 +93,7 @@ ApplicationWindow {
                 }
             } else if (root.pendingDeleteKind === "context") {
                 if (contextModel.deleteContext(root.pendingDeleteProjectName, root.pendingDeleteContextName)) {
-                    root.showStatus(
-                        "Deleted context: "
-                            + root.pendingDeleteProjectName
-                            + " / "
-                            + root.pendingDeleteContextName,
-                        false
-                    );
+                    root.showStatus("Deleted context: " + root.pendingDeleteProjectName + " / " + root.pendingDeleteContextName, false);
                 } else {
                     root.showStatus(contextModel.lastError, true);
                 }
@@ -556,10 +536,7 @@ ApplicationWindow {
                                         previewWin.show();
                                     }
                                     onLaunchRequested: {
-                                        statusToast_.show(
-                                            "Launching: " + modelData.project + " / " + modelData.name,
-                                            Style.success
-                                        );
+                                        statusToast_.show("Launching: " + modelData.project + " / " + modelData.name, Style.success);
                                     }
                                     onDuplicateRequested: root.openDuplicateContextDialog(modelData)
                                     onDeleteRequested: root.confirmDeleteContext(modelData.project, modelData.name)
