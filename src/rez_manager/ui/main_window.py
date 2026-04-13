@@ -16,19 +16,8 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QColor
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.storage import (
-    create_project,
-    delete_context,
-    delete_project,
-    duplicate_context,
-    duplicate_project,
-    list_contexts,
-    list_projects,
-    load_settings,
-    rename_project,
-    save_context,
-)
-from rez_manager.models.rez_context import ContextInfo, ContextMeta, LaunchTarget
+from rez_manager.models.project import Project
+from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -121,8 +110,7 @@ class ProjectListModel(_BaseListModel):
 
     @Slot()
     def reload(self) -> None:
-        settings = load_settings()
-        self._reset_items(list_projects(settings))
+        self._reset_items(Project.all())
         self._clear_error()
 
     @Slot(int, result="QVariantMap")
@@ -149,7 +137,7 @@ class ProjectListModel(_BaseListModel):
     @Slot(str, result=bool)
     def createProject(self, name: str) -> bool:  # noqa: N802
         try:
-            create_project(load_settings(), name)
+            Project.create(name)
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False
@@ -159,7 +147,7 @@ class ProjectListModel(_BaseListModel):
     @Slot(str, str, result=bool)
     def renameProject(self, current_name: str, new_name: str) -> bool:  # noqa: N802
         try:
-            rename_project(load_settings(), current_name, new_name)
+            Project.load(current_name).rename(new_name)
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False
@@ -169,7 +157,7 @@ class ProjectListModel(_BaseListModel):
     @Slot(str, str, result=bool)
     def duplicateProject(self, source_name: str, target_name: str) -> bool:  # noqa: N802
         try:
-            duplicate_project(load_settings(), source_name, target_name)
+            Project.load(source_name).duplicate(target_name)
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False
@@ -179,7 +167,7 @@ class ProjectListModel(_BaseListModel):
     @Slot(str, result=bool)
     def deleteProject(self, name: str) -> bool:  # noqa: N802
         try:
-            delete_project(load_settings(), name)
+            Project.load(name).delete()
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False
@@ -228,8 +216,7 @@ class RezContextListModel(_BaseListModel):
 
     @Slot()
     def reload(self) -> None:
-        settings = load_settings()
-        self._reset_items(list_contexts(settings))
+        self._reset_items(RezContext.all())
         self._clear_error()
 
     @Slot(int, result="QVariantMap")
@@ -250,7 +237,7 @@ class RezContextListModel(_BaseListModel):
     def contextCountFor(self, project_name: str) -> int:  # noqa: N802
         return sum(1 for context in self._items if context.project_name == project_name)
 
-    def _context_payload(self, context: ContextInfo) -> dict[str, object]:
+    def _context_payload(self, context: RezContext) -> dict[str, object]:
         return {
             "project": context.project_name,
             "name": context.name,
@@ -274,6 +261,11 @@ class RezContextListModel(_BaseListModel):
         packages: list[str],
     ) -> bool:
         try:
+            if bool(original_project_name) != bool(original_context_name):
+                raise ValueError(
+                    "Original project and context names must both be provided "
+                    "when editing a context"
+                )
             meta = ContextMeta(
                 name=name,
                 description=description.strip(),
@@ -281,13 +273,13 @@ class RezContextListModel(_BaseListModel):
                 custom_command=custom_command.strip() or None,
                 packages=[str(package) for package in packages],
             )
-            save_context(
-                load_settings(),
-                project_name,
-                meta,
-                original_project_name=original_project_name or None,
-                original_context_name=original_context_name or None,
-            )
+            if original_project_name and original_context_name:
+                RezContext.load(
+                    original_project_name,
+                    original_context_name,
+                ).update(project_name, meta)
+            else:
+                RezContext.create(project_name, meta)
         except (OSError, TypeError, ValueError) as exc:
             self._set_error(str(exc))
             return False
@@ -303,10 +295,7 @@ class RezContextListModel(_BaseListModel):
         target_context_name: str,
     ) -> bool:
         try:
-            duplicate_context(
-                load_settings(),
-                source_project_name,
-                source_context_name,
+            RezContext.load(source_project_name, source_context_name).duplicate(
                 target_project_name,
                 target_context_name,
             )
@@ -319,7 +308,7 @@ class RezContextListModel(_BaseListModel):
     @Slot(str, str, result=bool)
     def deleteContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
         try:
-            delete_context(load_settings(), project_name, context_name)
+            RezContext.load(project_name, context_name).delete()
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False

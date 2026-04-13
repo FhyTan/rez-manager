@@ -4,6 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from os import PathLike
+from pathlib import Path
+
+
+def _settings_store():
+    from rez_manager.persistence import settings_store
+
+    return settings_store
 
 
 @dataclass
@@ -20,6 +27,21 @@ class AppSettings:
             "package_repositories": list(self.package_repositories),
             "contexts_location": self.contexts_location,
         }
+
+    @property
+    def contexts_root(self) -> Path:
+        return Path(self.contexts_location)
+
+    @classmethod
+    def default(cls) -> AppSettings:
+        return _settings_store().default_settings()
+
+    @classmethod
+    def load(cls) -> AppSettings:
+        return _settings_store().load_settings()
+
+    def save(self) -> Path:
+        return _settings_store().save_settings(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> AppSettings:

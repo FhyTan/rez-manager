@@ -157,11 +157,15 @@ src/rez_manager/
 ├── app.py               # QApplication subclass; registers QML types
 ├── adapter/             # Thin wrapper around Rez and filesystem adapters
 │   ├── context.py       # ResolvedContext creation, serialization, preview
-│   ├── packages.py      # Repository discovery, package search/query
-│   └── storage.py       # Settings/project/context filesystem persistence
+│   └── packages.py      # Repository discovery, package search/query
+├── persistence/         # Generic filesystem persistence and path helpers
+│   ├── app_paths.py     # Config/data path resolution
+│   ├── settings_store.py
+│   ├── project_store.py
+│   └── context_store.py
 ├── models/              # Plain Python data models (dataclasses / Pydantic)
 │   ├── project.py       # Project dataclass
-│   └── rez_context.py   # ContextMeta, ContextInfo dataclasses
+│   └── rez_context.py   # ContextMeta, RezContext dataclasses
 ├── ui/                  # PySide6 QObject subclasses exposed to QML
 │   ├── main_window.py   # MainWindowController
 │   ├── settings_window.py
@@ -179,8 +183,10 @@ src/rez_manager/
 
 1. **adapter/** must be the only layer that imports from `rez.*`.
 2. **models/** must not import from `rez.*` or PySide6.
-3. **ui/** imports models and adapter; exposes `@Property`, `@Slot`, `Signal` to QML.
-4. **qml/** only communicates with **ui/** through registered QML types and signals.
+3. **persistence/** owns generic filesystem/path persistence and must not import from `rez.*` or PySide6.
+4. **ui/** exposes `@Property`, `@Slot`, `Signal` to QML and should prefer the model API over
+   low-level persistence helpers.
+5. **qml/** only communicates with **ui/** through registered QML types and signals.
 
 ---
 

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from rez_manager.models.project import Project
+from rez_manager.models.rez_context import RezContext
+
 
 def test_context_meta_roundtrip():
     from rez_manager.models.rez_context import ContextMeta, LaunchTarget
@@ -75,13 +78,10 @@ def test_context_meta_rejects_invalid_package_types():
 
 
 def test_storage_discovers_projects_and_contexts(tmp_path, monkeypatch):
-    from rez_manager.adapter.storage import (
-        list_contexts,
-        list_projects,
-        load_settings,
-        save_settings,
-    )
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.context_store import list_contexts
+    from rez_manager.persistence.project_store import list_projects
+    from rez_manager.persistence.settings_store import load_settings, save_settings
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     contexts_root = tmp_path / "contexts"
@@ -119,7 +119,7 @@ def test_storage_discovers_projects_and_contexts(tmp_path, monkeypatch):
 
 
 def test_load_settings_falls_back_to_default_on_invalid_json(tmp_path, monkeypatch):
-    from rez_manager.adapter.storage import load_settings
+    from rez_manager.persistence.settings_store import load_settings
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     (tmp_path / "settings.json").write_text("{invalid json", encoding="utf-8")
@@ -132,23 +132,23 @@ def test_load_settings_falls_back_to_default_on_invalid_json(tmp_path, monkeypat
 
 
 def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
-    from rez_manager.adapter import storage
+    from rez_manager.persistence import app_paths, settings_store
 
     config_root = tmp_path / "config-root"
     data_root = tmp_path / "data-root"
     monkeypatch.delenv("REZ_MANAGER_HOME", raising=False)
-    monkeypatch.setattr(storage, "user_config_path", lambda *args, **kwargs: config_root)
-    monkeypatch.setattr(storage, "user_data_path", lambda *args, **kwargs: data_root)
+    monkeypatch.setattr(app_paths, "user_config_path", lambda *args, **kwargs: config_root)
+    monkeypatch.setattr(app_paths, "user_data_path", lambda *args, **kwargs: data_root)
 
-    assert storage.app_config_dir() == config_root
-    assert storage.app_data_dir() == data_root
-    assert storage.settings_file_path() == config_root / "settings.json"
-    assert storage.default_settings().contexts_location == str(data_root / "contexts")
+    assert app_paths.app_config_dir() == config_root
+    assert app_paths.app_data_dir() == data_root
+    assert app_paths.settings_file_path() == config_root / "settings.json"
+    assert settings_store.default_settings().contexts_location == str(data_root / "contexts")
 
 
 def test_list_contexts_skips_invalid_metadata(tmp_path):
-    from rez_manager.adapter.storage import list_contexts
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.context_store import list_contexts
 
     contexts_root = tmp_path / "contexts"
     valid_context_dir = contexts_root / "Pipeline" / "Valid Context"
@@ -187,8 +187,8 @@ def test_list_contexts_skips_invalid_metadata(tmp_path):
 
 
 def test_list_projects_ignores_file_contexts_location(tmp_path):
-    from rez_manager.adapter.storage import list_projects
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.project_store import list_projects
 
     file_path = tmp_path / "not-a-directory.txt"
     file_path.write_text("x", encoding="utf-8")
@@ -197,8 +197,8 @@ def test_list_projects_ignores_file_contexts_location(tmp_path):
 
 
 def test_project_list_model_project_names_refresh_on_reload(tmp_path, monkeypatch):
-    from rez_manager.adapter.storage import save_settings
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
     from rez_manager.ui.main_window import ProjectListModel
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
@@ -231,8 +231,8 @@ def test_project_list_model_project_names_refresh_on_reload(tmp_path, monkeypatc
 
 
 def test_context_list_model_refresh_updates_revision_and_counts(tmp_path, monkeypatch):
-    from rez_manager.adapter.storage import save_settings
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
     from rez_manager.ui.main_window import RezContextListModel
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
@@ -265,68 +265,66 @@ def test_context_list_model_refresh_updates_revision_and_counts(tmp_path, monkey
     assert len(model.filteredContexts("Pipeline")) == 1
 
 
-def test_storage_project_crud_roundtrip(tmp_path):
-    from rez_manager.adapter.storage import (
-        create_project,
-        delete_project,
-        duplicate_project,
-        list_projects,
-        rename_project,
-    )
+def test_storage_project_crud_roundtrip(tmp_path, monkeypatch):
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.project_store import list_projects
+    from rez_manager.persistence.settings_store import save_settings
 
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    save_settings(settings)
 
-    created = create_project(settings, "Pipeline")
-    renamed = rename_project(settings, "Pipeline", "Pipeline Renamed")
-    duplicated = duplicate_project(settings, "Pipeline Renamed", "Pipeline Copy")
+    created = Project.create("Pipeline")
+    renamed = Project.load("Pipeline").rename("Pipeline Renamed")
+    duplicated = Project.load("Pipeline Renamed").duplicate("Pipeline Copy")
 
     assert created.name == "Pipeline"
     assert renamed.name == "Pipeline Renamed"
     assert duplicated.name == "Pipeline Copy"
-    assert [project.name for project in list_projects(settings)] == [
+    assert [project.name for project in list_projects()] == [
         "Pipeline Copy",
         "Pipeline Renamed",
     ]
 
-    delete_project(settings, "Pipeline Copy")
+    Project.load("Pipeline Copy").delete()
 
-    assert [project.name for project in list_projects(settings)] == ["Pipeline Renamed"]
+    assert [project.name for project in list_projects()] == ["Pipeline Renamed"]
 
 
-def test_storage_project_rename_updates_case_only_names_on_windows(tmp_path):
-    from rez_manager.adapter.storage import create_project, rename_project
+def test_storage_project_rename_updates_case_only_names_on_windows(tmp_path, monkeypatch):
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
 
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
-    create_project(settings, "Pipeline")
+    save_settings(settings)
+    Project.create("Pipeline")
 
-    renamed = rename_project(settings, "Pipeline", "pipeline")
+    renamed = Project.load("Pipeline").rename("pipeline")
 
     assert renamed.name == "pipeline"
     assert [path.name for path in (tmp_path / "contexts").iterdir()] == ["pipeline"]
 
 
-def test_storage_context_crud_roundtrip(tmp_path):
-    from rez_manager.adapter.storage import (
+def test_storage_context_crud_roundtrip(tmp_path, monkeypatch):
+    from rez_manager.models.project import Project
+    from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.context_store import list_contexts
+    from rez_manager.persistence.filesystem import (
         CONTEXT_FILE_NAME,
         META_FILE_NAME,
         THUMBNAIL_FILE_NAME,
-        create_project,
-        delete_context,
-        duplicate_context,
-        list_contexts,
-        save_context,
     )
-    from rez_manager.models.rez_context import ContextMeta, LaunchTarget
-    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
 
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
-    create_project(settings, "Pipeline")
-    create_project(settings, "Shots")
+    save_settings(settings)
+    Project.create("Pipeline")
+    Project.create("Shots")
 
-    created = save_context(
-        settings,
+    created = RezContext.create(
         "Pipeline",
         ContextMeta(
             name="Base",
@@ -339,8 +337,7 @@ def test_storage_context_crud_roundtrip(tmp_path):
     (source_context_dir / CONTEXT_FILE_NAME).write_text("resolved", encoding="utf-8")
     (source_context_dir / THUMBNAIL_FILE_NAME).write_bytes(b"png")
 
-    edited = save_context(
-        settings,
+    edited = RezContext.load("Pipeline", "Base").update(
         "Shots",
         ContextMeta(
             name="Shot Base",
@@ -348,12 +345,10 @@ def test_storage_context_crud_roundtrip(tmp_path):
             launch_target=LaunchTarget.CUSTOM,
             custom_command="nuke -x %f",
             packages=["python-3.11"],
-        ),
-        original_project_name="Pipeline",
-        original_context_name="Base",
+        )
     )
 
-    duplicated = duplicate_context(settings, "Shots", "Shot Base", "Pipeline", "Shot Base Copy")
+    duplicated = RezContext.load("Shots", "Shot Base").duplicate("Pipeline", "Shot Base Copy")
 
     assert created.project_name == "Pipeline"
     assert edited.project_name == "Shots"
@@ -366,79 +361,83 @@ def test_storage_context_crud_roundtrip(tmp_path):
         tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / META_FILE_NAME
     ).read_text(encoding="utf-8").find('"name": "Shot Base Copy"') >= 0
 
-    delete_context(settings, "Pipeline", "Shot Base Copy")
+    RezContext.load("Pipeline", "Shot Base Copy").delete()
 
-    contexts = list_contexts(settings)
+    contexts = list_contexts()
     assert sorted((context.project_name, context.name) for context in contexts) == [
         ("Shots", "Shot Base"),
     ]
 
 
-def test_storage_context_edit_rejects_partial_original_identity(tmp_path):
-    from rez_manager.adapter.storage import create_project, save_context
+def test_storage_context_edit_rejects_partial_original_identity(tmp_path, monkeypatch):
     from rez_manager.models.rez_context import ContextMeta
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.context_store import save_context
+    from rez_manager.persistence.settings_store import save_settings
 
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
-    create_project(settings, "Pipeline")
+    save_settings(settings)
+    Project.create("Pipeline")
 
     with pytest.raises(ValueError, match="must both be provided"):
         save_context(
-            settings,
             "Pipeline",
             ContextMeta(name="Base", packages=[]),
             original_project_name="Pipeline",
             original_context_name=None,
+            settings=settings,
         )
 
 
-def test_storage_context_rename_updates_case_only_names_on_windows(tmp_path):
-    from rez_manager.adapter.storage import create_project, save_context
+def test_storage_context_rename_updates_case_only_names_on_windows(tmp_path, monkeypatch):
     from rez_manager.models.rez_context import ContextMeta
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
 
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
-    create_project(settings, "Pipeline")
-    save_context(settings, "Pipeline", ContextMeta(name="Base", packages=[]))
+    save_settings(settings)
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=[]))
 
-    edited = save_context(
-        settings,
+    edited = RezContext.load("Pipeline", "Base").update(
         "Pipeline",
         ContextMeta(name="base", packages=[]),
-        original_project_name="Pipeline",
-        original_context_name="Base",
     )
 
     assert edited.name == "base"
     assert [path.name for path in (tmp_path / "contexts" / "Pipeline").iterdir()] == ["base"]
 
 
-def test_storage_rejects_duplicate_names_and_invalid_separators(tmp_path):
-    from rez_manager.adapter.storage import create_project, duplicate_project, save_context
+def test_storage_rejects_duplicate_names_and_invalid_separators(tmp_path, monkeypatch):
     from rez_manager.models.rez_context import ContextMeta
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
 
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
-    create_project(settings, "Pipeline")
+    save_settings(settings)
+    Project.create("Pipeline")
 
     with pytest.raises(ValueError, match="already exists"):
-        create_project(settings, "Pipeline")
+        Project.create("Pipeline")
 
     with pytest.raises(ValueError, match="invalid path characters"):
-        create_project(settings, "Bad/Name")
+        Project.create("Bad/Name")
 
-    save_context(settings, "Pipeline", ContextMeta(name="Base", packages=[]))
-
-    with pytest.raises(ValueError, match="already exists"):
-        duplicate_project(settings, "Pipeline", "Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=[]))
 
     with pytest.raises(ValueError, match="already exists"):
-        save_context(settings, "Pipeline", ContextMeta(name="Base", packages=[]))
+        Project.load("Pipeline").duplicate("Pipeline")
+
+    with pytest.raises(ValueError, match="already exists"):
+        RezContext.create("Pipeline", ContextMeta(name="Base", packages=[]))
 
 
 def test_project_list_model_project_crud_slots(tmp_path, monkeypatch):
-    from rez_manager.adapter.storage import save_settings
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
     from rez_manager.ui.main_window import ProjectListModel
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
@@ -454,15 +453,15 @@ def test_project_list_model_project_crud_slots(tmp_path, monkeypatch):
 
 
 def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
-    from rez_manager.adapter.storage import create_project, save_settings
     from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
     from rez_manager.ui.main_window import RezContextListModel
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
     save_settings(settings)
-    create_project(settings, "Pipeline")
-    create_project(settings, "Shots")
+    Project.create("Pipeline")
+    Project.create("Shots")
 
     model = RezContextListModel()
 

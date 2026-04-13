@@ -4,6 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from os import PathLike
+from pathlib import Path
+
+from .project import Project
+
+
+def _context_store():
+    from rez_manager.persistence import context_store
+
+    return context_store
 
 
 class LaunchTarget(StrEnum):
@@ -22,7 +32,6 @@ class ContextMeta:
     launch_target: LaunchTarget = LaunchTarget.SHELL
     custom_command: str | None = None
     packages: list[str] = field(default_factory=list)
-    thumbnail_path: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -62,13 +71,27 @@ class ContextMeta:
 
 
 @dataclass
-class ContextInfo:
+class RezContext:
     """Runtime representation of a context shown in the UI."""
 
-    project_name: str
+    project: Project
     meta: ContextMeta
-    context_dir: str = ""
-    rxt_path: str = ""
+    path: str | PathLike[str] = ""
+
+    def __post_init__(self) -> None:
+        self.path = str(self.path)
+
+    @classmethod
+    def all(cls) -> list[RezContext]:
+        return _context_store().list_contexts()
+
+    @classmethod
+    def load(cls, project_name: str, context_name: str) -> RezContext:
+        return _context_store().load_context(project_name, context_name)
+
+    @classmethod
+    def create(cls, project_name: str, meta: ContextMeta) -> RezContext:
+        return _context_store().save_context(project_name, meta)
 
     @property
     def name(self) -> str:
@@ -85,3 +108,44 @@ class ContextInfo:
     @property
     def packages(self) -> list[str]:
         return list(self.meta.packages)
+
+    @property
+    def project_name(self) -> str:
+        return self.project.name
+
+    @property
+    def thumbnail_path(self) -> str:
+        if not self.path:
+            return ""
+        path = Path(self.path) / "thumbnail.png"
+        return str(path) if path.exists() else ""
+
+    @property
+    def rxt_path(self) -> str:
+        if not self.path:
+            return ""
+        path = Path(self.path) / "context.rxt"
+        return str(path) if path.exists() else ""
+
+    def update(self, project_name: str, meta: ContextMeta) -> RezContext:
+        updated = _context_store().save_context(
+            project_name,
+            meta,
+            original_project_name=self.project_name,
+            original_context_name=self.name,
+        )
+        self.project = updated.project
+        self.meta = updated.meta
+        self.path = updated.path
+        return self
+
+    def duplicate(self, target_project_name: str, target_context_name: str) -> RezContext:
+        return _context_store().duplicate_context(
+            self.project_name,
+            self.name,
+            target_project_name,
+            target_context_name,
+        )
+
+    def delete(self) -> None:
+        _context_store().delete_context(self.project_name, self.name)
