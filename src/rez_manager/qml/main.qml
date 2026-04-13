@@ -31,6 +31,94 @@ ApplicationWindow {
         id: editorDlg
         anchors.centerIn: root.contentItem
         projectOptions: projectModel.projectNames
+        onSaveRequested: function(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages) {
+            const saved = contextModel.saveContext(
+                originalProjectName,
+                originalContextName,
+                projectName,
+                contextName,
+                description,
+                launchTarget,
+                customCommand,
+                packages
+            );
+            if (saved) {
+                editorDlg.close();
+                root.selectProjectByName(projectName);
+                root.showStatus("Saved context: " + projectName + " / " + contextName, false);
+            } else {
+                root.showStatus(contextModel.lastError, true);
+            }
+        }
+    }
+    ProjectNameDialog {
+        id: projectNameDlg
+        anchors.centerIn: root.contentItem
+        onSubmitted: function(projectName) {
+            let success = false;
+            if (root.projectDialogMode === "create")
+                success = projectModel.createProject(projectName);
+            else if (root.projectDialogMode === "edit")
+                success = projectModel.renameProject(root.projectDialogSourceName, projectName);
+            else if (root.projectDialogMode === "duplicate")
+                success = projectModel.duplicateProject(root.projectDialogSourceName, projectName);
+
+            if (success) {
+                projectNameDlg.close();
+                contextModel.reload();
+                root.selectProjectByName(projectName);
+                root.showStatus("Saved project: " + projectName, false);
+            } else {
+                root.showStatus(projectModel.lastError, true);
+            }
+        }
+    }
+    ContextDuplicateDialog {
+        id: contextDuplicateDlg
+        anchors.centerIn: root.contentItem
+        projectOptions: projectModel.projectNames
+        onSubmitted: function(projectName, contextName) {
+            const duplicated = contextModel.duplicateContext(
+                root.duplicateSourceProjectName,
+                root.duplicateSourceContextName,
+                projectName,
+                contextName
+            );
+            if (duplicated) {
+                contextDuplicateDlg.close();
+                root.selectProjectByName(projectName);
+                root.showStatus("Duplicated context: " + projectName + " / " + contextName, false);
+            } else {
+                root.showStatus(contextModel.lastError, true);
+            }
+        }
+    }
+    ConfirmDeleteDialog {
+        id: confirmDeleteDlg
+        anchors.centerIn: root.contentItem
+        onConfirmed: {
+            if (root.pendingDeleteKind === "project") {
+                if (projectModel.deleteProject(root.pendingDeleteProjectName)) {
+                    contextModel.reload();
+                    root.clampSelectedProjectIndex();
+                    root.showStatus("Deleted project: " + root.pendingDeleteProjectName, false);
+                } else {
+                    root.showStatus(projectModel.lastError, true);
+                }
+            } else if (root.pendingDeleteKind === "context") {
+                if (contextModel.deleteContext(root.pendingDeleteProjectName, root.pendingDeleteContextName)) {
+                    root.showStatus(
+                        "Deleted context: "
+                            + root.pendingDeleteProjectName
+                            + " / "
+                            + root.pendingDeleteContextName,
+                        false
+                    );
+                } else {
+                    root.showStatus(contextModel.lastError, true);
+                }
+            }
+        }
     }
     PackageManagerWindow {
         id: pkgManagerWin
@@ -43,7 +131,124 @@ ApplicationWindow {
 
     // ── State ─────────────────────────────────────────────────
     property int selectedProjectIndex: 0
-    property string selectedProject: projectModel.count > 0 ? projectModel.get(selectedProjectIndex).name : ""
+    property string selectedProject: selectedProjectIndex >= 0 && selectedProjectIndex < projectModel.count ? (projectModel.get(selectedProjectIndex).name || "") : ""
+    property string projectDialogMode: "create"
+    property string projectDialogSourceName: ""
+    property string duplicateSourceProjectName: ""
+    property string duplicateSourceContextName: ""
+    property string pendingDeleteKind: ""
+    property string pendingDeleteProjectName: ""
+    property string pendingDeleteContextName: ""
+
+    function clampSelectedProjectIndex() {
+        if (projectModel.count === 0) {
+            selectedProjectIndex = 0;
+            return;
+        }
+        if (selectedProjectIndex < 0)
+            selectedProjectIndex = 0;
+        else if (selectedProjectIndex >= projectModel.count)
+            selectedProjectIndex = projectModel.count - 1;
+    }
+
+    function selectProjectByName(projectName) {
+        const targetIndex = projectModel.indexOfProject(projectName);
+        if (targetIndex >= 0)
+            selectedProjectIndex = targetIndex;
+        else
+            clampSelectedProjectIndex();
+    }
+
+    function showStatus(message, isError) {
+        statusToast_.show(message, isError ? Style.error : Style.success);
+    }
+
+    function openCreateProjectDialog() {
+        projectDialogMode = "create";
+        projectDialogSourceName = "";
+        projectNameDlg.title = "New Project";
+        projectNameDlg.projectNameValue = "";
+        projectNameDlg.open();
+    }
+
+    function openEditProjectDialog(projectName) {
+        projectDialogMode = "edit";
+        projectDialogSourceName = projectName;
+        projectNameDlg.title = "Edit Project";
+        projectNameDlg.projectNameValue = projectName;
+        projectNameDlg.open();
+    }
+
+    function openDuplicateProjectDialog(projectName) {
+        projectDialogMode = "duplicate";
+        projectDialogSourceName = projectName;
+        projectNameDlg.title = "Duplicate Project";
+        projectNameDlg.projectNameValue = projectName + " Copy";
+        projectNameDlg.open();
+    }
+
+    function openNewContextDialog() {
+        if (selectedProject.length === 0) {
+            showStatus("Create a project first.", true);
+            return;
+        }
+        editorDlg.title = "New Context";
+        editorDlg.originalProjectValue = "";
+        editorDlg.originalContextNameValue = "";
+        editorDlg.projectValue = selectedProject;
+        editorDlg.contextNameValue = "";
+        editorDlg.descriptionValue = "";
+        editorDlg.launchTargetValue = "shell";
+        editorDlg.customCommandValue = "";
+        editorDlg.packagesValue = [];
+        editorDlg.open();
+    }
+
+    function openEditContextDialog(modelData) {
+        editorDlg.title = "Edit Context";
+        editorDlg.originalProjectValue = modelData.project;
+        editorDlg.originalContextNameValue = modelData.name;
+        editorDlg.projectValue = modelData.project;
+        editorDlg.contextNameValue = modelData.name;
+        editorDlg.descriptionValue = modelData.description;
+        editorDlg.launchTargetValue = modelData.launchTarget;
+        editorDlg.customCommandValue = modelData.customCommand;
+        editorDlg.packagesValue = modelData.packageRequests;
+        editorDlg.open();
+    }
+
+    function openDuplicateContextDialog(modelData) {
+        duplicateSourceProjectName = modelData.project;
+        duplicateSourceContextName = modelData.name;
+        contextDuplicateDlg.projectValue = modelData.project;
+        contextDuplicateDlg.contextNameValue = modelData.name + " Copy";
+        contextDuplicateDlg.open();
+    }
+
+    function confirmDeleteProject(projectName) {
+        pendingDeleteKind = "project";
+        pendingDeleteProjectName = projectName;
+        pendingDeleteContextName = "";
+        confirmDeleteDlg.title = "Delete Project";
+        confirmDeleteDlg.messageText = "Delete project '" + projectName + "' and all of its contexts?";
+        confirmDeleteDlg.open();
+    }
+
+    function confirmDeleteContext(projectName, contextName) {
+        pendingDeleteKind = "context";
+        pendingDeleteProjectName = projectName;
+        pendingDeleteContextName = contextName;
+        confirmDeleteDlg.title = "Delete Context";
+        confirmDeleteDlg.messageText = "Delete context '" + contextName + "' from project '" + projectName + "'?";
+        confirmDeleteDlg.open();
+    }
+
+    Connections {
+        target: projectModel
+        function onCountChanged() {
+            root.clampSelectedProjectIndex();
+        }
+    }
 
     // ── Menu bar ──────────────────────────────────────────────
     menuBar: MenuBar {
@@ -192,6 +397,9 @@ ApplicationWindow {
                                 return contextModel.contextCountFor(parent.name);
                             }
                             onClicked: root.selectedProjectIndex = parent.index
+                            onEditRequested: root.openEditProjectDialog(parent.name)
+                            onDuplicateRequested: root.openDuplicateProjectDialog(parent.name)
+                            onDeleteRequested: root.confirmDeleteProject(parent.name)
                         }
                     }
                 }
@@ -218,6 +426,7 @@ ApplicationWindow {
                         CardButton {
                             glyph: "+"
                             label: "Project"
+                            onClicked: root.openCreateProjectDialog()
                         }
                         Item {
                             Layout.fillWidth: true
@@ -291,10 +500,7 @@ ApplicationWindow {
                             glyph: "+"
                             label: "New Context"
                             accent: true
-                            onClicked: {
-                                editorDlg.projectValue = root.selectedProject;
-                                editorDlg.open();
-                            }
+                            onClicked: root.openNewContextDialog()
                         }
                     }
                     Rectangle {
@@ -337,9 +543,7 @@ ApplicationWindow {
                                     packages: modelData.packages
 
                                     onEditInfoRequested: {
-                                        editorDlg.projectValue = modelData.project;
-                                        editorDlg.contextNameValue = modelData.name;
-                                        editorDlg.open();
+                                        root.openEditContextDialog(modelData);
                                     }
                                     onEditPackagesRequested: {
                                         pkgManagerWin.contextName_ = modelData.name;
@@ -352,10 +556,13 @@ ApplicationWindow {
                                         previewWin.show();
                                     }
                                     onLaunchRequested: {
-                                        launchToast_.projectName = modelData.project;
-                                        launchToast_.contextName = modelData.name;
-                                        launchToast_.show();
+                                        statusToast_.show(
+                                            "Launching: " + modelData.project + " / " + modelData.name,
+                                            Style.success
+                                        );
                                     }
+                                    onDuplicateRequested: root.openDuplicateContextDialog(modelData)
+                                    onDeleteRequested: root.confirmDeleteContext(modelData.project, modelData.name)
                                 }
                             }
 
@@ -398,10 +605,7 @@ ApplicationWindow {
                                         Layout.alignment: Qt.AlignHCenter
                                         label: "New Context"
                                         accent: true
-                                        onClicked: {
-                                            editorDlg.projectValue = root.selectedProject;
-                                            editorDlg.open();
-                                        }
+                                        onClicked: root.openNewContextDialog()
                                     }
                                 }
                             }
@@ -412,13 +616,15 @@ ApplicationWindow {
         }
     }
 
-    // ── Launch toast notification ──────────────────────────────
+    // ── Status toast notification ──────────────────────────────
     Rectangle {
-        id: launchToast_
-        property string projectName: ""
-        property string contextName: ""
+        id: statusToast_
+        property string messageText: ""
+        property color accentColor: Style.success
 
-        function show() {
+        function show(messageText, accentColor) {
+            statusToast_.messageText = messageText;
+            statusToast_.accentColor = accentColor;
             visible = true;
             hideTimer_.restart();
         }
@@ -445,7 +651,7 @@ ApplicationWindow {
         Timer {
             id: hideTimer_
             interval: 3000
-            onTriggered: launchToast_.visible = false
+            onTriggered: statusToast_.visible = false
         }
 
         Row {
@@ -456,12 +662,12 @@ ApplicationWindow {
                 width: 8
                 height: 8
                 radius: 4
-                color: Style.success
+                color: statusToast_.accentColor
                 anchors.verticalCenter: parent.verticalCenter
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Launching: " + launchToast_.projectName + " / " + launchToast_.contextName
+                text: statusToast_.messageText
                 color: Style.textPrimary
                 font.pixelSize: Style.fontMd
             }

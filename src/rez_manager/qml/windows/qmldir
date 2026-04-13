@@ -3,3 +3,6 @@ ContextEditorDialog 1.0 ContextEditorDialog.qml
 ContextPreviewWindow 1.0 ContextPreviewWindow.qml
 PackageManagerWindow 1.0 PackageManagerWindow.qml
 SettingsDialog 1.0 SettingsDialog.qml
+ProjectNameDialog 1.0 ProjectNameDialog.qml
+ContextDuplicateDialog 1.0 ContextDuplicateDialog.qml
+ConfirmDeleteDialog 1.0 ConfirmDeleteDialog.qml

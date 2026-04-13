@@ -43,6 +43,22 @@ def test_app_settings_roundtrip():
     assert restored.contexts_location == settings.contexts_location
 
 
+def test_app_settings_normalize_pathlike_inputs():
+    from pathlib import Path
+
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(
+        package_repositories=[Path("D:\\packages\\maya"), Path("D:\\packages\\base")],
+        contexts_location=Path("D:\\contexts"),
+    )
+
+    assert settings.to_dict() == {
+        "package_repositories": ["D:\\packages\\maya", "D:\\packages\\base"],
+        "contexts_location": "D:\\contexts",
+    }
+
+
 def test_context_meta_rejects_invalid_package_types():
     from rez_manager.models.rez_context import ContextMeta
 
@@ -247,3 +263,222 @@ def test_context_list_model_refresh_updates_revision_and_counts(tmp_path, monkey
     assert model.revision > initial_revision
     assert model.contextCountFor("Pipeline") == 1
     assert len(model.filteredContexts("Pipeline")) == 1
+
+
+def test_storage_project_crud_roundtrip(tmp_path):
+    from rez_manager.adapter.storage import (
+        create_project,
+        delete_project,
+        duplicate_project,
+        list_projects,
+        rename_project,
+    )
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+
+    created = create_project(settings, "Pipeline")
+    renamed = rename_project(settings, "Pipeline", "Pipeline Renamed")
+    duplicated = duplicate_project(settings, "Pipeline Renamed", "Pipeline Copy")
+
+    assert created.name == "Pipeline"
+    assert renamed.name == "Pipeline Renamed"
+    assert duplicated.name == "Pipeline Copy"
+    assert [project.name for project in list_projects(settings)] == [
+        "Pipeline Copy",
+        "Pipeline Renamed",
+    ]
+
+    delete_project(settings, "Pipeline Copy")
+
+    assert [project.name for project in list_projects(settings)] == ["Pipeline Renamed"]
+
+
+def test_storage_project_rename_updates_case_only_names_on_windows(tmp_path):
+    from rez_manager.adapter.storage import create_project, rename_project
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    create_project(settings, "Pipeline")
+
+    renamed = rename_project(settings, "Pipeline", "pipeline")
+
+    assert renamed.name == "pipeline"
+    assert [path.name for path in (tmp_path / "contexts").iterdir()] == ["pipeline"]
+
+
+def test_storage_context_crud_roundtrip(tmp_path):
+    from rez_manager.adapter.storage import (
+        CONTEXT_FILE_NAME,
+        META_FILE_NAME,
+        THUMBNAIL_FILE_NAME,
+        create_project,
+        delete_context,
+        duplicate_context,
+        list_contexts,
+        save_context,
+    )
+    from rez_manager.models.rez_context import ContextMeta, LaunchTarget
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    create_project(settings, "Pipeline")
+    create_project(settings, "Shots")
+
+    created = save_context(
+        settings,
+        "Pipeline",
+        ContextMeta(
+            name="Base",
+            description="Base context",
+            launch_target=LaunchTarget.SHELL,
+            packages=["python-3.11"],
+        ),
+    )
+    source_context_dir = tmp_path / "contexts" / "Pipeline" / "Base"
+    (source_context_dir / CONTEXT_FILE_NAME).write_text("resolved", encoding="utf-8")
+    (source_context_dir / THUMBNAIL_FILE_NAME).write_bytes(b"png")
+
+    edited = save_context(
+        settings,
+        "Shots",
+        ContextMeta(
+            name="Shot Base",
+            description="Moved context",
+            launch_target=LaunchTarget.CUSTOM,
+            custom_command="nuke -x %f",
+            packages=["python-3.11"],
+        ),
+        original_project_name="Pipeline",
+        original_context_name="Base",
+    )
+
+    duplicated = duplicate_context(settings, "Shots", "Shot Base", "Pipeline", "Shot Base Copy")
+
+    assert created.project_name == "Pipeline"
+    assert edited.project_name == "Shots"
+    assert edited.name == "Shot Base"
+    assert duplicated.project_name == "Pipeline"
+    assert duplicated.name == "Shot Base Copy"
+    assert (tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / CONTEXT_FILE_NAME).exists()
+    assert (tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / THUMBNAIL_FILE_NAME).exists()
+    assert (
+        tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / META_FILE_NAME
+    ).read_text(encoding="utf-8").find('"name": "Shot Base Copy"') >= 0
+
+    delete_context(settings, "Pipeline", "Shot Base Copy")
+
+    contexts = list_contexts(settings)
+    assert sorted((context.project_name, context.name) for context in contexts) == [
+        ("Shots", "Shot Base"),
+    ]
+
+
+def test_storage_context_edit_rejects_partial_original_identity(tmp_path):
+    from rez_manager.adapter.storage import create_project, save_context
+    from rez_manager.models.rez_context import ContextMeta
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    create_project(settings, "Pipeline")
+
+    with pytest.raises(ValueError, match="must both be provided"):
+        save_context(
+            settings,
+            "Pipeline",
+            ContextMeta(name="Base", packages=[]),
+            original_project_name="Pipeline",
+            original_context_name=None,
+        )
+
+
+def test_storage_context_rename_updates_case_only_names_on_windows(tmp_path):
+    from rez_manager.adapter.storage import create_project, save_context
+    from rez_manager.models.rez_context import ContextMeta
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    create_project(settings, "Pipeline")
+    save_context(settings, "Pipeline", ContextMeta(name="Base", packages=[]))
+
+    edited = save_context(
+        settings,
+        "Pipeline",
+        ContextMeta(name="base", packages=[]),
+        original_project_name="Pipeline",
+        original_context_name="Base",
+    )
+
+    assert edited.name == "base"
+    assert [path.name for path in (tmp_path / "contexts" / "Pipeline").iterdir()] == ["base"]
+
+
+def test_storage_rejects_duplicate_names_and_invalid_separators(tmp_path):
+    from rez_manager.adapter.storage import create_project, duplicate_project, save_context
+    from rez_manager.models.rez_context import ContextMeta
+    from rez_manager.models.settings import AppSettings
+
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    create_project(settings, "Pipeline")
+
+    with pytest.raises(ValueError, match="already exists"):
+        create_project(settings, "Pipeline")
+
+    with pytest.raises(ValueError, match="invalid path characters"):
+        create_project(settings, "Bad/Name")
+
+    save_context(settings, "Pipeline", ContextMeta(name="Base", packages=[]))
+
+    with pytest.raises(ValueError, match="already exists"):
+        duplicate_project(settings, "Pipeline", "Pipeline")
+
+    with pytest.raises(ValueError, match="already exists"):
+        save_context(settings, "Pipeline", ContextMeta(name="Base", packages=[]))
+
+
+def test_project_list_model_project_crud_slots(tmp_path, monkeypatch):
+    from rez_manager.adapter.storage import save_settings
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.ui.main_window import ProjectListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+
+    model = ProjectListModel()
+
+    assert model.createProject("Pipeline")
+    assert model.renameProject("Pipeline", "Pipeline Renamed")
+    assert model.duplicateProject("Pipeline Renamed", "Pipeline Copy")
+    assert model.deleteProject("Pipeline Copy")
+    assert model.projectNames == ["Pipeline Renamed"]
+
+
+def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
+    from rez_manager.adapter.storage import create_project, save_settings
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.ui.main_window import RezContextListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    settings = AppSettings(contexts_location=str(tmp_path / "contexts"))
+    save_settings(settings)
+    create_project(settings, "Pipeline")
+    create_project(settings, "Shots")
+
+    model = RezContextListModel()
+
+    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", [])
+    assert model.saveContext(
+        "Pipeline",
+        "Base",
+        "Shots",
+        "Shot Base",
+        "Moved context",
+        "custom",
+        "nuke -x %f",
+        ["python-3.11"],
+    )
+    assert model.duplicateContext("Shots", "Shot Base", "Pipeline", "Shot Base Copy")
+    assert model.deleteContext("Pipeline", "Shot Base Copy")
+    assert [(item["project"], item["name"]) for item in model.filteredContexts("Shots")] == [
+        ("Shots", "Shot Base"),
+    ]

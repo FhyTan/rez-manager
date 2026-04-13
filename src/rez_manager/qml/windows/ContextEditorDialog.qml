@@ -15,15 +15,54 @@ Dialog {
     height: Math.max(520, implicitHeight)
 
     property string contextNameValue: "New Context"
+    property string originalContextNameValue: ""
     property string projectValue: "VFX Pipeline"
+    property string originalProjectValue: ""
     property string descriptionValue: ""
     property string launchTargetValue: "shell"
+    property string customCommandValue: ""
+    property var packagesValue: []
     property var projectOptions: []
+    signal saveRequested(
+        string originalProjectName,
+        string originalContextName,
+        string projectName,
+        string contextName,
+        string description,
+        string launchTarget,
+        string customCommand,
+        var packages
+    )
+
+    function comboProjectOptions() {
+        if (root.projectValue.length === 0)
+            return root.projectOptions;
+        if (root.projectOptions.indexOf(root.projectValue) >= 0)
+            return root.projectOptions;
+        return [root.projectValue].concat(root.projectOptions);
+    }
 
     padding: Style.xl
     standardButtons: Dialog.Save | Dialog.Cancel
-    onAboutToShow: projectCombo_.currentIndex = Math.max(0, projectCombo_.model.indexOf(root.projectValue))
-    onAccepted: root.close()
+    onAboutToShow: {
+        projectNameField_.text = root.contextNameValue;
+        const projectIndex = projectCombo_.model.indexOf(root.projectValue);
+        projectCombo_.currentIndex = projectIndex >= 0 ? projectIndex : 0;
+        descriptionField_.text = root.descriptionValue;
+        customCommandField_.text = root.customCommandValue;
+    }
+    onAccepted: {
+        root.saveRequested(
+            root.originalProjectValue,
+            root.originalContextNameValue,
+            projectCombo_.currentText,
+            projectNameField_.text,
+            descriptionField_.text,
+            root.launchTargetValue,
+            customCommandField_.text,
+            root.packagesValue
+        );
+    }
     onRejected: root.close()
 
     contentItem: ColumnLayout {
@@ -34,8 +73,8 @@ Dialog {
             label: "Name"
             Layout.fillWidth: true
             FieldInput {
+                id: projectNameField_
                 Layout.fillWidth: true
-                text: root.contextNameValue
             }
         }
 
@@ -46,7 +85,7 @@ Dialog {
             FieldCombo {
                 id: projectCombo_
                 Layout.fillWidth: true
-                model: root.projectOptions.length > 0 ? root.projectOptions : [root.projectValue]
+                model: root.comboProjectOptions()
             }
         }
 
@@ -55,9 +94,10 @@ Dialog {
             label: "Description"
             Layout.fillWidth: true
             TextArea {
+                id: descriptionField_
                 Layout.fillWidth: true
                 implicitHeight: 88
-                text: root.descriptionValue.length > 0 ? root.descriptionValue : "A short description of this context."
+                placeholderText: "A short description of this context."
                 wrapMode: TextArea.WordWrap
             }
         }
@@ -134,9 +174,10 @@ Dialog {
             Layout.fillWidth: true
             visible: root.launchTargetValue === "custom"
             FieldInput {
+                id: customCommandField_
                 Layout.fillWidth: true
-                text: "nuke -x %f"
                 monospace: true
+                placeholderText: "nuke -x %f"
             }
         }
 

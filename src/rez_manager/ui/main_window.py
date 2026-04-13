@@ -16,8 +16,19 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QColor
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.storage import list_contexts, list_projects, load_settings
-from rez_manager.models.rez_context import ContextInfo
+from rez_manager.adapter.storage import (
+    create_project,
+    delete_context,
+    delete_project,
+    duplicate_context,
+    duplicate_project,
+    list_contexts,
+    list_projects,
+    load_settings,
+    rename_project,
+    save_context,
+)
+from rez_manager.models.rez_context import ContextInfo, ContextMeta, LaunchTarget
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -41,11 +52,13 @@ def _project_color(name: str) -> str:
 class _BaseListModel(QAbstractListModel):
     countChanged = Signal()
     revisionChanged = Signal()
+    errorChanged = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._items: list[object] = []
         self._revision = 0
+        self._last_error = ""
 
     def _reset_items(self, items: Sequence[object]) -> None:
         self.beginResetModel()
@@ -62,6 +75,18 @@ class _BaseListModel(QAbstractListModel):
     @Property(int, notify=revisionChanged)
     def revision(self) -> int:
         return self._revision
+
+    @Property(str, notify=errorChanged)
+    def lastError(self) -> str:  # noqa: N802
+        return self._last_error
+
+    def _set_error(self, message: str) -> None:
+        if self._last_error != message:
+            self._last_error = message
+            self.errorChanged.emit()
+
+    def _clear_error(self) -> None:
+        self._set_error("")
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
         if parent.isValid():
@@ -98,6 +123,7 @@ class ProjectListModel(_BaseListModel):
     def reload(self) -> None:
         settings = load_settings()
         self._reset_items(list_projects(settings))
+        self._clear_error()
 
     @Slot(int, result="QVariantMap")
     def get(self, index: int) -> dict[str, object]:
@@ -112,6 +138,53 @@ class ProjectListModel(_BaseListModel):
     @Property("QVariantList", notify=_BaseListModel.countChanged)
     def projectNames(self) -> list[str]:
         return [project.name for project in self._items]
+
+    @Slot(str, result=int)
+    def indexOfProject(self, name: str) -> int:  # noqa: N802
+        for index, project in enumerate(self._items):
+            if project.name == name:
+                return index
+        return -1
+
+    @Slot(str, result=bool)
+    def createProject(self, name: str) -> bool:  # noqa: N802
+        try:
+            create_project(load_settings(), name)
+        except (OSError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True
+
+    @Slot(str, str, result=bool)
+    def renameProject(self, current_name: str, new_name: str) -> bool:  # noqa: N802
+        try:
+            rename_project(load_settings(), current_name, new_name)
+        except (OSError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True
+
+    @Slot(str, str, result=bool)
+    def duplicateProject(self, source_name: str, target_name: str) -> bool:  # noqa: N802
+        try:
+            duplicate_project(load_settings(), source_name, target_name)
+        except (OSError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True
+
+    @Slot(str, result=bool)
+    def deleteProject(self, name: str) -> bool:  # noqa: N802
+        try:
+            delete_project(load_settings(), name)
+        except (OSError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True
 
 
 @QmlElement
@@ -157,6 +230,7 @@ class RezContextListModel(_BaseListModel):
     def reload(self) -> None:
         settings = load_settings()
         self._reset_items(list_contexts(settings))
+        self._clear_error()
 
     @Slot(int, result="QVariantMap")
     def get(self, index: int) -> dict[str, object]:
@@ -183,4 +257,71 @@ class RezContextListModel(_BaseListModel):
             "description": context.description,
             "launchTarget": context.launch_target,
             "packages": ",".join(context.packages),
+            "packageRequests": list(context.packages),
+            "customCommand": context.meta.custom_command or "",
         }
+
+    @Slot(str, str, str, str, str, str, str, "QVariantList", result=bool)
+    def saveContext(  # noqa: N802
+        self,
+        original_project_name: str,
+        original_context_name: str,
+        project_name: str,
+        name: str,
+        description: str,
+        launch_target: str,
+        custom_command: str,
+        packages: list[str],
+    ) -> bool:
+        try:
+            meta = ContextMeta(
+                name=name,
+                description=description.strip(),
+                launch_target=LaunchTarget(launch_target),
+                custom_command=custom_command.strip() or None,
+                packages=[str(package) for package in packages],
+            )
+            save_context(
+                load_settings(),
+                project_name,
+                meta,
+                original_project_name=original_project_name or None,
+                original_context_name=original_context_name or None,
+            )
+        except (OSError, TypeError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True
+
+    @Slot(str, str, str, str, result=bool)
+    def duplicateContext(  # noqa: N802
+        self,
+        source_project_name: str,
+        source_context_name: str,
+        target_project_name: str,
+        target_context_name: str,
+    ) -> bool:
+        try:
+            duplicate_context(
+                load_settings(),
+                source_project_name,
+                source_context_name,
+                target_project_name,
+                target_context_name,
+            )
+        except (OSError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True
+
+    @Slot(str, str, result=bool)
+    def deleteContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
+        try:
+            delete_context(load_settings(), project_name, context_name)
+        except (OSError, ValueError) as exc:
+            self._set_error(str(exc))
+            return False
+        self.reload()
+        return True

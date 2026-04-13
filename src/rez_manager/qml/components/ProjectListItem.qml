@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Controls
 import QtQuick.Layouts 1.15
 import ".."
 
@@ -12,6 +13,9 @@ Rectangle {
     property bool   selected:     false
 
     signal clicked
+    signal editRequested
+    signal duplicateRequested
+    signal deleteRequested
 
 
     height: 44
@@ -94,5 +98,28 @@ Rectangle {
     TapHandler {
         acceptedButtons: Qt.LeftButton
         onTapped: root.clicked()
+    }
+
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        onTapped: function(eventPoint) {
+            projectMenu_.popup(root, eventPoint.position.x, eventPoint.position.y)
+        }
+    }
+
+    Menu {
+        id: projectMenu_
+        MenuItem {
+            text: "Edit"
+            onTriggered: root.editRequested()
+        }
+        MenuItem {
+            text: "Duplicate"
+            onTriggered: root.duplicateRequested()
+        }
+        MenuItem {
+            text: "Delete"
+            onTriggered: root.deleteRequested()
+        }
     }
 }
