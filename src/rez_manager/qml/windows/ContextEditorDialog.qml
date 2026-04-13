@@ -18,9 +18,11 @@ Dialog {
     property string projectValue: "VFX Pipeline"
     property string descriptionValue: ""
     property string launchTargetValue: "shell"
+    property var projectOptions: []
 
     padding: Style.xl
     standardButtons: Dialog.Save | Dialog.Cancel
+    onAboutToShow: projectCombo_.currentIndex = Math.max(0, projectCombo_.model.indexOf(root.projectValue))
     onAccepted: root.close()
     onRejected: root.close()
 
@@ -42,9 +44,9 @@ Dialog {
             label: "Project"
             Layout.fillWidth: true
             FieldCombo {
+                id: projectCombo_
                 Layout.fillWidth: true
-                model: ["VFX Pipeline", "Maya Rigging", "Houdini FX", "USD Pipeline"]
-                currentIndex: 0
+                model: root.projectOptions.length > 0 ? root.projectOptions : [root.projectValue]
             }
         }
 

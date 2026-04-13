@@ -11,6 +11,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 import rez_manager.rc_resources  # noqa: F401
+import rez_manager.ui  # noqa: F401
 
 
 def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]:

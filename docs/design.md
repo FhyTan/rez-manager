@@ -155,9 +155,10 @@ All context data lives under the configured **contexts location** directory:
 src/rez_manager/
 ├── __main__.py          # Entry point: creates QApplication, loads QML
 ├── app.py               # QApplication subclass; registers QML types
-├── adapter/             # Thin wrapper around rez Python API (keep isolated)
+├── adapter/             # Thin wrapper around Rez and filesystem adapters
 │   ├── context.py       # ResolvedContext creation, serialization, preview
-│   └── packages.py      # Repository discovery, package search/query
+│   ├── packages.py      # Repository discovery, package search/query
+│   └── storage.py       # Settings/project/context filesystem persistence
 ├── models/              # Plain Python data models (dataclasses / Pydantic)
 │   ├── project.py       # Project dataclass
 │   └── rez_context.py   # ContextMeta, ContextInfo dataclasses

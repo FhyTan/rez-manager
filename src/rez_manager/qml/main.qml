@@ -1,9 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import RezManager 1.0
 import "components"
 import "windows"
-import "dummydata"
 
 ApplicationWindow {
     id: root
@@ -15,7 +15,6 @@ ApplicationWindow {
     visible: true
     color: Style.bg
 
-    // ── Data models (dummy — swap imports for Python-backed types) ────────────
     ProjectListModel {
         id: projectModel
     }
@@ -31,6 +30,7 @@ ApplicationWindow {
     ContextEditorDialog {
         id: editorDlg
         anchors.centerIn: root.contentItem
+        projectOptions: projectModel.projectNames
     }
     PackageManagerWindow {
         id: pkgManagerWin
@@ -187,7 +187,10 @@ ApplicationWindow {
                             projectName: parent.name
                             avatarColor: parent.avatarColor
                             selected: root.selectedProjectIndex === parent.index
-                            contextCount: contextModel.contextCountFor(parent.name)
+                            contextCount: {
+                                contextModel.revision;
+                                return contextModel.contextCountFor(parent.name);
+                            }
                             onClicked: root.selectedProjectIndex = parent.index
                         }
                     }
@@ -270,7 +273,10 @@ ApplicationWindow {
                                 font.bold: true
                             }
                             Text {
-                                text: contextModel.filteredContexts(root.selectedProject).length + " contexts"
+                                text: {
+                                    contextModel.revision;
+                                    return contextModel.filteredContexts(root.selectedProject).length + " contexts";
+                                }
                                 color: Style.textSecondary
                                 font.pixelSize: Style.fontSm
                             }
@@ -285,7 +291,10 @@ ApplicationWindow {
                             glyph: "+"
                             label: "New Context"
                             accent: true
-                            onClicked: editorDlg.open()
+                            onClicked: {
+                                editorDlg.projectValue = root.selectedProject;
+                                editorDlg.open();
+                            }
                         }
                     }
                     Rectangle {
@@ -314,7 +323,10 @@ ApplicationWindow {
                             spacing: Style.lg
 
                             Repeater {
-                                model: contextModel.filteredContexts(root.selectedProject)
+                                model: {
+                                    contextModel.revision;
+                                    return contextModel.filteredContexts(root.selectedProject);
+                                }
 
                                 ContextCard {
                                     required property var modelData
@@ -325,6 +337,7 @@ ApplicationWindow {
                                     packages: modelData.packages
 
                                     onEditInfoRequested: {
+                                        editorDlg.projectValue = modelData.project;
                                         editorDlg.contextNameValue = modelData.name;
                                         editorDlg.open();
                                     }
@@ -348,7 +361,10 @@ ApplicationWindow {
 
                             // Empty state
                             Rectangle {
-                                visible: contextModel.filteredContexts(root.selectedProject).length === 0
+                                visible: {
+                                    contextModel.revision;
+                                    return contextModel.filteredContexts(root.selectedProject).length === 0;
+                                }
                                 width: 300
                                 height: 160
                                 radius: Style.radiusLg
@@ -382,7 +398,10 @@ ApplicationWindow {
                                         Layout.alignment: Qt.AlignHCenter
                                         label: "New Context"
                                         accent: true
-                                        onClicked: editorDlg.open()
+                                        onClicked: {
+                                            editorDlg.projectValue = root.selectedProject;
+                                            editorDlg.open();
+                                        }
                                     }
                                 }
                             }
