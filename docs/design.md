@@ -169,6 +169,7 @@ src/rez_manager/
 │   └── context_editor.py
 └── qml/                 # QML UI files
     ├── main.qml         # Root QML; loads initial window
+    ├── DarkRezStyle/    # Custom Styles
     ├── components/      # Reusable QML components (ContextCard, etc.)
     └── windows/         # Top-level window QML files
 ```

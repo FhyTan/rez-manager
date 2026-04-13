@@ -54,10 +54,7 @@ src/rez_manager/
 
 ## PySide6 / QML Patterns
 
-- Register Python types with `qmlRegisterType` or `@QmlElement` decorator.
-- Use `Signal` for QML notifications, `@Property` for bindable values, `@Slot` for callable actions.
-- QML files live in `src/rez_manager/qml/`; load via Qt resource system or `QUrl.fromLocalFile`.
-- Prefer `ListView` + delegate pattern for all list/card UIs.
+See `.github/instructions/qml-python.instructions.md` for full details.
 
 ---
 
@@ -69,10 +66,6 @@ See `docs/rez-knowledge.md` for full details. Summary:
 # Preferred: in-process resolve (keep in adapter/ only)
 from rez.resolved_context import ResolvedContext
 ctx = ResolvedContext(["maya-2024", "python-3.11"])
-
-# Fallback: subprocess for CLI commands
-import subprocess
-proc = subprocess.run(["rez-env", ...], capture_output=True, text=True, check=False)
 ```
 
 - **Never** import `rez.*` outside of `src/rez_manager/adapter/`.
