@@ -115,6 +115,21 @@ def test_load_settings_falls_back_to_default_on_invalid_json(tmp_path, monkeypat
     assert settings.contexts_location == str(tmp_path / "contexts")
 
 
+def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
+    from rez_manager.adapter import storage
+
+    config_root = tmp_path / "config-root"
+    data_root = tmp_path / "data-root"
+    monkeypatch.delenv("REZ_MANAGER_HOME", raising=False)
+    monkeypatch.setattr(storage, "user_config_path", lambda *args, **kwargs: config_root)
+    monkeypatch.setattr(storage, "user_data_path", lambda *args, **kwargs: data_root)
+
+    assert storage.app_config_dir() == config_root
+    assert storage.app_data_dir() == data_root
+    assert storage.settings_file_path() == config_root / "settings.json"
+    assert storage.default_settings().contexts_location == str(data_root / "contexts")
+
+
 def test_list_contexts_skips_invalid_metadata(tmp_path):
     from rez_manager.adapter.storage import list_contexts
     from rez_manager.models.settings import AppSettings

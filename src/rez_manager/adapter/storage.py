@@ -8,31 +8,41 @@ import warnings
 from json import JSONDecodeError
 from pathlib import Path
 
+from platformdirs import user_config_path, user_data_path
+
 from rez_manager.models.project import Project
 from rez_manager.models.rez_context import ContextInfo, ContextMeta
 from rez_manager.models.settings import AppSettings
 
+APP_NAME = "rez-manager"
 SETTINGS_FILE_NAME = "settings.json"
 META_FILE_NAME = "meta.json"
 CONTEXT_FILE_NAME = "context.rxt"
 THUMBNAIL_FILE_NAME = "thumbnail.png"
 
 
-def app_home_dir() -> Path:
+def app_config_dir() -> Path:
     configured_home = os.environ.get("REZ_MANAGER_HOME")
     if configured_home:
         return Path(configured_home).expanduser()
-    return Path.home() / ".rez-manager"
+    return user_config_path(APP_NAME, appauthor=False)
+
+
+def app_data_dir() -> Path:
+    configured_home = os.environ.get("REZ_MANAGER_HOME")
+    if configured_home:
+        return Path(configured_home).expanduser()
+    return user_data_path(APP_NAME, appauthor=False)
 
 
 def settings_file_path() -> Path:
-    return app_home_dir() / SETTINGS_FILE_NAME
+    return app_config_dir() / SETTINGS_FILE_NAME
 
 
 def default_settings() -> AppSettings:
     return AppSettings(
         package_repositories=[],
-        contexts_location=str(app_home_dir() / "contexts"),
+        contexts_location=str(app_data_dir() / "contexts"),
     )
 
 

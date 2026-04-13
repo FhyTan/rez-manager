@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 
-class LaunchTarget(str, Enum):
+class LaunchTarget(StrEnum):
     MAYA = "maya"
     HOUDINI = "houdini"
     SHELL = "shell"
