@@ -1,5 +1,7 @@
 # rez-manager
 
+***This app is in early development and not yet ready for production use.!***
+
 A GUI tool for managing [Rez](https://rez.readthedocs.io/en/stable/) package environments.
 
 ![MainWindow](./images/MainWindow.png)

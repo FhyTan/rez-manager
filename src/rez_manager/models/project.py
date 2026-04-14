@@ -2,9 +2,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from os import PathLike
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .rez_context import RezContext
+
+
+def _context_store():
+    from rez_manager.persistence import context_store
+
+    return context_store
 
 
 def _project_store():
@@ -17,6 +27,7 @@ def _project_store():
 class Project:
     name: str
     path: str | PathLike[str] = ""
+    contexts: list[RezContext] | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.path = str(self.path)
@@ -44,6 +55,10 @@ class Project:
     def load(cls, name: str) -> Project:
         return _project_store().get_project(name)
 
+    def load_contexts(self) -> list[RezContext]:
+        self.contexts = _context_store().list_project_contexts(self.name, project=self)
+        return list(self.contexts)
+
     def rename(self, new_name: str) -> Project:
         renamed = _project_store().rename_project(self.name, new_name)
         self.name = renamed.name
@@ -54,4 +69,5 @@ class Project:
         return _project_store().duplicate_project(self.name, new_name)
 
     def delete(self) -> None:
+        self.contexts = None
         _project_store().delete_project(self.name)

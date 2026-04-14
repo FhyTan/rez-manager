@@ -20,12 +20,22 @@ ApplicationWindow {
     }
     RezContextListModel {
         id: contextModel
+        projectModel: projectModel
     }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog {
         id: settingsDlg
         anchors.centerIn: root.contentItem
+        onSaved: {
+            projectModel.reload();
+            contextModel.reload();
+            root.clampSelectedProjectIndex();
+            root.showStatus("Saved settings.", false);
+        }
+        onSaveFailed: function (message) {
+            root.showStatus(message, true);
+        }
     }
     ContextEditorDialog {
         id: editorDlg
@@ -56,7 +66,6 @@ ApplicationWindow {
 
             if (success) {
                 projectNameDlg.close();
-                contextModel.reload();
                 root.selectProjectByName(projectName);
                 root.showStatus("Saved project: " + projectName, false);
             } else {
@@ -85,7 +94,6 @@ ApplicationWindow {
         onConfirmed: {
             if (root.pendingDeleteKind === "project") {
                 if (projectModel.deleteProject(root.pendingDeleteProjectName)) {
-                    contextModel.reload();
                     root.clampSelectedProjectIndex();
                     root.showStatus("Deleted project: " + root.pendingDeleteProjectName, false);
                 } else {
@@ -119,6 +127,9 @@ ApplicationWindow {
     property string pendingDeleteKind: ""
     property string pendingDeleteProjectName: ""
     property string pendingDeleteContextName: ""
+
+    Component.onCompleted: contextModel.loadProject(selectedProject)
+    onSelectedProjectChanged: contextModel.loadProject(selectedProject)
 
     function clampSelectedProjectIndex() {
         if (projectModel.count === 0) {
@@ -372,10 +383,6 @@ ApplicationWindow {
                             projectName: parent.name
                             avatarColor: parent.avatarColor
                             selected: root.selectedProjectIndex === parent.index
-                            contextCount: {
-                                contextModel.revision;
-                                return contextModel.contextCountFor(parent.name);
-                            }
                             onClicked: root.selectedProjectIndex = parent.index
                             onEditRequested: root.openEditProjectDialog(parent.name)
                             onDuplicateRequested: root.openDuplicateProjectDialog(parent.name)
@@ -464,7 +471,7 @@ ApplicationWindow {
                             Text {
                                 text: {
                                     contextModel.revision;
-                                    return contextModel.filteredContexts(root.selectedProject).length + " contexts";
+                                    return contextModel.count + " contexts";
                                 }
                                 color: Style.textSecondary
                                 font.pixelSize: Style.fontSm

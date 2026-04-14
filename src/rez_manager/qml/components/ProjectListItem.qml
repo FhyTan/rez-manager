@@ -9,7 +9,6 @@ Rectangle {
     id: root
     property string projectName:  "Project"
     property color  avatarColor:  Style.accent
-    property int    contextCount: 0
     property bool   selected:     false
 
     signal clicked
@@ -69,25 +68,6 @@ Rectangle {
             elide:           Text.ElideRight
         }
 
-        // Context count badge
-        Rectangle {
-            visible: root.contextCount > 0
-            width:   countText_.implicitWidth + 10
-            height:  18
-            radius:  9
-            color:   root.selected
-                ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.25)
-                : Qt.rgba(1,1,1,0.06)
-
-            Text {
-                id: countText_
-                anchors.centerIn: parent
-                text:            root.contextCount
-                color:           root.selected ? Style.accent : Style.textDisabled
-                font.pixelSize:  Style.fontXs
-                font.bold:       true
-            }
-        }
     }
 
     HoverHandler {

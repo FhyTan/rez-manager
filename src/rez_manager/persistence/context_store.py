@@ -34,45 +34,39 @@ def list_contexts(settings: AppSettings | None = None) -> list[RezContext]:
         return []
 
     contexts: list[RezContext] = []
-    try:
-        project_paths = sorted(
-            (path for path in contexts_root.iterdir() if path.is_dir()),
-            key=lambda path: path.name.lower(),
-        )
-    except OSError as exc:
-        warnings.warn(
-            f"Failed to list context projects from {contexts_root}: {exc}",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-        return []
+    for project_path in _sorted_directory_children(
+        contexts_root,
+        warning_prefix="Failed to list context projects",
+    ):
+        project = Project(name=project_path.name, path=project_path)
+        contexts.extend(list_project_contexts(project.name, settings, project=project))
+    return contexts
 
-    for project_path in project_paths:
+
+def list_project_contexts(
+    project_name: str,
+    settings: AppSettings | None = None,
+    *,
+    project: Project | None = None,
+) -> list[RezContext]:
+    project_path = _project_path_for_listing(project_name, settings, project)
+    contexts: list[RezContext] = []
+
+    for context_path in _sorted_directory_children(
+        project_path,
+        warning_prefix="Failed to list contexts",
+    ):
+        meta_path = context_path / META_FILE_NAME
+        if not meta_path.exists():
+            continue
         try:
-            context_paths = sorted(
-                (path for path in project_path.iterdir() if path.is_dir()),
-                key=lambda path: path.name.lower(),
-            )
-        except OSError as exc:
+            contexts.append(_load_context_from_path(project_name, context_path, project=project))
+        except (JSONDecodeError, KeyError, OSError, TypeError, ValueError) as exc:
             warnings.warn(
-                f"Failed to list contexts from {project_path}: {exc}",
+                f"Skipping invalid context metadata at {meta_path}: {exc}",
                 RuntimeWarning,
                 stacklevel=2,
             )
-            continue
-
-        for context_path in context_paths:
-            meta_path = context_path / META_FILE_NAME
-            if not meta_path.exists():
-                continue
-            try:
-                contexts.append(load_context(project_path.name, context_path.name, settings))
-            except (JSONDecodeError, KeyError, OSError, TypeError, ValueError) as exc:
-                warnings.warn(
-                    f"Skipping invalid context metadata at {meta_path}: {exc}",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
 
     return contexts
 
@@ -161,7 +155,37 @@ def delete_context(
     shutil.rmtree(context_path)
 
 
-def _load_context_from_path(project_name: str, context_path: Path) -> RezContext:
+def _project_path_for_listing(
+    project_name: str,
+    settings: AppSettings | None,
+    project: Project | None,
+) -> Path:
+    if project is not None and project.path:
+        return Path(project.path)
+    return require_project_path(project_name, settings)
+
+
+def _sorted_directory_children(path: Path, *, warning_prefix: str) -> list[Path]:
+    try:
+        return sorted(
+            (child for child in path.iterdir() if child.is_dir()),
+            key=lambda child: child.name.lower(),
+        )
+    except OSError as exc:
+        warnings.warn(
+            f"{warning_prefix} from {path}: {exc}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return []
+
+
+def _load_context_from_path(
+    project_name: str,
+    context_path: Path,
+    *,
+    project: Project | None = None,
+) -> RezContext:
     meta_path = context_path / META_FILE_NAME
     with meta_path.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
@@ -170,5 +194,5 @@ def _load_context_from_path(project_name: str, context_path: Path) -> RezContext
         raise TypeError(f"{meta_path} must contain a JSON object")
 
     meta = ContextMeta.from_dict(data)
-    project = Project(name=project_name, path=context_path.parent)
-    return RezContext(project=project, meta=meta, path=context_path)
+    context_project = project or Project(name=project_name, path=context_path.parent)
+    return RezContext(project=context_project, meta=meta, path=context_path)

@@ -6,8 +6,10 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from os import PathLike
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from .project import Project
+if TYPE_CHECKING:
+    from .project import Project
 
 
 def _context_store():

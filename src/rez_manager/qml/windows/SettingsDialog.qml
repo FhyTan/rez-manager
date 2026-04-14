@@ -2,7 +2,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
+import RezManager
 import ".."
 import "../components"
 
@@ -14,9 +16,56 @@ Dialog {
     width: 620
     height: Math.max(480, implicitHeight)
     padding: Style.xl
+    property var packageRepositoriesValue: []
+    signal saved()
+    signal saveFailed(string message)
     standardButtons: Dialog.Save | Dialog.Cancel
-    onAccepted: root.close()
+    onAboutToShow: {
+        settingsController_.reload();
+        root.packageRepositoriesValue = settingsController_.packageRepositories;
+        contextsLocationField_.text = settingsController_.contextsLocation;
+        newRepoField_.text = "";
+    }
+    onAccepted: {
+        if (settingsController_.save(root.packageRepositoriesValue, contextsLocationField_.text)) {
+            root.saved();
+            root.close();
+        } else {
+            root.saveFailed(settingsController_.lastError);
+        }
+    }
     onRejected: root.close()
+
+    function addRepository(path) {
+        const trimmedPath = path.trim();
+        if (trimmedPath.length === 0)
+            return;
+
+        const nextRepositories = root.packageRepositoriesValue.slice();
+        nextRepositories.push(trimmedPath);
+        root.packageRepositoriesValue = nextRepositories;
+        newRepoField_.text = "";
+    }
+
+    function removeRepository(index) {
+        if (index < 0 || index >= root.packageRepositoriesValue.length)
+            return;
+
+        const nextRepositories = root.packageRepositoriesValue.slice();
+        nextRepositories.splice(index, 1);
+        root.packageRepositoriesValue = nextRepositories;
+    }
+
+    AppSettingsController {
+        id: settingsController_
+    }
+
+    FolderDialog {
+        id: contextsFolderDialog_
+        onAccepted: contextsLocationField_.text = settingsController_.pathFromUrl(
+            contextsFolderDialog_.selectedFolder.toString()
+        )
+    }
 
     contentItem: ScrollView {
         clip: true
@@ -61,7 +110,7 @@ Dialog {
                         spacing: 2
 
                         Repeater {
-                            model: ["/packages/maya", "/packages/houdini", "/packages/base"]
+                            model: root.packageRepositoriesValue
                             delegate: Rectangle {
                                 id: repoRow_
                                 required property string modelData
@@ -101,6 +150,7 @@ Dialog {
                                     CardButton {
                                         glyph: "✕"
                                         danger: true
+                                        onClicked: root.removeRepository(repoRow_.index)
                                     }
                                 }
                                 HoverHandler {
@@ -116,14 +166,17 @@ Dialog {
                     Layout.fillWidth: true
                     spacing: Style.sm
                     TextField {
+                        id: newRepoField_
                         Layout.fillWidth: true
-                        text: "/packages/new"
                         placeholderText: "Repository path"
+                        onAccepted: root.addRepository(text)
                     }
                     CardButton {
+                        id: addRepoButton_
                         glyph: "+"
                         label: "Add"
                         accent: true
+                        onClicked: root.addRepository(newRepoField_.text)
                     }
                 }
             }
@@ -150,11 +203,12 @@ Dialog {
                     Layout.fillWidth: true
                     spacing: Style.sm
                     TextField {
+                        id: contextsLocationField_
                         Layout.fillWidth: true
-                        text: "/home/user/rez-contexts"
                     }
                     CardButton {
                         label: "Browse…"
+                        onClicked: contextsFolderDialog_.open()
                     }
                 }
             }

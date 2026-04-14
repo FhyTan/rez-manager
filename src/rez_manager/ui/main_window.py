@@ -9,6 +9,7 @@ from PySide6.QtCore import (
     QAbstractListModel,
     QByteArray,
     QModelIndex,
+    QObject,
     Qt,
     Signal,
     Slot,
@@ -127,6 +128,17 @@ class ProjectListModel(_BaseListModel):
     def projectNames(self) -> list[str]:
         return [project.name for project in self._items]
 
+    def get_project(self, name: str) -> Project | None:
+        for project in self._items:
+            if project.name == name:
+                return project
+        return None
+
+    def reload_project_contexts(self, name: str) -> None:
+        project = self.get_project(name)
+        if project is not None and project.contexts is not None:
+            project.load_contexts()
+
     @Slot(str, result=int)
     def indexOfProject(self, name: str) -> int:  # noqa: N802
         for index, project in enumerate(self._items):
@@ -177,6 +189,7 @@ class ProjectListModel(_BaseListModel):
 
 @QmlElement
 class RezContextListModel(_BaseListModel):
+    projectModelChanged = Signal()
     ProjectRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
     DescriptionRole = Qt.UserRole + 3
@@ -185,6 +198,21 @@ class RezContextListModel(_BaseListModel):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self._project_model: ProjectListModel | None = None
+        self._current_project_name = ""
+        self.reload()
+
+    @Property(QObject, notify=projectModelChanged)
+    def projectModel(self) -> QObject | None:  # noqa: N802
+        return self._project_model
+
+    @projectModel.setter
+    def projectModel(self, model: QObject | None) -> None:  # noqa: N802
+        typed_model = model if isinstance(model, ProjectListModel) else None
+        if self._project_model is typed_model:
+            return
+        self._project_model = typed_model
+        self.projectModelChanged.emit()
         self.reload()
 
     def roleNames(self) -> dict[int, QByteArray]:  # noqa: N802
@@ -216,8 +244,11 @@ class RezContextListModel(_BaseListModel):
 
     @Slot()
     def reload(self) -> None:
-        self._reset_items(RezContext.all())
-        self._clear_error()
+        self._load_project(self._current_project_name, refresh=True)
+
+    @Slot(str, result=bool)
+    def loadProject(self, project_name: str) -> bool:  # noqa: N802
+        return self._load_project(project_name)
 
     @Slot(int, result="QVariantMap")
     def get(self, index: int) -> dict[str, object]:
@@ -227,15 +258,12 @@ class RezContextListModel(_BaseListModel):
 
     @Slot(str, result="QVariantList")
     def filteredContexts(self, project_name: str) -> list[dict[str, object]]:  # noqa: N802
+        if project_name != self._current_project_name:
+            return []
         return [
             self._context_payload(context)
             for context in self._items
-            if context.project_name == project_name
         ]
-
-    @Slot(str, result=int)
-    def contextCountFor(self, project_name: str) -> int:  # noqa: N802
-        return sum(1 for context in self._items if context.project_name == project_name)
 
     def _context_payload(self, context: RezContext) -> dict[str, object]:
         return {
@@ -283,6 +311,7 @@ class RezContextListModel(_BaseListModel):
         except (OSError, TypeError, ValueError) as exc:
             self._set_error(str(exc))
             return False
+        self._reload_project_contexts(original_project_name, project_name)
         self.reload()
         return True
 
@@ -302,6 +331,7 @@ class RezContextListModel(_BaseListModel):
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False
+        self._reload_project_contexts(source_project_name, target_project_name)
         self.reload()
         return True
 
@@ -312,5 +342,50 @@ class RezContextListModel(_BaseListModel):
         except (OSError, ValueError) as exc:
             self._set_error(str(exc))
             return False
+        self._reload_project_contexts(project_name)
         self.reload()
         return True
+
+    def _load_project(self, project_name: str, *, refresh: bool = False) -> bool:
+        self._current_project_name = project_name
+        if not project_name:
+            self._reset_items([])
+            self._clear_error()
+            return True
+
+        project = self._resolve_project(project_name)
+        if project is None:
+            self._reset_items([])
+            self._clear_error()
+            return False
+
+        try:
+            if refresh or project.contexts is None:
+                project.load_contexts()
+            self._reset_items(project.contexts or [])
+        except (OSError, TypeError, ValueError) as exc:
+            self._reset_items([])
+            self._set_error(str(exc))
+            return False
+
+        self._clear_error()
+        return True
+
+    def _resolve_project(self, project_name: str) -> Project | None:
+        if not project_name:
+            return None
+        if self._project_model is not None:
+            project = self._project_model.get_project(project_name)
+            if project is not None:
+                return project
+        try:
+            return Project.load(project_name)
+        except (OSError, ValueError):
+            return None
+
+    def _reload_project_contexts(self, *project_names: str) -> None:
+        if self._project_model is None:
+            return
+        for project_name in project_names:
+            if project_name:
+                self._project_model.reload_project_contexts(project_name)
