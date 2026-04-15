@@ -101,7 +101,7 @@ class ProjectListModel(QAbstractListModel):
             "avatarColor": _project_color(project.name),
         }
 
-    @Property("QVariantList", notify="projectNamesChanged")
+    @Property("QVariantList", notify=projectNamesChanged)
     def projectNames(self) -> list[str]:
         return [project.name for project in self._items]
 
@@ -310,7 +310,7 @@ class RezContextListModel(QAbstractListModel):
             return {}
         return self._context_payload(self._items[index])
 
-    @Property("QVariantList", notify="contextsChanged")
+    @Property("QVariantList", notify=contextsChanged)
     def contexts(self) -> list[dict[str, object]]:
         return [self._context_payload(context) for context in self._items]
 
