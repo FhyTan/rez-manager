@@ -234,7 +234,6 @@ def test_project_list_model_project_names_refresh_on_reload(tmp_path, monkeypatc
     save_settings(AppSettings(contexts_location=str(contexts_root)))
 
     model = ProjectListModel()
-    initial_revision = model.revision
     assert model.projectNames == []
 
     context_dir = contexts_root / "Pipeline" / "Context A"
@@ -254,7 +253,7 @@ def test_project_list_model_project_names_refresh_on_reload(tmp_path, monkeypatc
 
     model.reload()
 
-    assert model.revision > initial_revision
+    assert model.count == 1
     assert model.projectNames == ["Pipeline"]
 
 
@@ -270,7 +269,6 @@ def test_context_list_model_refresh_updates_revision_and_loaded_contexts(tmp_pat
     project_model = ProjectListModel()
     model = RezContextListModel()
     model.projectModel = project_model
-    initial_revision = model.revision
     assert model.count == 0
 
     context_dir = contexts_root / "Pipeline" / "Context A"
@@ -292,8 +290,8 @@ def test_context_list_model_refresh_updates_revision_and_loaded_contexts(tmp_pat
     assert project_model.get_project("Pipeline").contexts is None
     model.loadProject("Pipeline")
 
-    assert model.revision > initial_revision
     assert model.count == 1
+    assert [item["name"] for item in model.contexts] == ["Context A"]
     assert len(model.filteredContexts("Pipeline")) == 1
     assert [context.name for context in project_model.get_project("Pipeline").contexts or []] == [
         "Context A"
@@ -531,6 +529,7 @@ def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
 def test_app_settings_controller_reload_exposes_saved_settings(tmp_path, monkeypatch):
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.error_hub import app_error_hub
     from rez_manager.ui.settings_controller import AppSettingsController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
@@ -541,21 +540,24 @@ def test_app_settings_controller_reload_exposes_saved_settings(tmp_path, monkeyp
         )
     )
 
+    app_error_hub.clear()
     controller = AppSettingsController()
 
     assert controller.packageRepositories == ["D:\\packages\\maya", "D:\\packages\\base"]
     assert controller.contextsLocation == str(tmp_path / "contexts")
-    assert controller.lastError == ""
+    assert app_error_hub.message == ""
 
 
 def test_app_settings_controller_save_updates_settings_file(tmp_path, monkeypatch):
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import load_settings, save_settings
+    from rez_manager.ui.error_hub import app_error_hub
     from rez_manager.ui.settings_controller import AppSettingsController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
 
+    app_error_hub.clear()
     controller = AppSettingsController()
 
     assert controller.save(
@@ -568,14 +570,48 @@ def test_app_settings_controller_save_updates_settings_file(tmp_path, monkeypatc
     assert settings.contexts_location == str(tmp_path / "new-contexts")
     assert controller.packageRepositories == ["D:\\packages\\maya", "D:\\packages\\base"]
     assert controller.contextsLocation == str(tmp_path / "new-contexts")
+    assert app_error_hub.message == ""
 
 
 def test_app_settings_controller_save_rejects_blank_contexts_location(tmp_path, monkeypatch):
+    from rez_manager.ui.error_hub import app_error_hub
     from rez_manager.ui.settings_controller import AppSettingsController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
 
+    app_error_hub.clear()
     controller = AppSettingsController()
 
     assert not controller.save(["D:\\packages\\maya"], "   ")
-    assert controller.lastError == "Contexts location is required."
+    assert app_error_hub.message == "Contexts location is required."
+
+
+def test_project_list_model_reports_errors_to_app_error_hub(tmp_path, monkeypatch):
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.error_hub import app_error_hub
+    from rez_manager.ui.main_window import ProjectListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+
+    app_error_hub.clear()
+    model = ProjectListModel()
+
+    assert model.createProject("Pipeline")
+    assert not model.createProject("Pipeline")
+    assert "already exists" in app_error_hub.message
+
+
+def test_uncaught_hook_reports_unexpected_exceptions_to_app_error_hub():
+    from rez_manager.exception_hook import qt_exception_hook
+    from rez_manager.ui.error_hub import app_error_hub
+
+    app_error_hub.clear()
+
+    try:
+        raise RuntimeError("boom")
+    except RuntimeError as exc:
+        qt_exception_hook.exception_hook(type(exc), exc, exc.__traceback__)
+
+    assert app_error_hub.message == "Unexpected application error: RuntimeError: boom"

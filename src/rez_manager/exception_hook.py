@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import sys
 import traceback
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
 
+from rez_manager.ui.error_hub import report_unexpected_exception
+
 
 class UncaughtHook(QObject):
-    _exception_caught = Signal(object)
+    _exception_caught = Signal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -14,8 +18,7 @@ class UncaughtHook(QObject):
         # this registers the exception_hook() function as hook with the Python interpreter
         sys.excepthook = self.exception_hook
 
-        # connect signal to execute the message box function always on main thread
-        # self._exception_caught.connect(show_exception_box)
+        self._exception_caught.connect(report_unexpected_exception)
 
     def exception_hook(self, exc_type, exc_value, exc_traceback):
         """Function handling uncaught exceptions.

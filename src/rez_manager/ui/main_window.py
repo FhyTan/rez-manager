@@ -19,6 +19,7 @@ from PySide6.QtQml import QmlElement
 
 from rez_manager.models.project import Project
 from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -39,59 +40,31 @@ def _project_color(name: str) -> str:
     return _PROJECT_COLORS[sum(ord(char) for char in name) % len(_PROJECT_COLORS)]
 
 
-class _BaseListModel(QAbstractListModel):
-    countChanged = Signal()
-    revisionChanged = Signal()
-    errorChanged = Signal()
-
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent)
-        self._items: list[object] = []
-        self._revision = 0
-        self._last_error = ""
-
-    def _reset_items(self, items: Sequence[object]) -> None:
-        self.beginResetModel()
-        self._items = list(items)
-        self._revision += 1
-        self.endResetModel()
-        self.countChanged.emit()
-        self.revisionChanged.emit()
-
-    @Property(int, notify=countChanged)
-    def count(self) -> int:
-        return self.rowCount()
-
-    @Property(int, notify=revisionChanged)
-    def revision(self) -> int:
-        return self._revision
-
-    @Property(str, notify=errorChanged)
-    def lastError(self) -> str:  # noqa: N802
-        return self._last_error
-
-    def _set_error(self, message: str) -> None:
-        if self._last_error != message:
-            self._last_error = message
-            self.errorChanged.emit()
-
-    def _clear_error(self) -> None:
-        self._set_error("")
-
-    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
-        if parent.isValid():
-            return 0
-        return len(self._items)
-
-
 @QmlElement
-class ProjectListModel(_BaseListModel):
+class ProjectListModel(QAbstractListModel):
+    countChanged = Signal()
     NameRole = Qt.ItemDataRole.UserRole + 1
     AvatarColorRole = Qt.ItemDataRole.UserRole + 2
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self._items: list[Project] = []
         self.reload()
+
+    def _reset_items(self, items: Sequence[Project]) -> None:
+        self.beginResetModel()
+        self._items = list(items)
+        self.endResetModel()
+        self.countChanged.emit()
+
+    @Property(int, notify=countChanged)
+    def count(self) -> int:
+        return self.rowCount()
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
+        if parent.isValid():
+            return 0
+        return len(self._items)
 
     def roleNames(self) -> dict[int, QByteArray]:  # noqa: N802
         return {
@@ -112,7 +85,7 @@ class ProjectListModel(_BaseListModel):
     @Slot()
     def reload(self) -> None:
         self._reset_items(Project.all())
-        self._clear_error()
+        clear_ui_error()
 
     @Slot(int, result="QVariantMap")
     def get(self, index: int) -> dict[str, object]:
@@ -151,7 +124,7 @@ class ProjectListModel(_BaseListModel):
         try:
             Project.create(name)
         except (OSError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self.reload()
         return True
@@ -161,7 +134,7 @@ class ProjectListModel(_BaseListModel):
         try:
             Project.load(current_name).rename(new_name)
         except (OSError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self.reload()
         return True
@@ -171,7 +144,7 @@ class ProjectListModel(_BaseListModel):
         try:
             Project.load(source_name).duplicate(target_name)
         except (OSError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self.reload()
         return True
@@ -181,14 +154,15 @@ class ProjectListModel(_BaseListModel):
         try:
             Project.load(name).delete()
         except (OSError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self.reload()
         return True
 
 
 @QmlElement
-class RezContextListModel(_BaseListModel):
+class RezContextListModel(QAbstractListModel):
+    countChanged = Signal()
     projectModelChanged = Signal()
     ProjectRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
@@ -198,9 +172,25 @@ class RezContextListModel(_BaseListModel):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self._items: list[RezContext] = []
         self._project_model: ProjectListModel | None = None
         self._current_project_name = ""
         self.reload()
+
+    def _reset_items(self, items: Sequence[RezContext]) -> None:
+        self.beginResetModel()
+        self._items = list(items)
+        self.endResetModel()
+        self.countChanged.emit()
+
+    @Property(int, notify=countChanged)
+    def count(self) -> int:
+        return self.rowCount()
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
+        if parent.isValid():
+            return 0
+        return len(self._items)
 
     @Property(QObject, notify=projectModelChanged)
     def projectModel(self) -> QObject | None:  # noqa: N802
@@ -256,14 +246,15 @@ class RezContextListModel(_BaseListModel):
             return {}
         return self._context_payload(self._items[index])
 
+    @Property("QVariantList", notify="countChanged")
+    def contexts(self) -> list[dict[str, object]]:
+        return [self._context_payload(context) for context in self._items]
+
     @Slot(str, result="QVariantList")
     def filteredContexts(self, project_name: str) -> list[dict[str, object]]:  # noqa: N802
         if project_name != self._current_project_name:
             return []
-        return [
-            self._context_payload(context)
-            for context in self._items
-        ]
+        return self.contexts
 
     def _context_payload(self, context: RezContext) -> dict[str, object]:
         return {
@@ -309,7 +300,7 @@ class RezContextListModel(_BaseListModel):
             else:
                 RezContext.create(project_name, meta)
         except (OSError, TypeError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self._reload_project_contexts(original_project_name, project_name)
         self.reload()
@@ -329,7 +320,7 @@ class RezContextListModel(_BaseListModel):
                 target_context_name,
             )
         except (OSError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self._reload_project_contexts(source_project_name, target_project_name)
         self.reload()
@@ -340,7 +331,7 @@ class RezContextListModel(_BaseListModel):
         try:
             RezContext.load(project_name, context_name).delete()
         except (OSError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
         self._reload_project_contexts(project_name)
         self.reload()
@@ -350,13 +341,13 @@ class RezContextListModel(_BaseListModel):
         self._current_project_name = project_name
         if not project_name:
             self._reset_items([])
-            self._clear_error()
+            clear_ui_error()
             return True
 
         project = self._resolve_project(project_name)
         if project is None:
             self._reset_items([])
-            self._clear_error()
+            clear_ui_error()
             return False
 
         try:
@@ -365,10 +356,10 @@ class RezContextListModel(_BaseListModel):
             self._reset_items(project.contexts or [])
         except (OSError, TypeError, ValueError) as exc:
             self._reset_items([])
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
 
-        self._clear_error()
+        clear_ui_error()
         return True
 
     def _resolve_project(self, project_name: str) -> Project | None:

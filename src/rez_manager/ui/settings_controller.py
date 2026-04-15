@@ -6,6 +6,7 @@ from PySide6.QtCore import Property, QObject, QUrl, Signal, Slot
 from PySide6.QtQml import QmlElement
 
 from rez_manager.models.settings import AppSettings
+from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -15,12 +16,10 @@ QML_IMPORT_MAJOR_VERSION = 1
 class AppSettingsController(QObject):
     packageRepositoriesChanged = Signal()
     contextsLocationChanged = Signal()
-    errorChanged = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._settings = AppSettings.default()
-        self._last_error = ""
         self.reload()
 
     @Property("QVariantList", notify="packageRepositoriesChanged")
@@ -31,14 +30,10 @@ class AppSettingsController(QObject):
     def contextsLocation(self) -> str:  # noqa: N802
         return self._settings.contexts_location
 
-    @Property(str, notify=errorChanged)
-    def lastError(self) -> str:  # noqa: N802
-        return self._last_error
-
     @Slot()
     def reload(self) -> None:
         self._apply_settings(AppSettings.load())
-        self._clear_error()
+        clear_ui_error()
 
     @Slot("QVariantList", str, result=bool)
     def save(self, package_repositories: list[str], contexts_location: str) -> bool:
@@ -46,7 +41,7 @@ class AppSettingsController(QObject):
         location = contexts_location.strip()
 
         if not location:
-            self._set_error("Contexts location is required.")
+            report_ui_error("Contexts location is required.")
             return False
 
         try:
@@ -56,11 +51,11 @@ class AppSettingsController(QObject):
             )
             settings.save()
         except (OSError, TypeError, ValueError) as exc:
-            self._set_error(str(exc))
+            report_ui_error(str(exc))
             return False
 
         self._apply_settings(settings)
-        self._clear_error()
+        clear_ui_error()
         return True
 
     @Slot(str, result=str)
@@ -78,11 +73,3 @@ class AppSettingsController(QObject):
             self.packageRepositoriesChanged.emit()
         if location_changed:
             self.contextsLocationChanged.emit()
-
-    def _set_error(self, message: str) -> None:
-        if self._last_error != message:
-            self._last_error = message
-            self.errorChanged.emit()
-
-    def _clear_error(self) -> None:
-        self._set_error("")

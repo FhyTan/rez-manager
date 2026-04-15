@@ -33,9 +33,6 @@ ApplicationWindow {
             root.clampSelectedProjectIndex();
             root.showStatus("Saved settings.", false);
         }
-        onSaveFailed: function (message) {
-            root.showStatus(message, true);
-        }
     }
     ContextEditorDialog {
         id: editorDlg
@@ -47,8 +44,6 @@ ApplicationWindow {
                 editorDlg.close();
                 root.selectProjectByName(projectName);
                 root.showStatus("Saved context: " + projectName + " / " + contextName, false);
-            } else {
-                root.showStatus(contextModel.lastError, true);
             }
         }
     }
@@ -68,8 +63,6 @@ ApplicationWindow {
                 projectNameDlg.close();
                 root.selectProjectByName(projectName);
                 root.showStatus("Saved project: " + projectName, false);
-            } else {
-                root.showStatus(projectModel.lastError, true);
             }
         }
     }
@@ -83,8 +76,6 @@ ApplicationWindow {
                 contextDuplicateDlg.close();
                 root.selectProjectByName(projectName);
                 root.showStatus("Duplicated context: " + projectName + " / " + contextName, false);
-            } else {
-                root.showStatus(contextModel.lastError, true);
             }
         }
     }
@@ -96,14 +87,10 @@ ApplicationWindow {
                 if (projectModel.deleteProject(root.pendingDeleteProjectName)) {
                     root.clampSelectedProjectIndex();
                     root.showStatus("Deleted project: " + root.pendingDeleteProjectName, false);
-                } else {
-                    root.showStatus(projectModel.lastError, true);
                 }
             } else if (root.pendingDeleteKind === "context") {
                 if (contextModel.deleteContext(root.pendingDeleteProjectName, root.pendingDeleteContextName)) {
                     root.showStatus("Deleted context: " + root.pendingDeleteProjectName + " / " + root.pendingDeleteContextName, false);
-                } else {
-                    root.showStatus(contextModel.lastError, true);
                 }
             }
         }
@@ -238,6 +225,13 @@ ApplicationWindow {
         target: projectModel
         function onCountChanged() {
             root.clampSelectedProjectIndex();
+        }
+    }
+
+    Connections {
+        target: AppErrorHub
+        function onErrorOccurred(message) {
+            root.showStatus(message, true);
         }
     }
 
@@ -469,10 +463,7 @@ ApplicationWindow {
                                 font.bold: true
                             }
                             Text {
-                                text: {
-                                    contextModel.revision;
-                                    return contextModel.count + " contexts";
-                                }
+                                text: contextModel.count + " contexts"
                                 color: Style.textSecondary
                                 font.pixelSize: Style.fontSm
                             }
@@ -516,10 +507,7 @@ ApplicationWindow {
                             spacing: Style.lg
 
                             Repeater {
-                                model: {
-                                    contextModel.revision;
-                                    return contextModel.filteredContexts(root.selectedProject);
-                                }
+                                model: contextModel.contexts
 
                                 ContextCard {
                                     required property var modelData
@@ -552,10 +540,7 @@ ApplicationWindow {
 
                             // Empty state
                             Rectangle {
-                                visible: {
-                                    contextModel.revision;
-                                    return contextModel.filteredContexts(root.selectedProject).length === 0;
-                                }
+                                visible: contextModel.count === 0
                                 width: 300
                                 height: 160
                                 radius: Style.radiusLg

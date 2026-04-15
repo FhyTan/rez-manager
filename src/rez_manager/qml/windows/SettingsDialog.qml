@@ -18,7 +18,6 @@ Dialog {
     padding: Style.xl
     property var packageRepositoriesValue: []
     signal saved()
-    signal saveFailed(string message)
     standardButtons: Dialog.Save | Dialog.Cancel
     onAboutToShow: {
         settingsController_.reload();
@@ -30,8 +29,6 @@ Dialog {
         if (settingsController_.save(root.packageRepositoriesValue, contextsLocationField_.text)) {
             root.saved();
             root.close();
-        } else {
-            root.saveFailed(settingsController_.lastError);
         }
     }
     onRejected: root.close()
