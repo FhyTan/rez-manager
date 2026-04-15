@@ -40,9 +40,17 @@ def _project_color(name: str) -> str:
     return _PROJECT_COLORS[sum(ord(char) for char in name) % len(_PROJECT_COLORS)]
 
 
+def _sorted_row(items: Sequence[Project] | Sequence[RezContext], name: str) -> int:
+    normalized_name = name.lower()
+    for index, item in enumerate(items):
+        if item.name.lower() > normalized_name:
+            return index
+    return len(items)
+
+
 @QmlElement
 class ProjectListModel(QAbstractListModel):
-    countChanged = Signal()
+    projectNamesChanged = Signal()
     NameRole = Qt.ItemDataRole.UserRole + 1
     AvatarColorRole = Qt.ItemDataRole.UserRole + 2
 
@@ -55,11 +63,7 @@ class ProjectListModel(QAbstractListModel):
         self.beginResetModel()
         self._items = list(items)
         self.endResetModel()
-        self.countChanged.emit()
-
-    @Property(int, notify=countChanged)
-    def count(self) -> int:
-        return self.rowCount()
+        self.projectNamesChanged.emit()
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
         if parent.isValid():
@@ -97,7 +101,7 @@ class ProjectListModel(QAbstractListModel):
             "avatarColor": _project_color(project.name),
         }
 
-    @Property("QVariantList", notify="countChanged")
+    @Property("QVariantList", notify="projectNamesChanged")
     def projectNames(self) -> list[str]:
         return [project.name for project in self._items]
 
@@ -106,6 +110,37 @@ class ProjectListModel(QAbstractListModel):
             if project.name == name:
                 return project
         return None
+
+    def _find_project_row(self, name: str) -> int:
+        for index, project in enumerate(self._items):
+            if project.name == name:
+                return index
+        return -1
+
+    def _insert_project(self, project: Project) -> None:
+        row = _sorted_row(self._items, project.name)
+        self.beginInsertRows(QModelIndex(), row, row)
+        self._items.insert(row, project)
+        self.endInsertRows()
+        self.projectNamesChanged.emit()
+
+    def _remove_project(self, row: int) -> Project:
+        self.beginRemoveRows(QModelIndex(), row, row)
+        project = self._items.pop(row)
+        self.endRemoveRows()
+        self.projectNamesChanged.emit()
+        return project
+
+    def _project_missing_message(self, name: str) -> str:
+        return f"Project '{name}' is no longer available. Refresh the list and try again."
+
+    def _load_project_for_action(self, name: str) -> Project | None:
+        try:
+            loaded_project = Project.load(name)
+        except (OSError, ValueError):
+            report_ui_error(self._project_missing_message(name))
+            return None
+        return self.get_project(name) or loaded_project
 
     def reload_project_contexts(self, name: str) -> None:
         project = self.get_project(name)
@@ -120,55 +155,82 @@ class ProjectListModel(QAbstractListModel):
         return -1
 
     @Slot(str, result=bool)
+    def ensureProjectExists(self, name: str) -> bool:  # noqa: N802
+        if self._load_project_for_action(name) is None:
+            return False
+        clear_ui_error()
+        return True
+
+    @Slot(str, result=bool)
     def createProject(self, name: str) -> bool:  # noqa: N802
         try:
-            Project.create(name)
+            project = Project.create(name)
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self.reload()
+        self._insert_project(project)
+        clear_ui_error()
         return True
 
     @Slot(str, str, result=bool)
     def renameProject(self, current_name: str, new_name: str) -> bool:  # noqa: N802
+        project = self._load_project_for_action(current_name)
+        if project is None:
+            return False
+        row = self._find_project_row(current_name)
         try:
-            Project.load(current_name).rename(new_name)
+            project.rename(new_name)
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self.reload()
+        if row >= 0:
+            self._remove_project(row)
+        self._insert_project(project)
+        clear_ui_error()
         return True
 
     @Slot(str, str, result=bool)
     def duplicateProject(self, source_name: str, target_name: str) -> bool:  # noqa: N802
+        project = self._load_project_for_action(source_name)
+        if project is None:
+            return False
         try:
-            Project.load(source_name).duplicate(target_name)
+            duplicated = project.duplicate(target_name)
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self.reload()
+        self._insert_project(duplicated)
+        clear_ui_error()
         return True
 
     @Slot(str, result=bool)
     def deleteProject(self, name: str) -> bool:  # noqa: N802
+        project = self._load_project_for_action(name)
+        if project is None:
+            return False
         try:
-            Project.load(name).delete()
+            project.delete()
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self.reload()
+        row = self._find_project_row(name)
+        if row >= 0:
+            self._remove_project(row)
+        clear_ui_error()
         return True
 
 
 @QmlElement
 class RezContextListModel(QAbstractListModel):
-    countChanged = Signal()
+    contextsChanged = Signal()
     projectModelChanged = Signal()
     ProjectRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
     DescriptionRole = Qt.UserRole + 3
     LaunchTargetRole = Qt.UserRole + 4
     PackagesRole = Qt.UserRole + 5
+    PackageRequestsRole = Qt.UserRole + 6
+    CustomCommandRole = Qt.UserRole + 7
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -181,11 +243,7 @@ class RezContextListModel(QAbstractListModel):
         self.beginResetModel()
         self._items = list(items)
         self.endResetModel()
-        self.countChanged.emit()
-
-    @Property(int, notify=countChanged)
-    def count(self) -> int:
-        return self.rowCount()
+        self.contextsChanged.emit()
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
         if parent.isValid():
@@ -212,6 +270,8 @@ class RezContextListModel(QAbstractListModel):
             self.DescriptionRole: QByteArray(b"description"),
             self.LaunchTargetRole: QByteArray(b"launchTarget"),
             self.PackagesRole: QByteArray(b"packages"),
+            self.PackageRequestsRole: QByteArray(b"packageRequests"),
+            self.CustomCommandRole: QByteArray(b"customCommand"),
         }
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
@@ -230,6 +290,10 @@ class RezContextListModel(QAbstractListModel):
             return payload["launchTarget"]
         if role == self.PackagesRole:
             return payload["packages"]
+        if role == self.PackageRequestsRole:
+            return payload["packageRequests"]
+        if role == self.CustomCommandRole:
+            return payload["customCommand"]
         return None
 
     @Slot()
@@ -246,7 +310,7 @@ class RezContextListModel(QAbstractListModel):
             return {}
         return self._context_payload(self._items[index])
 
-    @Property("QVariantList", notify="countChanged")
+    @Property("QVariantList", notify="contextsChanged")
     def contexts(self) -> list[dict[str, object]]:
         return [self._context_payload(context) for context in self._items]
 
@@ -266,6 +330,127 @@ class RezContextListModel(QAbstractListModel):
             "packageRequests": list(context.packages),
             "customCommand": context.meta.custom_command or "",
         }
+
+    def _context_roles(self) -> list[int]:
+        return [
+            self.ProjectRole,
+            self.NameRole,
+            self.DescriptionRole,
+            self.LaunchTargetRole,
+            self.PackagesRole,
+            self.PackageRequestsRole,
+            self.CustomCommandRole,
+        ]
+
+    def _bind_context_project(self, context: RezContext) -> RezContext:
+        if self._project_model is None:
+            return context
+        project = self._project_model.get_project(context.project_name)
+        if project is not None:
+            context.project = project
+        return context
+
+    def _find_context_row(self, project_name: str, context_name: str) -> int:
+        for index, context in enumerate(self._items):
+            if context.project_name == project_name and context.name == context_name:
+                return index
+        return -1
+
+    def _insert_context(self, context: RezContext) -> None:
+        row = _sorted_row(self._items, context.name)
+        self.beginInsertRows(QModelIndex(), row, row)
+        self._items.insert(row, context)
+        self.endInsertRows()
+        self.contextsChanged.emit()
+
+    def _remove_context(self, row: int) -> RezContext:
+        self.beginRemoveRows(QModelIndex(), row, row)
+        context = self._items.pop(row)
+        self.endRemoveRows()
+        self.contextsChanged.emit()
+        return context
+
+    def _update_context(self, row: int, context: RezContext) -> None:
+        self._items[row] = context
+        model_index = self.index(row, 0)
+        self.dataChanged.emit(model_index, model_index, self._context_roles())
+        self.contextsChanged.emit()
+
+    def _context_missing_message(self, project_name: str, context_name: str) -> str:
+        return (
+            f"Context '{context_name}' in project '{project_name}' is no longer available. "
+            "Refresh the list and try again."
+        )
+
+    def _load_context_for_action(self, project_name: str, context_name: str) -> RezContext | None:
+        try:
+            loaded_context = RezContext.load(project_name, context_name)
+        except (OSError, ValueError):
+            report_ui_error(self._context_missing_message(project_name, context_name))
+            return None
+
+        row = self._find_context_row(project_name, context_name)
+        if row >= 0:
+            return self._items[row]
+        return self._bind_context_project(loaded_context)
+
+    def _cached_project(self, project_name: str) -> Project | None:
+        if self._project_model is None:
+            return None
+        return self._project_model.get_project(project_name)
+
+    def _insert_cached_context(self, context: RezContext) -> None:
+        project = self._cached_project(context.project_name)
+        if project is None or project.contexts is None:
+            return
+        context.project = project
+        row = _sorted_row(project.contexts, context.name)
+        project.contexts.insert(row, context)
+
+    def _find_cached_context_row(self, project_name: str, context_name: str) -> int:
+        project = self._cached_project(project_name)
+        if project is None or project.contexts is None:
+            return -1
+
+        for index, cached_context in enumerate(project.contexts):
+            if cached_context.name == context_name:
+                return index
+        return -1
+
+    def _replace_cached_context(
+        self,
+        project_name: str,
+        original_context_name: str,
+        context: RezContext,
+    ) -> None:
+        project = self._cached_project(project_name)
+        if project is None or project.contexts is None:
+            return
+
+        for index, cached_context in enumerate(project.contexts):
+            if cached_context.name == original_context_name:
+                context.project = project
+                project.contexts[index] = context
+                return
+
+    def _remove_cached_context(self, project_name: str, context_name: str) -> None:
+        row = self._find_cached_context_row(project_name, context_name)
+        if row >= 0:
+            self._remove_cached_context_row(project_name, row)
+
+    def _remove_cached_context_row(self, project_name: str, row: int) -> None:
+        project = self._cached_project(project_name)
+        if project is None or project.contexts is None:
+            return
+        if 0 <= row < len(project.contexts):
+            project.contexts.pop(row)
+
+    @Slot(str, str, result=bool)
+    def ensureContextExists(self, project_name: str, context_name: str) -> bool:  # noqa: N802
+        if self._load_context_for_action(project_name, context_name) is None:
+            return False
+        clear_ui_error()
+        return True
 
     @Slot(str, str, str, str, str, str, str, "QVariantList", result=bool)
     def saveContext(  # noqa: N802
@@ -293,17 +478,53 @@ class RezContextListModel(QAbstractListModel):
                 packages=[str(package) for package in packages],
             )
             if original_project_name and original_context_name:
-                RezContext.load(
+                current_row = self._find_context_row(original_project_name, original_context_name)
+                cached_row = self._find_cached_context_row(
                     original_project_name,
                     original_context_name,
-                ).update(project_name, meta)
+                )
+                context = self._load_context_for_action(
+                    original_project_name,
+                    original_context_name,
+                )
+                if context is None:
+                    return False
+                updated_context = self._bind_context_project(context.update(project_name, meta))
             else:
-                RezContext.create(project_name, meta)
+                current_row = -1
+                cached_row = -1
+                if self._project_model is not None and not self._project_model.ensureProjectExists(
+                    project_name
+                ):
+                    return False
+                updated_context = self._bind_context_project(RezContext.create(project_name, meta))
         except (OSError, TypeError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self._reload_project_contexts(original_project_name, project_name)
-        self.reload()
+
+        if original_project_name and original_context_name:
+            if original_project_name == updated_context.project_name and (
+                original_context_name == updated_context.name
+            ):
+                self._replace_cached_context(project_name, original_context_name, updated_context)
+                if self._current_project_name == project_name:
+                    if current_row >= 0:
+                        self._update_context(current_row, updated_context)
+            else:
+                if cached_row >= 0:
+                    self._remove_cached_context_row(original_project_name, cached_row)
+                self._insert_cached_context(updated_context)
+                if self._current_project_name == original_project_name:
+                    if current_row >= 0:
+                        self._remove_context(current_row)
+                if self._current_project_name == updated_context.project_name:
+                    self._insert_context(updated_context)
+        else:
+            self._insert_cached_context(updated_context)
+            if self._current_project_name == updated_context.project_name:
+                self._insert_context(updated_context)
+
+        clear_ui_error()
         return True
 
     @Slot(str, str, str, str, result=bool)
@@ -314,27 +535,43 @@ class RezContextListModel(QAbstractListModel):
         target_project_name: str,
         target_context_name: str,
     ) -> bool:
+        source_context = self._load_context_for_action(source_project_name, source_context_name)
+        if source_context is None:
+            return False
+        if self._project_model is not None and not self._project_model.ensureProjectExists(
+            target_project_name
+        ):
+            return False
         try:
-            RezContext.load(source_project_name, source_context_name).duplicate(
+            duplicated_context = self._bind_context_project(source_context.duplicate(
                 target_project_name,
                 target_context_name,
-            )
+            ))
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self._reload_project_contexts(source_project_name, target_project_name)
-        self.reload()
+        self._insert_cached_context(duplicated_context)
+        if self._current_project_name == duplicated_context.project_name:
+            self._insert_context(duplicated_context)
+        clear_ui_error()
         return True
 
     @Slot(str, str, result=bool)
     def deleteContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
+        context = self._load_context_for_action(project_name, context_name)
+        if context is None:
+            return False
         try:
-            RezContext.load(project_name, context_name).delete()
+            context.delete()
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
-        self._reload_project_contexts(project_name)
-        self.reload()
+        self._remove_cached_context(project_name, context_name)
+        if self._current_project_name == project_name:
+            row = self._find_context_row(project_name, context_name)
+            if row >= 0:
+                self._remove_context(row)
+        clear_ui_error()
         return True
 
     def _load_project(self, project_name: str, *, refresh: bool = False) -> bool:
@@ -373,10 +610,3 @@ class RezContextListModel(QAbstractListModel):
             return Project.load(project_name)
         except (OSError, ValueError):
             return None
-
-    def _reload_project_contexts(self, *project_names: str) -> None:
-        if self._project_model is None:
-            return
-        for project_name in project_names:
-            if project_name:
-                self._project_model.reload_project_contexts(project_name)

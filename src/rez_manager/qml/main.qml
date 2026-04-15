@@ -28,9 +28,7 @@ ApplicationWindow {
         id: settingsDlg
         anchors.centerIn: root.contentItem
         onSaved: {
-            projectModel.reload();
-            contextModel.reload();
-            root.clampSelectedProjectIndex();
+            root.reloadModels();
             root.showStatus("Saved settings.", false);
         }
     }
@@ -106,7 +104,7 @@ ApplicationWindow {
 
     // ── State ─────────────────────────────────────────────────
     property int selectedProjectIndex: 0
-    property string selectedProject: selectedProjectIndex >= 0 && selectedProjectIndex < projectModel.count ? (projectModel.get(selectedProjectIndex).name || "") : ""
+    property string selectedProject: selectedProjectIndex >= 0 && selectedProjectIndex < projectModel.projectNames.length ? (projectModel.projectNames[selectedProjectIndex] || "") : ""
     property string projectDialogMode: "create"
     property string projectDialogSourceName: ""
     property string duplicateSourceProjectName: ""
@@ -118,15 +116,21 @@ ApplicationWindow {
     Component.onCompleted: contextModel.loadProject(selectedProject)
     onSelectedProjectChanged: contextModel.loadProject(selectedProject)
 
+    function reloadModels() {
+        projectModel.reload();
+        clampSelectedProjectIndex();
+        contextModel.reload();
+    }
+
     function clampSelectedProjectIndex() {
-        if (projectModel.count === 0) {
+        if (projectModel.projectNames.length === 0) {
             selectedProjectIndex = 0;
             return;
         }
         if (selectedProjectIndex < 0)
             selectedProjectIndex = 0;
-        else if (selectedProjectIndex >= projectModel.count)
-            selectedProjectIndex = projectModel.count - 1;
+        else if (selectedProjectIndex >= projectModel.projectNames.length)
+            selectedProjectIndex = projectModel.projectNames.length - 1;
     }
 
     function selectProjectByName(projectName) {
@@ -150,6 +154,8 @@ ApplicationWindow {
     }
 
     function openEditProjectDialog(projectName) {
+        if (!projectModel.ensureProjectExists(projectName))
+            return;
         projectDialogMode = "edit";
         projectDialogSourceName = projectName;
         projectNameDlg.title = "Edit Project";
@@ -158,6 +164,8 @@ ApplicationWindow {
     }
 
     function openDuplicateProjectDialog(projectName) {
+        if (!projectModel.ensureProjectExists(projectName))
+            return;
         projectDialogMode = "duplicate";
         projectDialogSourceName = projectName;
         projectNameDlg.title = "Duplicate Project";
@@ -170,6 +178,8 @@ ApplicationWindow {
             showStatus("Create a project first.", true);
             return;
         }
+        if (!projectModel.ensureProjectExists(selectedProject))
+            return;
         editorDlg.title = "New Context";
         editorDlg.originalProjectValue = "";
         editorDlg.originalContextNameValue = "";
@@ -183,6 +193,8 @@ ApplicationWindow {
     }
 
     function openEditContextDialog(modelData) {
+        if (!contextModel.ensureContextExists(modelData.project, modelData.name))
+            return;
         editorDlg.title = "Edit Context";
         editorDlg.originalProjectValue = modelData.project;
         editorDlg.originalContextNameValue = modelData.name;
@@ -196,6 +208,8 @@ ApplicationWindow {
     }
 
     function openDuplicateContextDialog(modelData) {
+        if (!contextModel.ensureContextExists(modelData.project, modelData.name))
+            return;
         duplicateSourceProjectName = modelData.project;
         duplicateSourceContextName = modelData.name;
         contextDuplicateDlg.projectValue = modelData.project;
@@ -204,6 +218,8 @@ ApplicationWindow {
     }
 
     function confirmDeleteProject(projectName) {
+        if (!projectModel.ensureProjectExists(projectName))
+            return;
         pendingDeleteKind = "project";
         pendingDeleteProjectName = projectName;
         pendingDeleteContextName = "";
@@ -213,6 +229,8 @@ ApplicationWindow {
     }
 
     function confirmDeleteContext(projectName, contextName) {
+        if (!contextModel.ensureContextExists(projectName, contextName))
+            return;
         pendingDeleteKind = "context";
         pendingDeleteProjectName = projectName;
         pendingDeleteContextName = contextName;
@@ -223,7 +241,7 @@ ApplicationWindow {
 
     Connections {
         target: projectModel
-        function onCountChanged() {
+        function onProjectNamesChanged() {
             root.clampSelectedProjectIndex();
         }
     }
@@ -463,7 +481,7 @@ ApplicationWindow {
                                 font.bold: true
                             }
                             Text {
-                                text: contextModel.count + " contexts"
+                                text: contextModel.contexts.length + " contexts"
                                 color: Style.textSecondary
                                 font.pixelSize: Style.fontSm
                             }
@@ -474,6 +492,14 @@ ApplicationWindow {
                         }
 
                         // Context actions
+                        CardButton {
+                            glyph: "↻"
+                            label: "Refresh"
+                            onClicked: {
+                                root.reloadModels();
+                                root.showStatus("Refreshed projects and contexts.", false);
+                            }
+                        }
                         CardButton {
                             glyph: "+"
                             label: "New Context"
@@ -507,40 +533,70 @@ ApplicationWindow {
                             spacing: Style.lg
 
                             Repeater {
-                                model: contextModel.contexts
+                                model: contextModel
 
-                                ContextCard {
-                                    required property var modelData
-                                    contextName: modelData.name
-                                    projectName: modelData.project
-                                    description: modelData.description
-                                    launchTarget: modelData.launchTarget
-                                    packages: modelData.packages
+                                delegate: Item {
+                                    required property string project
+                                    required property string name
+                                    required property string description
+                                    required property string launchTarget
+                                    required property string packages
+                                    required property var packageRequests
+                                    required property string customCommand
 
-                                    onEditInfoRequested: {
-                                        root.openEditContextDialog(modelData);
+                                    width: contextCard_.width
+                                    height: contextCard_.height
+
+                                    ContextCard {
+                                        id: contextCard_
+                                        contextName: parent.name
+                                        projectName: parent.project
+                                        description: parent.description
+                                        launchTarget: parent.launchTarget
+                                        packages: parent.packages
+
+                                        onEditInfoRequested: {
+                                            root.openEditContextDialog({
+                                                "project": parent.project,
+                                                "name": parent.name,
+                                                "description": parent.description,
+                                                "launchTarget": parent.launchTarget,
+                                                "packages": parent.packages,
+                                                "packageRequests": parent.packageRequests,
+                                                "customCommand": parent.customCommand
+                                            });
+                                        }
+                                        onEditPackagesRequested: {
+                                            if (!contextModel.ensureContextExists(parent.project, parent.name))
+                                                return;
+                                            pkgManagerWin.contextName_ = parent.name;
+                                            pkgManagerWin.projectName_ = parent.project;
+                                            pkgManagerWin.show();
+                                        }
+                                        onPreviewRequested: {
+                                            if (!contextModel.ensureContextExists(parent.project, parent.name))
+                                                return;
+                                            previewWin.contextName_ = parent.name;
+                                            previewWin.projectName_ = parent.project;
+                                            previewWin.show();
+                                        }
+                                        onLaunchRequested: {
+                                            if (!contextModel.ensureContextExists(parent.project, parent.name))
+                                                return;
+                                            statusToast_.show("Launching: " + parent.project + " / " + parent.name, Style.success);
+                                        }
+                                        onDuplicateRequested: root.openDuplicateContextDialog({
+                                            "project": parent.project,
+                                            "name": parent.name
+                                        })
+                                        onDeleteRequested: root.confirmDeleteContext(parent.project, parent.name)
                                     }
-                                    onEditPackagesRequested: {
-                                        pkgManagerWin.contextName_ = modelData.name;
-                                        pkgManagerWin.projectName_ = modelData.project;
-                                        pkgManagerWin.show();
-                                    }
-                                    onPreviewRequested: {
-                                        previewWin.contextName_ = modelData.name;
-                                        previewWin.projectName_ = modelData.project;
-                                        previewWin.show();
-                                    }
-                                    onLaunchRequested: {
-                                        statusToast_.show("Launching: " + modelData.project + " / " + modelData.name, Style.success);
-                                    }
-                                    onDuplicateRequested: root.openDuplicateContextDialog(modelData)
-                                    onDeleteRequested: root.confirmDeleteContext(modelData.project, modelData.name)
                                 }
                             }
 
                             // Empty state
                             Rectangle {
-                                visible: contextModel.count === 0
+                                visible: contextModel.contexts.length === 0
                                 width: 300
                                 height: 160
                                 radius: Style.radiusLg
