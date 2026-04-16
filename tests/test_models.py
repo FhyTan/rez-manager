@@ -536,9 +536,9 @@ def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
     model.loadProject("Pipeline")
 
     assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", [])
-    assert [
-        context.name for context in project_model.get_project("Pipeline").contexts or []
-    ] == ["Base"]
+    assert [context.name for context in project_model.get_project("Pipeline").contexts or []] == [
+        "Base"
+    ]
     assert model.saveContext(
         "Pipeline",
         "Base",
@@ -840,6 +840,181 @@ def test_app_settings_controller_save_rejects_blank_contexts_location(tmp_path, 
 
     assert not controller.save(["D:\\packages\\maya"], "   ")
     assert app_error_hub.message == "Contexts location is required."
+
+
+def test_package_manager_controller_loads_context_and_repository_tree(tmp_path, monkeypatch):
+    import rez_manager.ui.package_manager as package_manager
+    from rez_manager.adapter.packages import RepositoryInfo
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.package_manager import PackageManagerController, PackageRequestListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya", "D:\\packages\\base"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+    Project.create("Pipeline")
+    RezContext.create(
+        "Pipeline",
+        ContextMeta(name="Render", packages=["redshift-houdini-3.5", "python-3.11"]),
+    )
+
+    monkeypatch.setattr(
+        package_manager,
+        "list_repositories",
+        lambda repo_paths: [
+            RepositoryInfo(
+                path=repo_paths[0], label=f"maya [{repo_paths[0]}]", packages=["maya", "mtoa"]
+            ),
+            RepositoryInfo(
+                path=repo_paths[1], label=f"base [{repo_paths[1]}]", packages=["python"]
+            ),
+        ],
+    )
+
+    controller = PackageManagerController()
+
+    assert controller.loadContext("Pipeline", "Render")
+    assert controller.packageCount == 2
+    assert controller.repositoryTree == [
+        {
+            "path": "D:\\packages\\maya",
+            "label": "maya [D:\\packages\\maya]",
+            "packages": ["maya", "mtoa"],
+        },
+        {
+            "path": "D:\\packages\\base",
+            "label": "base [D:\\packages\\base]",
+            "packages": ["python"],
+        },
+    ]
+
+    model = controller.packageRequestsModel
+    assert isinstance(model, PackageRequestListModel)
+    assert model.rowCount() == 2
+    assert model.data(model.index(0, 0), PackageRequestListModel.NameRole) == "redshift-houdini"
+    assert model.data(model.index(0, 0), PackageRequestListModel.VersionRole) == "3.5"
+
+
+def test_package_manager_controller_selects_package_and_saves_requests(tmp_path, monkeypatch):
+    import rez_manager.ui.package_manager as package_manager
+    from rez_manager.adapter.packages import PackageInfo, RepositoryInfo
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.error_hub import app_error_hub
+    from rez_manager.ui.package_manager import PackageManagerController, PackageRequestListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2024.0", "python-3.11"]))
+
+    monkeypatch.setattr(
+        package_manager,
+        "list_repositories",
+        lambda repo_paths: [
+            RepositoryInfo(path=repo_paths[0], label=f"maya [{repo_paths[0]}]", packages=["maya"])
+        ],
+    )
+    monkeypatch.setattr(
+        package_manager,
+        "get_package_versions",
+        lambda name, repo_paths: ["2025.0", "2024.0"] if name == "maya" else [],
+    )
+    monkeypatch.setattr(
+        package_manager,
+        "get_package_info",
+        lambda name, version, repo_paths: PackageInfo(
+            name=name,
+            versions=[version],
+            description=f"{name} {version}",
+            requires=["python-3.11"],
+            variants=[["platform-windows", "arch-x86_64"]],
+            tools=["maya"],
+            python_statements=f"name = '{name}'\nversion = '{version}'",
+        ),
+    )
+
+    app_error_hub.clear()
+    controller = PackageManagerController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    assert controller.selectPackage(0, 0)
+    assert controller.packageDetail["name"] == "maya"
+    assert controller.packageDetail["versions"] == ["2025.0", "2024.0"]
+    assert controller.packageDetail["variants"] == ["platform-windows arch-x86_64"]
+    assert controller.selectedDetailVersion == 0
+
+    assert controller.selectDetailVersion(1)
+    assert controller.packageDetail["description"] == "maya 2024.0"
+    assert controller.selectedDetailVersion == 1
+
+    assert controller.addPackageRequest("maya", "2025.0")
+    assert controller.packageCount == 2
+
+    model = controller.packageRequestsModel
+    assert isinstance(model, PackageRequestListModel)
+    assert model.data(model.index(0, 0), PackageRequestListModel.RequestRole) == "maya-2025.0"
+
+    assert controller.save()
+    assert RezContext.load("Pipeline", "Base").packages == ["maya-2025.0", "python-3.11"]
+    assert app_error_hub.message == ""
+
+
+def test_package_manager_controller_clears_stale_context_after_failed_load(tmp_path, monkeypatch):
+    import rez_manager.ui.package_manager as package_manager
+    from rez_manager.adapter.packages import RepositoryInfo
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.package_manager import PackageManagerController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2024.0"]))
+
+    monkeypatch.setattr(
+        package_manager,
+        "list_repositories",
+        lambda repo_paths: [
+            RepositoryInfo(path=repo_paths[0], label=f"maya [{repo_paths[0]}]", packages=["maya"])
+        ],
+    )
+
+    controller = PackageManagerController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    assert controller.packageCount == 1
+
+    assert not controller.loadContext("Pipeline", "Missing")
+    assert controller.packageCount == 0
+    assert controller.repositoryTree == []
+    assert controller.packageDetail == {
+        "name": "",
+        "versions": [],
+        "description": "",
+        "requires": [],
+        "variants": [],
+        "tools": [],
+        "code": "",
+    }
+    assert not controller.save()
 
 
 def test_project_list_model_reports_errors_to_app_error_hub(tmp_path, monkeypatch):

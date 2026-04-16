@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -16,64 +18,23 @@ Window {
 
     property string contextName_: "Maya 2024 Base"
     property string projectName_: "VFX Pipeline"
+    property var packageManagerController: null
 
-    ListModel {
-        id: currentPkgsModel
-        ListElement { pkgName: "maya"; version: "2024.0" }
-        ListElement { pkgName: "python"; version: "3.11.0" }
-        ListElement { pkgName: "mtoa"; version: "5.3.4" }
-        ListElement { pkgName: "usd"; version: "23.11" }
-        ListElement { pkgName: "openexr"; version: "3.1.10" }
-    }
-
-    property var repoTree: [
-        {
-            label: "maya  [/packages/maya]",
-            packages: ["maya", "mtoa", "yeti", "bifrost", "mgear", "pyblish"]
-        },
-        {
-            label: "houdini  [/packages/houdini]",
-            packages: ["houdini", "karma", "redshift", "redshift-houdini", "vellum-tools"]
-        },
-        {
-            label: "base  [/packages/base]",
-            packages: ["python", "cmake", "git", "openexr", "usd", "materialx", "boost", "tbb"]
-        }
-    ]
-
-    property int selectedRepoIndex: 0
+    property int selectedRepoIndex: -1
     property int selectedPkgIndex: -1
-    property string selectedPkgName: {
-        if (selectedPkgIndex < 0 || selectedRepoIndex < 0)
-            return ""
+    signal saved(string projectName, string contextName)
 
-        const repo = repoTree[selectedRepoIndex]
-        if (!repo || selectedPkgIndex >= repo.packages.length)
-            return ""
-
-        return repo.packages[selectedPkgIndex]
+    function loadContext(projectName, contextName) {
+        selectedRepoIndex = -1;
+        selectedPkgIndex = -1;
+        if (!packageManagerController)
+            return false;
+        if (!packageManagerController.loadContext(projectName, contextName))
+            return false;
+        projectName_ = projectName;
+        contextName_ = contextName;
+        return true;
     }
-
-    readonly property var pkgDetail: ({
-        name: selectedPkgName.length > 0 ? selectedPkgName : "—",
-        versions: ["2024.0", "2023.3", "2023.0", "2022.5"],
-        description: selectedPkgName === "maya"
-            ? "Autodesk Maya 3D animation and visual effects software."
-            : selectedPkgName.length > 0
-                ? "A package providing " + selectedPkgName + " tools and libraries."
-                : "Select a package to see details.",
-        requires: ["python-3.11", "openexr-3.1", "tbb-2021"],
-        variants: ["platform-linux arch-x86_64", "platform-windows arch-x86_64"],
-        tools: selectedPkgName === "maya"
-            ? ["maya", "mayapy", "mayabatch"]
-            : ["python3", "pip3"],
-        code: "name = '" + (selectedPkgName.length > 0 ? selectedPkgName : "package")
-            + "'\nversion = '2024.0'\nrequires = ['python-3.11+']\n\n"
-            + "def commands():\n    env.PATH.prepend('{root}/bin')\n"
-            + "    env.MAYA_LOCATION = '{root}'\n"
-    })
-
-    property int selectedDetailVersion: 0
 
     ColumnLayout {
         anchors.fill: parent
@@ -103,7 +64,9 @@ Window {
                     Item { Layout.fillWidth: true }
 
                     Badge {
-                        text: currentPkgsModel.count + " packages"
+                        text: root.packageManagerController
+                            ? root.packageManagerController.packageCount + " packages"
+                            : "0 packages"
                         badgeColor: Style.accent
                     }
                 }
@@ -143,47 +106,54 @@ Window {
             RequiredPackagesPanel {
                 SplitView.preferredWidth: 240
                 SplitView.minimumWidth: 160
-                packagesModel: currentPkgsModel
+                packagesModel: root.packageManagerController
+                    ? root.packageManagerController.packageRequestsModel
+                    : null
                 onRemoveRequested: function(index) {
-                    currentPkgsModel.remove(index)
+                    if (root.packageManagerController)
+                        root.packageManagerController.removePackageRequest(index);
                 }
             }
 
             PackageRepositoryPanel {
                 SplitView.preferredWidth: 260
                 SplitView.minimumWidth: 180
-                repoTree: root.repoTree
+                repoTree: root.packageManagerController ? root.packageManagerController.repositoryTree : []
                 selectedRepoIndex: root.selectedRepoIndex
                 selectedPkgIndex: root.selectedPkgIndex
                 onRepositoryToggled: function(index) {
-                    root.selectedRepoIndex = root.selectedRepoIndex === index ? -1 : index
-                    root.selectedPkgIndex = -1
-                    root.selectedDetailVersion = 0
+                    root.selectedRepoIndex = root.selectedRepoIndex === index ? -1 : index;
+                    root.selectedPkgIndex = -1;
+                    if (root.packageManagerController)
+                        root.packageManagerController.clearSelection();
                 }
                 onPackageSelected: function(repoIndex, pkgIndex) {
-                    root.selectedRepoIndex = repoIndex
-                    root.selectedPkgIndex = pkgIndex
-                    root.selectedDetailVersion = 0
+                    root.selectedRepoIndex = repoIndex;
+                    root.selectedPkgIndex = pkgIndex;
+                    if (root.packageManagerController)
+                        root.packageManagerController.selectPackage(repoIndex, pkgIndex);
                 }
             }
 
             PackageDetailPanel {
                 SplitView.fillWidth: true
                 SplitView.minimumWidth: 320
-                selectedPkgName: root.selectedPkgName
-                pkgDetail: root.pkgDetail
-                selectedDetailVersion: root.selectedDetailVersion
+                selectedPkgName: root.packageManagerController
+                    ? root.packageManagerController.packageDetail.name || ""
+                    : ""
+                pkgDetail: root.packageManagerController
+                    ? root.packageManagerController.packageDetail
+                    : ({})
+                selectedDetailVersion: root.packageManagerController
+                    ? root.packageManagerController.selectedDetailVersion
+                    : -1
                 onDetailVersionSelected: function(index) {
-                    root.selectedDetailVersion = index
+                    if (root.packageManagerController)
+                        root.packageManagerController.selectDetailVersion(index);
                 }
                 onAddPackageRequested: function(pkgName, version) {
-                    if (pkgName.length === 0)
-                        return
-
-                    currentPkgsModel.append({
-                        pkgName: pkgName,
-                        version: version
-                    })
+                    if (root.packageManagerController)
+                        root.packageManagerController.addPackageRequest(pkgName, version);
                 }
             }
         }
@@ -211,7 +181,17 @@ Window {
                 Item { Layout.fillWidth: true }
                 CardButton { label: "Cancel"; onClicked: root.close() }
                 Item { width: Style.sm }
-                CardButton { label: "Save"; accent: true }
+                CardButton {
+                    label: "Save"
+                    accent: true
+                    onClicked: {
+                        if (!root.packageManagerController || !root.packageManagerController.save())
+                            return;
+
+                        root.saved(root.projectName_, root.contextName_);
+                        root.close();
+                    }
+                }
             }
         }
     }

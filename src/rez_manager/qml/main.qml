@@ -22,6 +22,9 @@ ApplicationWindow {
         id: contextModel
         projectModel: projectModel
     }
+    PackageManagerController {
+        id: packageManagerController_
+    }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog {
@@ -96,6 +99,11 @@ ApplicationWindow {
     PackageManagerWindow {
         id: pkgManagerWin
         visible: false
+        packageManagerController: packageManagerController_
+        onSaved: function(projectName, contextName) {
+            contextModel.reload();
+            root.showStatus("Saved packages: " + projectName + " / " + contextName, false);
+        }
     }
     ContextPreviewWindow {
         id: previewWin
@@ -569,9 +577,10 @@ ApplicationWindow {
                                         onEditPackagesRequested: {
                                             if (!contextModel.ensureContextExists(parent.project, parent.name))
                                                 return;
-                                            pkgManagerWin.contextName_ = parent.name;
-                                            pkgManagerWin.projectName_ = parent.project;
+                                            if (!pkgManagerWin.loadContext(parent.project, parent.name))
+                                                return;
                                             pkgManagerWin.show();
+                                            pkgManagerWin.requestActivate();
                                         }
                                         onPreviewRequested: {
                                             if (!contextModel.ensureContextExists(parent.project, parent.name))
