@@ -9,6 +9,8 @@ Rectangle {
     property string glyph: ""
     property bool accent: false
     property bool danger: false
+    property bool square: false
+    property int minimumWidth: 80
 
     signal clicked
 
@@ -21,7 +23,7 @@ Rectangle {
     }
 
     implicitHeight: 30
-    implicitWidth: Math.max(80, label_.implicitWidth + 20)
+    implicitWidth: root.square ? implicitHeight : Math.max(root.minimumWidth, label_.implicitWidth + 20)
     radius: Style.radiusSm
     color: {
         if (root.danger)
@@ -59,6 +61,7 @@ Rectangle {
 
     TapHandler {
         id: tapHandler_
+        gesturePolicy: TapHandler.WithinBounds
         enabled: root.enabled
         acceptedButtons: Qt.LeftButton
         onTapped: root.clicked()
