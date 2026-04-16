@@ -1,13 +1,14 @@
-"""QML-facing controller for the package manager window."""
+"""QML-facing controller and models for the package manager window."""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from PySide6.QtCore import (
     Property,
+    QAbstractItemModel,
     QAbstractListModel,
     QByteArray,
     QModelIndex,
@@ -32,6 +33,7 @@ from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
 
+_AUTO_VERSION = "Auto"
 _PACKAGE_REQUEST_WITH_VERSION = re.compile(r"^(?P<name>.+?)(?:-(?P<version>\d.*))?$")
 
 
@@ -40,6 +42,32 @@ class _PackageRequestItem:
     request: str
     name: str
     version: str
+
+    @property
+    def display_version(self) -> str:
+        return self.version or _AUTO_VERSION
+
+
+@dataclass
+class _RepositoryTreeNode:
+    label: str
+    node_type: str
+    repo_index: int = -1
+    package_index: int = -1
+    package_name: str = ""
+    path: str = ""
+    parent: _RepositoryTreeNode | None = None
+    children: list[_RepositoryTreeNode] = field(default_factory=list)
+
+    def child(self, row: int) -> _RepositoryTreeNode | None:
+        if row < 0 or row >= len(self.children):
+            return None
+        return self.children[row]
+
+    def row(self) -> int:
+        if self.parent is None:
+            return 0
+        return self.parent.children.index(self)
 
 
 def _split_package_request(request: str) -> _PackageRequestItem:
@@ -55,20 +83,21 @@ def _split_package_request(request: str) -> _PackageRequestItem:
 
 def _build_package_request(name: str, version: str) -> str:
     trimmed_name = str(name).strip()
+    normalized_version = _normalize_version(version)
+    return f"{trimmed_name}-{normalized_version}" if normalized_version else trimmed_name
+
+
+def _normalize_version(version: str) -> str:
     trimmed_version = str(version).strip()
-    return f"{trimmed_name}-{trimmed_version}" if trimmed_version else trimmed_name
+    return "" if trimmed_version == _AUTO_VERSION else trimmed_version
 
 
-def _empty_package_detail() -> dict[str, object]:
-    return {
-        "name": "",
-        "versions": [],
-        "description": "",
-        "requires": [],
-        "variants": [],
-        "tools": [],
-        "code": "",
-    }
+def _detail_versions(versions: Sequence[str], preferred_version: str) -> list[str]:
+    detail_versions = [_AUTO_VERSION, *versions]
+    normalized_preferred_version = _normalize_version(preferred_version)
+    if normalized_preferred_version and normalized_preferred_version not in detail_versions:
+        detail_versions.append(normalized_preferred_version)
+    return detail_versions
 
 
 class PackageRequestListModel(QAbstractListModel):
@@ -77,6 +106,7 @@ class PackageRequestListModel(QAbstractListModel):
     RequestRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
     VersionRole = Qt.UserRole + 3
+    DisplayVersionRole = Qt.UserRole + 4
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -92,6 +122,7 @@ class PackageRequestListModel(QAbstractListModel):
             self.RequestRole: QByteArray(b"request"),
             self.NameRole: QByteArray(b"pkgName"),
             self.VersionRole: QByteArray(b"version"),
+            self.DisplayVersionRole: QByteArray(b"displayVersion"),
         }
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
@@ -105,6 +136,8 @@ class PackageRequestListModel(QAbstractListModel):
             return item.name
         if role == self.VersionRole:
             return item.version
+        if role == self.DisplayVersionRole:
+            return item.display_version
         return None
 
     def reset_requests(self, requests: Sequence[str]) -> None:
@@ -123,7 +156,7 @@ class PackageRequestListModel(QAbstractListModel):
         self.requestsChanged.emit()
         return True
 
-    def upsert_request(self, name: str, version: str) -> None:
+    def upsert_request(self, name: str, version: str) -> int:
         request = _build_package_request(name, version)
         item = _split_package_request(request)
 
@@ -134,58 +167,306 @@ class PackageRequestListModel(QAbstractListModel):
             self._items[row] = item
             model_index = self.index(row, 0)
             self.dataChanged.emit(
-                model_index, model_index, [self.RequestRole, self.NameRole, self.VersionRole]
+                model_index,
+                model_index,
+                [
+                    self.RequestRole,
+                    self.NameRole,
+                    self.VersionRole,
+                    self.DisplayVersionRole,
+                ],
             )
             self.requestsChanged.emit()
-            return
+            return row
 
         row = len(self._items)
         self.beginInsertRows(QModelIndex(), row, row)
         self._items.append(item)
         self.endInsertRows()
         self.requestsChanged.emit()
+        return row
 
     def requests(self) -> list[str]:
         return [item.request for item in self._items]
 
+    def item_at(self, row: int) -> _PackageRequestItem | None:
+        if row < 0 or row >= len(self._items):
+            return None
+        return self._items[row]
+
+
+class RepositoryTreeModel(QAbstractItemModel):
+    LabelRole = Qt.UserRole + 1
+    NodeTypeRole = Qt.UserRole + 2
+    RepoIndexRole = Qt.UserRole + 3
+    PackageIndexRole = Qt.UserRole + 4
+    PackageNameRole = Qt.UserRole + 5
+    PathRole = Qt.UserRole + 6
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._root = _RepositoryTreeNode(label="", node_type="root")
+        self._repositories: list[RepositoryInfo] = []
+
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
+        return 1
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
+        if parent.isValid() and parent.column() != 0:
+            return 0
+        node = self._root if not parent.isValid() else parent.internalPointer()
+        return len(node.children)
+
+    def index(  # noqa: N802
+        self, row: int, column: int, parent: QModelIndex = QModelIndex()
+    ) -> QModelIndex:
+        if column != 0 or row < 0:
+            return QModelIndex()
+
+        parent_node = self._root if not parent.isValid() else parent.internalPointer()
+        child_node = parent_node.child(row)
+        if child_node is None:
+            return QModelIndex()
+        return self.createIndex(row, column, child_node)
+
+    def parent(self, index: QModelIndex) -> QModelIndex:  # noqa: N802
+        if not index.isValid():
+            return QModelIndex()
+
+        node = index.internalPointer()
+        parent_node = node.parent
+        if parent_node is None or parent_node is self._root:
+            return QModelIndex()
+        return self.createIndex(parent_node.row(), 0, parent_node)
+
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
+        if not index.isValid():
+            return None
+
+        node = index.internalPointer()
+        if role in (Qt.DisplayRole, self.LabelRole):
+            return node.label
+        if role == self.NodeTypeRole:
+            return node.node_type
+        if role == self.RepoIndexRole:
+            return node.repo_index
+        if role == self.PackageIndexRole:
+            return node.package_index
+        if role == self.PackageNameRole:
+            return node.package_name
+        if role == self.PathRole:
+            return node.path
+        return None
+
+    def roleNames(self) -> dict[int, QByteArray]:  # noqa: N802
+        return {
+            self.LabelRole: QByteArray(b"label"),
+            self.NodeTypeRole: QByteArray(b"nodeType"),
+            self.RepoIndexRole: QByteArray(b"repoIndex"),
+            self.PackageIndexRole: QByteArray(b"packageIndex"),
+            self.PackageNameRole: QByteArray(b"packageName"),
+            self.PathRole: QByteArray(b"path"),
+        }
+
+    def reset_repositories(self, repositories: Sequence[RepositoryInfo]) -> None:
+        self.beginResetModel()
+        self._repositories = list(repositories)
+        self._root = _RepositoryTreeNode(label="", node_type="root")
+        for repo_index, repository in enumerate(self._repositories):
+            repository_node = _RepositoryTreeNode(
+                label=repository.label,
+                node_type="repository",
+                repo_index=repo_index,
+                path=repository.path,
+                parent=self._root,
+            )
+            repository_node.children = [
+                _RepositoryTreeNode(
+                    label=package_name,
+                    node_type="package",
+                    repo_index=repo_index,
+                    package_index=package_index,
+                    package_name=package_name,
+                    path=repository.path,
+                    parent=repository_node,
+                )
+                for package_index, package_name in enumerate(repository.packages)
+            ]
+            self._root.children.append(repository_node)
+        self.endResetModel()
+
+    def package_name_at(self, repo_index: int, package_index: int) -> str | None:
+        if repo_index < 0 or repo_index >= len(self._repositories):
+            return None
+
+        packages = self._repositories[repo_index].packages
+        if package_index < 0 or package_index >= len(packages):
+            return None
+        return packages[package_index]
+
+
+class PackageDetailObject(QObject):
+    stateChanged = Signal()
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._name = ""
+        self._versions: list[str] = []
+        self._selected_version_index = -1
+        self._description = ""
+        self._requires: list[str] = []
+        self._variants: list[str] = []
+        self._tools: list[str] = []
+        self._code = ""
+
+    @Property(bool, notify=stateChanged)
+    def hasSelection(self) -> bool:  # noqa: N802
+        return bool(self._name)
+
+    @Property(str, notify=stateChanged)
+    def name(self) -> str:
+        return self._name
+
+    @Property("QVariantList", notify=stateChanged)
+    def versions(self) -> list[str]:
+        return list(self._versions)
+
+    @Property(int, notify=stateChanged)
+    def selectedVersionIndex(self) -> int:  # noqa: N802
+        return self._selected_version_index
+
+    @Property(str, notify=stateChanged)
+    def selectedVersion(self) -> str:  # noqa: N802
+        if 0 <= self._selected_version_index < len(self._versions):
+            return self._versions[self._selected_version_index]
+        return ""
+
+    @Property(str, notify=stateChanged)
+    def description(self) -> str:
+        return self._description
+
+    @Property("QVariantList", notify=stateChanged)
+    def requires(self) -> list[str]:
+        return list(self._requires)
+
+    @Property("QVariantList", notify=stateChanged)
+    def variants(self) -> list[str]:
+        return list(self._variants)
+
+    @Property("QVariantList", notify=stateChanged)
+    def tools(self) -> list[str]:
+        return list(self._tools)
+
+    @Property(str, notify=stateChanged)
+    def code(self) -> str:
+        return self._code
+
+    def reset(self) -> None:
+        self.apply(
+            name="",
+            versions=[],
+            selected_version_index=-1,
+            description="",
+            requires=[],
+            variants=[],
+            tools=[],
+            code="",
+        )
+
+    def apply(
+        self,
+        *,
+        name: str,
+        versions: Sequence[str],
+        selected_version_index: int,
+        description: str,
+        requires: Sequence[str],
+        variants: Sequence[str],
+        tools: Sequence[str],
+        code: str,
+    ) -> None:
+        next_state = (
+            name,
+            list(versions),
+            selected_version_index,
+            description,
+            list(requires),
+            list(variants),
+            list(tools),
+            code,
+        )
+        current_state = (
+            self._name,
+            self._versions,
+            self._selected_version_index,
+            self._description,
+            self._requires,
+            self._variants,
+            self._tools,
+            self._code,
+        )
+        if next_state == current_state:
+            return
+
+        (
+            self._name,
+            self._versions,
+            self._selected_version_index,
+            self._description,
+            self._requires,
+            self._variants,
+            self._tools,
+            self._code,
+        ) = next_state
+        self.stateChanged.emit()
+
 
 @QmlElement
 class PackageManagerController(QObject):
-    repositoryTreeChanged = Signal()
-    packageDetailChanged = Signal()
     packageCountChanged = Signal()
-    selectedDetailVersionChanged = Signal()
+    selectedRequestRowChanged = Signal()
+    selectedRepositoryIndexChanged = Signal()
+    selectedRepositoryPackageIndexChanged = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._context: RezContext | None = None
         self._repo_paths: list[str] = []
-        self._repository_tree: list[dict[str, object]] = []
-        self._package_detail: dict[str, object] = _empty_package_detail()
-        self._selected_package_name = ""
-        self._selected_detail_version = -1
+        self._selected_request_row = -1
+        self._selected_repository_index = -1
+        self._selected_repository_package_index = -1
         self._package_requests_model = PackageRequestListModel(self)
+        self._repository_model = RepositoryTreeModel(self)
+        self._package_detail = PackageDetailObject(self)
         self._package_requests_model.requestsChanged.connect(self.packageCountChanged)
 
     @Property(QObject, constant=True)
     def packageRequestsModel(self) -> QObject:  # noqa: N802
         return self._package_requests_model
 
-    @Property("QVariantList", notify=repositoryTreeChanged)
-    def repositoryTree(self) -> list[dict[str, object]]:  # noqa: N802
-        return list(self._repository_tree)
+    @Property(QObject, constant=True)
+    def repositoryModel(self) -> QObject:  # noqa: N802
+        return self._repository_model
 
-    @Property("QVariantMap", notify=packageDetailChanged)
-    def packageDetail(self) -> dict[str, object]:  # noqa: N802
-        return dict(self._package_detail)
+    @Property(QObject, constant=True)
+    def packageDetail(self) -> QObject:  # noqa: N802
+        return self._package_detail
 
     @Property(int, notify=packageCountChanged)
     def packageCount(self) -> int:  # noqa: N802
         return len(self._package_requests_model.requests())
 
-    @Property(int, notify=selectedDetailVersionChanged)
-    def selectedDetailVersion(self) -> int:  # noqa: N802
-        return self._selected_detail_version
+    @Property(int, notify=selectedRequestRowChanged)
+    def selectedRequestRow(self) -> int:  # noqa: N802
+        return self._selected_request_row
+
+    @Property(int, notify=selectedRepositoryIndexChanged)
+    def selectedRepositoryIndex(self) -> int:  # noqa: N802
+        return self._selected_repository_index
+
+    @Property(int, notify=selectedRepositoryPackageIndexChanged)
+    def selectedRepositoryPackageIndex(self) -> int:  # noqa: N802
+        return self._selected_repository_package_index
 
     @Slot(str, str, result=bool)
     def loadContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
@@ -197,7 +478,7 @@ class PackageManagerController(QObject):
             self._context = None
             self._repo_paths = []
             self._package_requests_model.reset_requests([])
-            self._set_repository_tree([])
+            self._repository_model.reset_repositories([])
             self._clear_selection()
             report_ui_error(str(exc))
             return False
@@ -205,7 +486,7 @@ class PackageManagerController(QObject):
         self._context = context
         self._repo_paths = list(settings.package_repositories)
         self._package_requests_model.reset_requests(context.packages)
-        self._set_repository_tree(repositories)
+        self._repository_model.reset_repositories(repositories)
         self._clear_selection()
         clear_ui_error()
         return True
@@ -217,9 +498,29 @@ class PackageManagerController(QObject):
     @Slot(int, result=bool)
     def removePackageRequest(self, row: int) -> bool:  # noqa: N802
         removed = self._package_requests_model.remove_request(row)
-        if removed:
-            clear_ui_error()
-        return removed
+        if not removed:
+            return False
+
+        if self._selected_request_row == row:
+            self._clear_selection()
+        elif self._selected_request_row > row:
+            self._set_selected_request_row(self._selected_request_row - 1)
+        clear_ui_error()
+        return True
+
+    @Slot(int, result=bool)
+    def selectRequiredPackage(self, row: int) -> bool:  # noqa: N802
+        item = self._package_requests_model.item_at(row)
+        if item is None:
+            self._clear_selection()
+            return False
+
+        self._set_selected_request_row(row)
+        self._set_selected_repository_index(-1)
+        self._set_selected_repository_package_index(-1)
+        self._refresh_package_detail(item.name, item.version)
+        clear_ui_error()
+        return True
 
     @Slot(str, str, result=bool)
     def addPackageRequest(self, name: str, version: str) -> bool:  # noqa: N802
@@ -228,35 +529,41 @@ class PackageManagerController(QObject):
             report_ui_error("Package name is required.")
             return False
 
-        self._package_requests_model.upsert_request(trimmed_name, version)
+        row = self._package_requests_model.upsert_request(trimmed_name, version)
+        self._set_selected_request_row(row)
+        self._set_selected_repository_index(-1)
+        self._set_selected_repository_package_index(-1)
+        self._refresh_package_detail(trimmed_name, _normalize_version(version))
         clear_ui_error()
         return True
 
     @Slot(int, int, result=bool)
-    def selectPackage(self, repo_index: int, package_index: int) -> bool:  # noqa: N802
-        if repo_index < 0 or repo_index >= len(self._repository_tree):
+    def selectRepositoryPackage(self, repo_index: int, package_index: int) -> bool:  # noqa: N802
+        package_name = self._repository_model.package_name_at(repo_index, package_index)
+        if package_name is None:
             self._clear_selection()
             return False
 
-        packages = self._repository_tree[repo_index]["packages"]
-        if not isinstance(packages, list) or package_index < 0 or package_index >= len(packages):
-            self._clear_selection()
-            return False
-
-        package_name = str(packages[package_index])
-        self._refresh_package_detail(package_name)
+        self._set_selected_request_row(-1)
+        self._set_selected_repository_index(repo_index)
+        self._set_selected_repository_package_index(package_index)
+        self._refresh_package_detail(package_name, "")
         clear_ui_error()
         return True
 
     @Slot(int, result=bool)
     def selectDetailVersion(self, index: int) -> bool:  # noqa: N802
-        versions = self._package_detail.get("versions", [])
-        if not isinstance(versions, list) or index < 0 or index >= len(versions):
+        versions = self._package_detail.versions
+        if index < 0 or index >= len(versions):
             return False
-        if not self._selected_package_name:
+        if not self._package_detail.hasSelection:
             return False
 
-        self._refresh_package_detail(self._selected_package_name, str(versions[index]))
+        selected_version = versions[index]
+        self._refresh_package_detail(
+            self._package_detail.name,
+            _normalize_version(selected_version),
+        )
         clear_ui_error()
         return True
 
@@ -282,59 +589,61 @@ class PackageManagerController(QObject):
         clear_ui_error()
         return True
 
-    def _set_repository_tree(self, repositories: Sequence[RepositoryInfo]) -> None:
-        tree = [
-            {
-                "path": repository.path,
-                "label": repository.label,
-                "packages": list(repository.packages),
-            }
-            for repository in repositories
-        ]
-        if self._repository_tree != tree:
-            self._repository_tree = tree
-            self.repositoryTreeChanged.emit()
-
     def _clear_selection(self) -> None:
-        self._selected_package_name = ""
-        self._set_selected_detail_version(-1)
-        self._set_package_detail(_empty_package_detail())
+        self._set_selected_request_row(-1)
+        self._set_selected_repository_index(-1)
+        self._set_selected_repository_package_index(-1)
+        self._package_detail.reset()
 
-    def _refresh_package_detail(
-        self, package_name: str, preferred_version: str | None = None
-    ) -> None:
+    def _refresh_package_detail(self, package_name: str, preferred_version: str) -> None:
         versions = get_package_versions(package_name, self._repo_paths)
-        version = preferred_version
-        if version not in versions:
-            version = versions[0] if versions else ""
+        detail_versions = _detail_versions(versions, preferred_version)
+        normalized_preferred_version = _normalize_version(preferred_version)
+        selected_version = normalized_preferred_version or _AUTO_VERSION
+        if selected_version not in detail_versions:
+            selected_version = _AUTO_VERSION
+        selected_version_index = detail_versions.index(selected_version)
 
+        info_version = normalized_preferred_version or (versions[0] if versions else "")
         package_info = (
-            get_package_info(package_name, version, self._repo_paths) if version else None
+            get_package_info(package_name, info_version, self._repo_paths) if info_version else None
         )
-        self._selected_package_name = package_name
-        self._set_selected_detail_version(versions.index(version) if version in versions else -1)
-        self._set_package_detail(_package_detail_payload(package_name, versions, package_info))
+        self._package_detail.apply(
+            **_package_detail_payload(
+                package_name,
+                detail_versions,
+                selected_version_index,
+                package_info,
+            )
+        )
 
-    def _set_selected_detail_version(self, index: int) -> None:
-        if self._selected_detail_version != index:
-            self._selected_detail_version = index
-            self.selectedDetailVersionChanged.emit()
+    def _set_selected_request_row(self, row: int) -> None:
+        if self._selected_request_row != row:
+            self._selected_request_row = row
+            self.selectedRequestRowChanged.emit()
 
-    def _set_package_detail(self, detail: dict[str, object]) -> None:
-        if self._package_detail != detail:
-            self._package_detail = detail
-            self.packageDetailChanged.emit()
+    def _set_selected_repository_index(self, repo_index: int) -> None:
+        if self._selected_repository_index != repo_index:
+            self._selected_repository_index = repo_index
+            self.selectedRepositoryIndexChanged.emit()
+
+    def _set_selected_repository_package_index(self, package_index: int) -> None:
+        if self._selected_repository_package_index != package_index:
+            self._selected_repository_package_index = package_index
+            self.selectedRepositoryPackageIndexChanged.emit()
 
 
 def _package_detail_payload(
     package_name: str,
     versions: Sequence[str],
+    selected_version_index: int,
     package_info: PackageInfo | None,
 ) -> dict[str, object]:
     if package_info is None:
         return {
             "name": package_name,
             "versions": list(versions),
+            "selected_version_index": selected_version_index,
             "description": "",
             "requires": [],
             "variants": [],
@@ -344,7 +653,8 @@ def _package_detail_payload(
 
     return {
         "name": package_info.name,
-        "versions": list(versions) if versions else list(package_info.versions),
+        "versions": list(versions),
+        "selected_version_index": selected_version_index,
         "description": package_info.description,
         "requires": list(package_info.requires),
         "variants": [" ".join(variant) for variant in package_info.variants],

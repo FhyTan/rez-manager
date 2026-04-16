@@ -16,17 +16,13 @@ Window {
     color: Style.bg
     flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
-    property string contextName_: "Maya 2024 Base"
-    property string projectName_: "VFX Pipeline"
+    property string contextName_: ""
+    property string projectName_: ""
     property var packageManagerController: null
 
-    property int selectedRepoIndex: -1
-    property int selectedPkgIndex: -1
     signal saved(string projectName, string contextName)
 
     function loadContext(projectName, contextName) {
-        selectedRepoIndex = -1;
-        selectedPkgIndex = -1;
         if (!packageManagerController)
             return false;
         if (!packageManagerController.loadContext(projectName, contextName))
@@ -51,7 +47,9 @@ Window {
                 anchors.rightMargin: Style.xl
                 spacing: 2
 
-                Item { Layout.fillHeight: true }
+                Item {
+                    Layout.fillHeight: true
+                }
 
                 RowLayout {
                     Text {
@@ -61,17 +59,19 @@ Window {
                         font.bold: true
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     Badge {
-                        text: root.packageManagerController
-                            ? root.packageManagerController.packageCount + " packages"
-                            : "0 packages"
+                        text: root.packageManagerController ? root.packageManagerController.packageCount + " packages" : "0 packages"
                         badgeColor: Style.accent
                     }
                 }
 
-                Item { Layout.fillHeight: true }
+                Item {
+                    Layout.fillHeight: true
+                }
             }
 
             Rectangle {
@@ -98,7 +98,9 @@ Window {
                     color: SplitHandle.hovered || SplitHandle.pressed ? Style.accent : Style.border
 
                     Behavior on color {
-                        ColorAnimation { duration: 100 }
+                        ColorAnimation {
+                            duration: 100
+                        }
                     }
                 }
             }
@@ -109,7 +111,14 @@ Window {
                 packagesModel: root.packageManagerController
                     ? root.packageManagerController.packageRequestsModel
                     : null
-                onRemoveRequested: function(index) {
+                selectedRow: root.packageManagerController
+                    ? root.packageManagerController.selectedRequestRow
+                    : -1
+                onPackageSelected: function (index) {
+                    if (root.packageManagerController)
+                        root.packageManagerController.selectRequiredPackage(index);
+                }
+                onRemoveRequested: function (index) {
                     if (root.packageManagerController)
                         root.packageManagerController.removePackageRequest(index);
                 }
@@ -118,40 +127,32 @@ Window {
             PackageRepositoryPanel {
                 SplitView.preferredWidth: 260
                 SplitView.minimumWidth: 180
-                repoTree: root.packageManagerController ? root.packageManagerController.repositoryTree : []
-                selectedRepoIndex: root.selectedRepoIndex
-                selectedPkgIndex: root.selectedPkgIndex
-                onRepositoryToggled: function(index) {
-                    root.selectedRepoIndex = root.selectedRepoIndex === index ? -1 : index;
-                    root.selectedPkgIndex = -1;
+                repositoryModel: root.packageManagerController
+                    ? root.packageManagerController.repositoryModel
+                    : null
+                selectedRepoIndex: root.packageManagerController
+                    ? root.packageManagerController.selectedRepositoryIndex
+                    : -1
+                selectedPkgIndex: root.packageManagerController
+                    ? root.packageManagerController.selectedRepositoryPackageIndex
+                    : -1
+                onPackageSelected: function (repoIndex, pkgIndex) {
                     if (root.packageManagerController)
-                        root.packageManagerController.clearSelection();
-                }
-                onPackageSelected: function(repoIndex, pkgIndex) {
-                    root.selectedRepoIndex = repoIndex;
-                    root.selectedPkgIndex = pkgIndex;
-                    if (root.packageManagerController)
-                        root.packageManagerController.selectPackage(repoIndex, pkgIndex);
+                        root.packageManagerController.selectRepositoryPackage(repoIndex, pkgIndex);
                 }
             }
 
             PackageDetailPanel {
                 SplitView.fillWidth: true
                 SplitView.minimumWidth: 320
-                selectedPkgName: root.packageManagerController
-                    ? root.packageManagerController.packageDetail.name || ""
-                    : ""
-                pkgDetail: root.packageManagerController
+                packageDetail: root.packageManagerController
                     ? root.packageManagerController.packageDetail
-                    : ({})
-                selectedDetailVersion: root.packageManagerController
-                    ? root.packageManagerController.selectedDetailVersion
-                    : -1
-                onDetailVersionSelected: function(index) {
+                    : null
+                onDetailVersionSelected: function (index) {
                     if (root.packageManagerController)
                         root.packageManagerController.selectDetailVersion(index);
                 }
-                onAddPackageRequested: function(pkgName, version) {
+                onAddPackageRequested: function (pkgName, version) {
                     if (root.packageManagerController)
                         root.packageManagerController.addPackageRequest(pkgName, version);
                 }
@@ -175,12 +176,27 @@ Window {
                 anchors.leftMargin: Style.xl
                 anchors.rightMargin: Style.xl
 
-                CardButton { glyph: "◉"; label: "Preview Resolve" }
-                Item { width: Style.sm }
-                CardButton { glyph: "⌘"; label: "Launch Console" }
-                Item { Layout.fillWidth: true }
-                CardButton { label: "Cancel"; onClicked: root.close() }
-                Item { width: Style.sm }
+                CardButton {
+                    glyph: "◉"
+                    label: "Preview Resolve"
+                }
+                Item {
+                    width: Style.sm
+                }
+                CardButton {
+                    glyph: "⌘"
+                    label: "Launch Console"
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                CardButton {
+                    label: "Cancel"
+                    onClicked: root.close()
+                }
+                Item {
+                    width: Style.sm
+                }
                 CardButton {
                     label: "Save"
                     accent: true

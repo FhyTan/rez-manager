@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -7,8 +9,10 @@ Rectangle {
     id: root
 
     property var packagesModel: null
+    property int selectedRow: -1
 
     signal removeRequested(int index)
+    signal packageSelected(int index)
 
     color: Style.surface
 
@@ -48,13 +52,16 @@ Rectangle {
             ScrollIndicator.vertical: ScrollIndicator {}
 
             delegate: Rectangle {
+                id: requestDelegate_
                 required property int index
                 required property string pkgName
-                required property string version
+                required property string displayVersion
 
                 width: ListView.view.width
                 height: 46
-                color: rowHover_.hovered ? Style.elevated : "transparent"
+                color: requestDelegate_.index === root.selectedRow
+                    ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
+                    : (rowHover_.hovered ? Style.elevated : "transparent")
 
                 Behavior on color {
                     ColorAnimation { duration: 80 }
@@ -87,7 +94,7 @@ Rectangle {
                         }
 
                         Text {
-                            text: version
+                            text: displayVersion
                             color: Style.textSecondary
                             font.pixelSize: Style.fontXs
                             font.family: "Consolas, Courier New, monospace"
@@ -138,6 +145,12 @@ Rectangle {
 
                 HoverHandler {
                     id: rowHover_
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onTapped: root.packageSelected(requestDelegate_.index)
                 }
             }
         }

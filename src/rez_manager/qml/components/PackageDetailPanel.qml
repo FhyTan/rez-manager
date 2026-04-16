@@ -6,15 +6,13 @@ import ".."
 Rectangle {
     id: root
 
-    property string selectedPkgName: ""
-    property var pkgDetail: ({})
-    property int selectedDetailVersion: 0
+    property var packageDetail: null
 
     signal detailVersionSelected(int index)
     signal addPackageRequested(string pkgName, string version)
 
-    readonly property var versions: pkgDetail && pkgDetail.versions ? pkgDetail.versions : []
-    readonly property string selectedVersion: selectedDetailVersion >= 0 && selectedDetailVersion < versions.length ? versions[selectedDetailVersion] : ""
+    readonly property var versions: root.packageDetail ? root.packageDetail.versions : []
+    readonly property string selectedVersion: root.packageDetail ? root.packageDetail.selectedVersion : ""
 
     color: Style.surface
 
@@ -110,7 +108,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             padding: Style.lg
-            visible: root.selectedPkgName.length > 0
+            visible: root.packageDetail && root.packageDetail.hasSelection
 
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
@@ -124,7 +122,7 @@ Rectangle {
 
                     Text {
                         Layout.fillWidth: true
-                        text: root.pkgDetail.name || "—"
+                        text: root.packageDetail ? root.packageDetail.name : "—"
                         color: Style.textPrimary
                         font.pixelSize: Style.fontXl
                         font.bold: true
@@ -134,7 +132,7 @@ Rectangle {
                     ComboBox {
                         Layout.preferredWidth: 132
                         model: root.versions
-                        currentIndex: root.selectedDetailVersion
+                        currentIndex: root.packageDetail ? root.packageDetail.selectedVersionIndex : -1
                         onActivated: root.detailVersionSelected(currentIndex)
                     }
                 }
@@ -142,37 +140,42 @@ Rectangle {
                 CardButton {
                     Layout.fillWidth: true
                     implicitHeight: 38
-                    label: "Add  " + (root.pkgDetail.name || "Package") + (root.selectedVersion.length > 0 ? "  " + root.selectedVersion : "")
+                    label: "Add  "
+                        + (root.packageDetail ? root.packageDetail.name : "Package")
+                        + (root.selectedVersion.length > 0 ? "  " + root.selectedVersion : "")
                     accent: true
-                    onClicked: root.addPackageRequested(root.pkgDetail.name || "", root.selectedVersion)
+                    onClicked: root.addPackageRequested(
+                        root.packageDetail ? root.packageDetail.name : "",
+                        root.selectedVersion
+                    )
                 }
 
                 DetailBox {
                     title: "Description"
-                    body: root.pkgDetail.description || ""
+                    body: root.packageDetail ? root.packageDetail.description : ""
                 }
 
                 DetailBox {
                     title: "Requires"
-                    body: (root.pkgDetail.requires || []).join("\n")
+                    body: root.packageDetail ? root.packageDetail.requires.join("\n") : ""
                     monospace: true
                 }
 
                 DetailBox {
                     title: "Variants"
-                    body: (root.pkgDetail.variants || []).join("\n")
+                    body: root.packageDetail ? root.packageDetail.variants.join("\n") : ""
                     monospace: true
                 }
 
                 DetailBox {
                     title: "Tools"
-                    body: (root.pkgDetail.tools || []).join("\n")
+                    body: root.packageDetail ? root.packageDetail.tools.join("\n") : ""
                     monospace: true
                 }
 
                 DetailBox {
                     title: "package.py"
-                    body: root.pkgDetail.code || ""
+                    body: root.packageDetail ? root.packageDetail.code : ""
                     monospace: true
                     codeStyle: true
                 }
@@ -182,7 +185,7 @@ Rectangle {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            visible: root.selectedPkgName.length === 0
+            visible: !root.packageDetail || !root.packageDetail.hasSelection
 
             ColumnLayout {
                 anchors.centerIn: parent

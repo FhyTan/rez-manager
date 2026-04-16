@@ -848,7 +848,11 @@ def test_package_manager_controller_loads_context_and_repository_tree(tmp_path, 
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
-    from rez_manager.ui.package_manager import PackageManagerController, PackageRequestListModel
+    from rez_manager.ui.package_manager import (
+        PackageManagerController,
+        PackageRequestListModel,
+        RepositoryTreeModel,
+    )
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     save_settings(
@@ -880,24 +884,30 @@ def test_package_manager_controller_loads_context_and_repository_tree(tmp_path, 
 
     assert controller.loadContext("Pipeline", "Render")
     assert controller.packageCount == 2
-    assert controller.repositoryTree == [
-        {
-            "path": "D:\\packages\\maya",
-            "label": "maya [D:\\packages\\maya]",
-            "packages": ["maya", "mtoa"],
-        },
-        {
-            "path": "D:\\packages\\base",
-            "label": "base [D:\\packages\\base]",
-            "packages": ["python"],
-        },
-    ]
+    repository_model = controller.repositoryModel
+    assert isinstance(repository_model, RepositoryTreeModel)
+    assert repository_model.rowCount() == 2
+
+    top_index = repository_model.index(0, 0)
+    assert (
+        repository_model.data(top_index, RepositoryTreeModel.LabelRole)
+        == "maya [D:\\packages\\maya]"
+    )
+    assert repository_model.data(top_index, RepositoryTreeModel.NodeTypeRole) == "repository"
+    assert repository_model.rowCount(top_index) == 2
+
+    child_index = repository_model.index(0, 0, top_index)
+    assert repository_model.data(child_index, RepositoryTreeModel.LabelRole) == "maya"
+    assert repository_model.data(child_index, RepositoryTreeModel.NodeTypeRole) == "package"
+    assert repository_model.data(child_index, RepositoryTreeModel.RepoIndexRole) == 0
+    assert repository_model.data(child_index, RepositoryTreeModel.PackageIndexRole) == 0
 
     model = controller.packageRequestsModel
     assert isinstance(model, PackageRequestListModel)
     assert model.rowCount() == 2
     assert model.data(model.index(0, 0), PackageRequestListModel.NameRole) == "redshift-houdini"
     assert model.data(model.index(0, 0), PackageRequestListModel.VersionRole) == "3.5"
+    assert model.data(model.index(1, 0), PackageRequestListModel.DisplayVersionRole) == "3.11"
 
 
 def test_package_manager_controller_selects_package_and_saves_requests(tmp_path, monkeypatch):
@@ -907,7 +917,7 @@ def test_package_manager_controller_selects_package_and_saves_requests(tmp_path,
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
     from rez_manager.ui.error_hub import app_error_hub
-    from rez_manager.ui.package_manager import PackageManagerController, PackageRequestListModel
+    from rez_manager.ui.package_manager import PackageDetailObject, PackageManagerController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     save_settings(
@@ -949,26 +959,82 @@ def test_package_manager_controller_selects_package_and_saves_requests(tmp_path,
     controller = PackageManagerController()
 
     assert controller.loadContext("Pipeline", "Base")
-    assert controller.selectPackage(0, 0)
-    assert controller.packageDetail["name"] == "maya"
-    assert controller.packageDetail["versions"] == ["2025.0", "2024.0"]
-    assert controller.packageDetail["variants"] == ["platform-windows arch-x86_64"]
-    assert controller.selectedDetailVersion == 0
+    assert controller.selectRepositoryPackage(0, 0)
+    detail = controller.packageDetail
+    assert isinstance(detail, PackageDetailObject)
+    assert detail.name == "maya"
+    assert detail.versions == ["Auto", "2025.0", "2024.0"]
+    assert detail.variants == ["platform-windows arch-x86_64"]
+    assert detail.selectedVersion == "Auto"
+    assert detail.selectedVersionIndex == 0
 
-    assert controller.selectDetailVersion(1)
-    assert controller.packageDetail["description"] == "maya 2024.0"
-    assert controller.selectedDetailVersion == 1
+    assert controller.selectDetailVersion(2)
+    assert detail.description == "maya 2024.0"
+    assert detail.selectedVersion == "2024.0"
+    assert detail.selectedVersionIndex == 2
 
-    assert controller.addPackageRequest("maya", "2025.0")
+    assert controller.addPackageRequest("maya", "Auto")
     assert controller.packageCount == 2
-
-    model = controller.packageRequestsModel
-    assert isinstance(model, PackageRequestListModel)
-    assert model.data(model.index(0, 0), PackageRequestListModel.RequestRole) == "maya-2025.0"
+    assert controller.selectedRequestRow == 0
 
     assert controller.save()
-    assert RezContext.load("Pipeline", "Base").packages == ["maya-2025.0", "python-3.11"]
+    assert RezContext.load("Pipeline", "Base").packages == ["maya", "python-3.11"]
     assert app_error_hub.message == ""
+
+
+def test_package_manager_controller_selects_required_package_with_auto_version(
+    tmp_path, monkeypatch
+):
+    import rez_manager.ui.package_manager as package_manager
+    from rez_manager.adapter.packages import PackageInfo, RepositoryInfo
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.package_manager import PackageManagerController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya", "python-3.11"]))
+
+    monkeypatch.setattr(
+        package_manager,
+        "list_repositories",
+        lambda repo_paths: [
+            RepositoryInfo(path=repo_paths[0], label=f"maya [{repo_paths[0]}]", packages=["maya"])
+        ],
+    )
+    monkeypatch.setattr(
+        package_manager, "get_package_versions", lambda name, repo_paths: ["2025.0", "2024.0"]
+    )
+    monkeypatch.setattr(
+        package_manager,
+        "get_package_info",
+        lambda name, version, repo_paths: PackageInfo(
+            name=name,
+            versions=[version],
+            description=f"{name} {version}",
+            requires=["python-3.11"],
+            variants=[["platform-windows", "arch-x86_64"]],
+            tools=["maya"],
+            python_statements=f"name = '{name}'\nversion = '{version}'",
+        ),
+    )
+
+    controller = PackageManagerController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    assert controller.selectRequiredPackage(0)
+    assert controller.selectedRequestRow == 0
+    assert controller.selectedRepositoryIndex == -1
+    assert controller.packageDetail.selectedVersion == "Auto"
+    assert controller.packageDetail.versions == ["Auto", "2025.0", "2024.0"]
+    assert controller.packageDetail.description == "maya 2025.0"
 
 
 def test_package_manager_controller_clears_stale_context_after_failed_load(tmp_path, monkeypatch):
@@ -977,7 +1043,7 @@ def test_package_manager_controller_clears_stale_context_after_failed_load(tmp_p
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
-    from rez_manager.ui.package_manager import PackageManagerController
+    from rez_manager.ui.package_manager import PackageManagerController, RepositoryTreeModel
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     save_settings(
@@ -1004,16 +1070,14 @@ def test_package_manager_controller_clears_stale_context_after_failed_load(tmp_p
 
     assert not controller.loadContext("Pipeline", "Missing")
     assert controller.packageCount == 0
-    assert controller.repositoryTree == []
-    assert controller.packageDetail == {
-        "name": "",
-        "versions": [],
-        "description": "",
-        "requires": [],
-        "variants": [],
-        "tools": [],
-        "code": "",
-    }
+    assert isinstance(controller.repositoryModel, RepositoryTreeModel)
+    assert controller.repositoryModel.rowCount() == 0
+    assert controller.packageDetail.name == ""
+    assert controller.packageDetail.versions == []
+    assert controller.packageDetail.description == ""
+    assert controller.selectedRequestRow == -1
+    assert controller.selectedRepositoryIndex == -1
+    assert controller.selectedRepositoryPackageIndex == -1
     assert not controller.save()
 
 

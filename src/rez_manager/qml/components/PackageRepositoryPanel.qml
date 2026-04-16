@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -6,131 +8,28 @@ import ".."
 Rectangle {
     id: root
 
-    property var repoTree: []
+    property var repositoryModel: null
     property int selectedRepoIndex: -1
     property int selectedPkgIndex: -1
 
-    signal repositoryToggled(int index)
     signal packageSelected(int repoIndex, int pkgIndex)
 
     color: Style.bg
 
-    component RepositorySection: ColumnLayout {
-        id: repositorySection
-        required property int repoIndex
-        required property var repoData
-
-        Layout.fillWidth: true
-        spacing: 0
-
-        Rectangle {
-            Layout.fillWidth: true
-            height: 36
-            color: headerHover_.hovered ? Style.elevated : Style.surface
-
-            Behavior on color {
-                ColorAnimation { duration: 80 }
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: Style.sm
-                anchors.rightMargin: Style.sm
-                spacing: Style.xs
-
-                Text {
-                    text: root.selectedRepoIndex === repositorySection.repoIndex ? "▾" : "▸"
-                    color: Style.accent
-                    font.pixelSize: Style.fontXs
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    text: repositorySection.repoData.label
-                    color: Style.textPrimary
-                    font.pixelSize: Style.fontSm
-                    font.bold: true
-                    elide: Text.ElideRight
-                }
-            }
-
-            HoverHandler {
-                id: headerHover_
-                cursorShape: Qt.PointingHandCursor
-            }
-
-            TapHandler {
-                acceptedButtons: Qt.LeftButton
-                onTapped: root.repositoryToggled(repositorySection.repoIndex)
-            }
-
-            Rectangle {
-                anchors.bottom: parent.bottom
-                width: parent.width
-                height: 1
-                color: Style.border
-            }
+    function toggleTopLevelRow(treeView, row, repoIndex) {
+        if (treeView.isExpanded(row)) {
+            treeView.collapse(row);
+            return;
         }
 
-        Repeater {
-            model: root.selectedRepoIndex === repositorySection.repoIndex
-                ? repositorySection.repoData.packages
-                : []
-
-            delegate: Rectangle {
-                id: packageDelegate_
-                required property string modelData
-                required property int index
-
-                Layout.fillWidth: true
-                height: 32
-
-                property bool isSelected: root.selectedRepoIndex === repositorySection.repoIndex
-                    && root.selectedPkgIndex === index
-
-                color: isSelected
-                    ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
-                    : (packageHover_.hovered ? Style.elevated : "transparent")
-
-                Behavior on color {
-                    ColorAnimation { duration: 80 }
-                }
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Style.xl
-                    anchors.rightMargin: Style.md
-
-                    Rectangle {
-                        width: 4
-                        height: 4
-                        radius: 2
-                        color: packageDelegate_.isSelected ? Style.accent : Style.textDisabled
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelData
-                        color: packageDelegate_.isSelected ? Style.accent : Style.textSecondary
-                        font.pixelSize: Style.fontMd
-                        font.family: "Consolas, Courier New, monospace"
-                        elide: Text.ElideRight
-                    }
-                }
-
-                HoverHandler {
-                    id: packageHover_
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton
-                    onTapped: root.packageSelected(repositorySection.repoIndex, index)
-                }
-            }
+        for (let visibleRow = 0; visibleRow < treeView.rows; ++visibleRow) {
+            if (visibleRow === row)
+                continue;
+            if (treeView.depth(visibleRow) === 0 && treeView.isExpanded(visibleRow))
+                treeView.collapse(visibleRow);
         }
+
+        treeView.expand(repoIndex);
     }
 
     ColumnLayout {
@@ -160,26 +59,117 @@ Rectangle {
             }
         }
 
-        ScrollView {
+        TreeView {
+            id: repositoryTreeView_
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            model: root.repositoryModel
+            columnWidthProvider: function(column) {
+                return width;
+            }
 
-            ColumnLayout {
-                width: parent.width
-                spacing: 0
+            delegate: Rectangle {
+                id: delegateRoot_
+                required property TreeView treeView
+                required property bool expanded
+                required property bool hasChildren
+                required property int depth
+                required property int row
+                required property int column
+                required property string label
+                required property string nodeType
+                required property int repoIndex
+                required property int packageIndex
 
-                Repeater {
-                    model: root.repoTree
+                readonly property bool isRepository: nodeType === "repository"
+                readonly property bool isSelected: !isRepository
+                    && repoIndex === root.selectedRepoIndex
+                    && packageIndex === root.selectedPkgIndex
 
-                    delegate: RepositorySection {
-                        required property int index
-                        required property var modelData
+                implicitWidth: treeView.width
+                implicitHeight: isRepository ? 36 : 32
+                color: isSelected
+                    ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
+                    : (hoverHandler_.hovered
+                        ? (isRepository ? Style.elevated : Qt.rgba(1, 1, 1, 0.02))
+                        : (isRepository ? Style.surface : "transparent"))
 
-                        repoIndex: index
-                        repoData: modelData
+                Behavior on color {
+                    ColorAnimation { duration: 80 }
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Style.sm + delegateRoot_.depth * Style.lg
+                    anchors.rightMargin: Style.md
+                    spacing: Style.xs
+
+                    Text {
+                        visible: delegateRoot_.isRepository
+                        text: delegateRoot_.expanded ? "▾" : "▸"
+                        color: Style.accent
+                        font.pixelSize: Style.fontXs
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Rectangle {
+                        visible: !delegateRoot_.isRepository
+                        width: 4
+                        height: 4
+                        radius: 2
+                        color: delegateRoot_.isSelected ? Style.accent : Style.textDisabled
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: delegateRoot_.label
+                        color: delegateRoot_.isSelected
+                            ? Style.accent
+                            : (delegateRoot_.isRepository ? Style.textPrimary : Style.textSecondary)
+                        font.pixelSize: delegateRoot_.isRepository ? Style.fontSm : Style.fontMd
+                        font.bold: delegateRoot_.isRepository
+                        font.family: delegateRoot_.isRepository
+                            ? font.family
+                            : "Consolas, Courier New, monospace"
+                        elide: Text.ElideRight
                     }
                 }
+
+                HoverHandler {
+                    id: hoverHandler_
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onTapped: {
+                        if (delegateRoot_.isRepository)
+                            root.toggleTopLevelRow(
+                                delegateRoot_.treeView,
+                                delegateRoot_.row,
+                                delegateRoot_.repoIndex
+                            );
+                        else
+                            root.packageSelected(delegateRoot_.repoIndex, delegateRoot_.packageIndex);
+                    }
+                }
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: delegateRoot_.isRepository ? 1 : 0
+                    color: Style.border
+                }
+            }
+
+            Text {
+                anchors.centerIn: parent
+                visible: repositoryTreeView_.rows === 0
+                text: qsTr("No repositories available.")
+                color: Style.textSecondary
+                font.pixelSize: Style.fontMd
             }
         }
     }
