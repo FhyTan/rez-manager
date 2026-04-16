@@ -1,0 +1,12 @@
+{
+  "name": "houdini_fx",
+  "description": "Houdini FX environment with Arnold, Solaris bridge, and shot publishing tools.",
+  "launch_target": "houdini",
+  "custom_command": null,
+  "packages": [
+    "houdini-20.0",
+    "htoa-6.2.5.1",
+    "solaris_bridge-0.9.0",
+    "shot_tools-2.4.0"
+  ]
+}

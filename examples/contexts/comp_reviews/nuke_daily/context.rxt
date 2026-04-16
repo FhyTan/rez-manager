@@ -1,0 +1,113 @@
+{
+    "append_sys_path": true,
+    "arch": "AMD64",
+    "building": false,
+    "caching": true,
+    "created": 1776324065,
+    "default_patch_lock": "no_lock",
+    "failure_description": null,
+    "from_cache": false,
+    "graph": "{'nodes': [((('fillcolor', '#FFFFAA'), ('fontsize', 10), ('style', 'filled,dashed')), [('_1', 'nuke-15.0'), ('_2', 'nukex-15.0'), ('_3', 'nuke_studio_tools-3.0.0'), ('_4', 'render_submit-1.2.0'), ('_5', '~platform==windows'), ('_6', '~arch==AMD64'), ('_7', '~os==windows-10.0.19045.SP0')]), ((('fillcolor', '#AAFFAA'), ('fontsize', 10), ('style', 'filled')), [('_8', 'nuke-15.0[]'), ('_9', 'nukex-15.0[]'), ('_10', 'ocio-2.3.2[]'), ('_11', 'studio_core-1.1.0[]'), ('_12', 'nuke_studio_tools-3.0.0[]'), ('_13', 'render_submit-1.2.0[2]')]), ((('fillcolor', '#F6F6F6'), ('fontsize', 10), ('style', 'filled,dashed')), [('_14', 'nuke-15+<16'), ('_15', 'ocio-2.3+<3'), ('_16', 'studio_core-1.1+<2')])], 'edges': [((('arrowsize', '0.5'),), [('_1', '_8'), ('_2', '_9'), ('_3', '_12'), ('_4', '_13'), ('_9', '_1'), ('_12', '_14'), ('_12', '_15'), ('_12', '_16'), ('_13', '_14'), ('_13', '_16'), ('_14', '_8'), ('_15', '_10'), ('_16', '_11')])]}",
+    "host": "TanWin",
+    "implicit_packages": [
+        "~platform==windows",
+        "~arch==AMD64",
+        "~os==windows-10.0.19045.SP0"
+    ],
+    "load_time": 0.0,
+    "num_loaded_packages": 6,
+    "os": "windows-10.0.19045.SP0",
+    "package_cache_async": true,
+    "package_caching": true,
+    "package_filter": [],
+    "package_orderers": null,
+    "package_paths": [
+        "D:\\Code\\rez-manager\\examples\\packages\\maya",
+        "D:\\Code\\rez-manager\\examples\\packages\\houdini",
+        "D:\\Code\\rez-manager\\examples\\packages\\nuke",
+        "D:\\Code\\rez-manager\\examples\\packages\\python",
+        "D:\\Code\\rez-manager\\examples\\packages\\studio"
+    ],
+    "package_requests": [
+        "nuke-15.0",
+        "nukex-15.0",
+        "nuke_studio_tools-3.0.0",
+        "render_submit-1.2.0"
+    ],
+    "parent_suite_path": null,
+    "patch_locks": {},
+    "platform": "windows",
+    "requested_timestamp": null,
+    "resolved_ephemerals": [],
+    "resolved_packages": [
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\nuke",
+                "name": "nuke",
+                "repository_type": "filesystem",
+                "version": "15.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\nuke",
+                "name": "nukex",
+                "repository_type": "filesystem",
+                "version": "15.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "ocio",
+                "repository_type": "filesystem",
+                "version": "2.3.2"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "studio_core",
+                "repository_type": "filesystem",
+                "version": "1.1.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\nuke",
+                "name": "nuke_studio_tools",
+                "repository_type": "filesystem",
+                "version": "3.0.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": 2,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "render_submit",
+                "repository_type": "filesystem",
+                "version": "1.2.0"
+            }
+        }
+    ],
+    "rez_path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\rez",
+    "rez_version": "3.3.0",
+    "serialize_version": "4.9",
+    "solve_time": 0.0010004043579101562,
+    "status": "solved",
+    "suite_context_name": null,
+    "testing": false,
+    "timestamp": 1776324065,
+    "user": "tan"
+}

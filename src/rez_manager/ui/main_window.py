@@ -543,10 +543,12 @@ class RezContextListModel(QAbstractListModel):
         ):
             return False
         try:
-            duplicated_context = self._bind_context_project(source_context.duplicate(
-                target_project_name,
-                target_context_name,
-            ))
+            duplicated_context = self._bind_context_project(
+                source_context.duplicate(
+                    target_project_name,
+                    target_context_name,
+                )
+            )
         except (OSError, ValueError) as exc:
             report_ui_error(str(exc))
             return False

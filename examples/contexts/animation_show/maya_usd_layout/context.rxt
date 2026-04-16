@@ -1,0 +1,112 @@
+{
+    "append_sys_path": true,
+    "arch": "AMD64",
+    "building": false,
+    "caching": true,
+    "created": 1776324065,
+    "default_patch_lock": "no_lock",
+    "failure_description": null,
+    "from_cache": false,
+    "graph": "{'nodes': [((('fillcolor', '#FFFFAA'), ('fontsize', 10), ('style', 'filled,dashed')), [('_1', 'maya-2024'), ('_2', 'maya_usd-0.30.0'), ('_3', 'shot_tools-2.4.0'), ('_4', '~platform==windows'), ('_5', '~arch==AMD64'), ('_6', '~os==windows-10.0.19045.SP0')]), ((('fillcolor', '#AAFFAA'), ('fontsize', 10), ('style', 'filled')), [('_7', 'maya-2024[]'), ('_8', 'python-3.12[]'), ('_9', 'usd-24.5[0]'), ('_10', 'maya_usd-0.30.0[]'), ('_11', 'studio_core-1.1.0[]'), ('_12', 'shot_tools-2.4.0[]')]), ((('fillcolor', '#F6F6F6'), ('fontsize', 10), ('style', 'filled,dashed')), [('_13', 'python-3.12'), ('_14', 'maya-2024+<2026'), ('_15', 'usd-24.5+<25'), ('_16', 'studio_core-1.1+<2'), ('_17', 'usd-24+<25')])], 'edges': [((('arrowsize', '0.5'),), [('_1', '_7'), ('_2', '_10'), ('_3', '_12'), ('_9', '_13'), ('_10', '_14'), ('_10', '_13'), ('_10', '_15'), ('_12', '_16'), ('_12', '_17'), ('_13', '_8'), ('_14', '_7'), ('_15', '_9'), ('_16', '_11')]), ((('arrowhead', 'odot'), ('arrowsize', '1')), [('_17', '_15')])]}",
+    "host": "TanWin",
+    "implicit_packages": [
+        "~platform==windows",
+        "~arch==AMD64",
+        "~os==windows-10.0.19045.SP0"
+    ],
+    "load_time": 0.0,
+    "num_loaded_packages": 6,
+    "os": "windows-10.0.19045.SP0",
+    "package_cache_async": true,
+    "package_caching": true,
+    "package_filter": [],
+    "package_orderers": null,
+    "package_paths": [
+        "D:\\Code\\rez-manager\\examples\\packages\\maya",
+        "D:\\Code\\rez-manager\\examples\\packages\\houdini",
+        "D:\\Code\\rez-manager\\examples\\packages\\nuke",
+        "D:\\Code\\rez-manager\\examples\\packages\\python",
+        "D:\\Code\\rez-manager\\examples\\packages\\studio"
+    ],
+    "package_requests": [
+        "maya-2024",
+        "maya_usd-0.30.0",
+        "shot_tools-2.4.0"
+    ],
+    "parent_suite_path": null,
+    "patch_locks": {},
+    "platform": "windows",
+    "requested_timestamp": null,
+    "resolved_ephemerals": [],
+    "resolved_packages": [
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "maya",
+                "repository_type": "filesystem",
+                "version": "2024"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\python",
+                "name": "python",
+                "repository_type": "filesystem",
+                "version": "3.12"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": 0,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "usd",
+                "repository_type": "filesystem",
+                "version": "24.5"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "maya_usd",
+                "repository_type": "filesystem",
+                "version": "0.30.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "studio_core",
+                "repository_type": "filesystem",
+                "version": "1.1.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "shot_tools",
+                "repository_type": "filesystem",
+                "version": "2.4.0"
+            }
+        }
+    ],
+    "rez_path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\rez",
+    "rez_version": "3.3.0",
+    "serialize_version": "4.9",
+    "solve_time": 0.003945589065551758,
+    "status": "solved",
+    "suite_context_name": null,
+    "testing": false,
+    "timestamp": 1776324065,
+    "user": "tan"
+}

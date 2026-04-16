@@ -285,21 +285,24 @@ Rectangle {
             spacing: Style.sm
 
             RowLayout {
-                spacing: Style.xs
+                spacing: Style.sm
 
                 CardButton {
                     glyph: "✎"
                     label: "Info"
+                    minimumWidth: 0
                     onClicked: root.editInfoRequested()
                 }
                 CardButton {
                     glyph: "⊟"
                     label: "Packages"
+                    minimumWidth: 0
                     onClicked: root.editPackagesRequested()
                 }
                 CardButton {
                     glyph: "◎"
                     label: "Preview"
+                    minimumWidth: 0
                     onClicked: root.previewRequested()
                 }
             }

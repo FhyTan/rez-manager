@@ -1,0 +1,133 @@
+{
+    "append_sys_path": true,
+    "arch": "AMD64",
+    "building": false,
+    "caching": true,
+    "created": 1776324065,
+    "default_patch_lock": "no_lock",
+    "failure_description": null,
+    "from_cache": false,
+    "graph": "{'nodes': [((('fillcolor', '#FFFFAA'), ('fontsize', 10), ('style', 'filled,dashed')), [('_1', 'houdini-20.0'), ('_2', 'htoa-6.2.5.1'), ('_3', 'solaris_bridge-0.9.0'), ('_4', 'shot_tools-2.4.0'), ('_5', '~platform==windows'), ('_6', '~arch==AMD64'), ('_7', '~os==windows-10.0.19045.SP0')]), ((('fillcolor', '#AAFFAA'), ('fontsize', 10), ('style', 'filled')), [('_8', 'houdini-20.0[]'), ('_9', 'arnold-7.3.1.0[]'), ('_10', 'htoa-6.2.5.1[]'), ('_11', 'python-3.12[]'), ('_12', 'studio_core-1.1.0[]'), ('_13', 'usd-24.5[0]'), ('_14', 'solaris_bridge-0.9.0[]'), ('_15', 'shot_tools-2.4.0[]')]), ((('fillcolor', '#F6F6F6'), ('fontsize', 10), ('style', 'filled,dashed')), [('_16', 'houdini-20.0+<21'), ('_17', 'arnold-7.3+<8'), ('_18', 'python-3.12'), ('_19', 'houdini-19.5+<21'), ('_20', 'usd-24+<25'), ('_21', 'studio_core-1.0+<2'), ('_22', 'studio_core-1.1+<2')])], 'edges': [((('arrowsize', '0.5'),), [('_1', '_8'), ('_2', '_10'), ('_3', '_14'), ('_4', '_15'), ('_10', '_16'), ('_10', '_17'), ('_13', '_18'), ('_14', '_19'), ('_14', '_20'), ('_14', '_21'), ('_15', '_22'), ('_15', '_20'), ('_16', '_8'), ('_17', '_9'), ('_18', '_11'), ('_19', '_8'), ('_20', '_13'), ('_21', '_12'), ('_22', '_12')])]}",
+    "host": "TanWin",
+    "implicit_packages": [
+        "~platform==windows",
+        "~arch==AMD64",
+        "~os==windows-10.0.19045.SP0"
+    ],
+    "load_time": 0.0,
+    "num_loaded_packages": 10,
+    "os": "windows-10.0.19045.SP0",
+    "package_cache_async": true,
+    "package_caching": true,
+    "package_filter": [],
+    "package_orderers": null,
+    "package_paths": [
+        "D:\\Code\\rez-manager\\examples\\packages\\maya",
+        "D:\\Code\\rez-manager\\examples\\packages\\houdini",
+        "D:\\Code\\rez-manager\\examples\\packages\\nuke",
+        "D:\\Code\\rez-manager\\examples\\packages\\python",
+        "D:\\Code\\rez-manager\\examples\\packages\\studio"
+    ],
+    "package_requests": [
+        "houdini-20.0",
+        "htoa-6.2.5.1",
+        "solaris_bridge-0.9.0",
+        "shot_tools-2.4.0"
+    ],
+    "parent_suite_path": null,
+    "patch_locks": {},
+    "platform": "windows",
+    "requested_timestamp": null,
+    "resolved_ephemerals": [],
+    "resolved_packages": [
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\houdini",
+                "name": "houdini",
+                "repository_type": "filesystem",
+                "version": "20.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "arnold",
+                "repository_type": "filesystem",
+                "version": "7.3.1.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\houdini",
+                "name": "htoa",
+                "repository_type": "filesystem",
+                "version": "6.2.5.1"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\python",
+                "name": "python",
+                "repository_type": "filesystem",
+                "version": "3.12"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "studio_core",
+                "repository_type": "filesystem",
+                "version": "1.1.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": 0,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "usd",
+                "repository_type": "filesystem",
+                "version": "24.5"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\houdini",
+                "name": "solaris_bridge",
+                "repository_type": "filesystem",
+                "version": "0.9.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "shot_tools",
+                "repository_type": "filesystem",
+                "version": "2.4.0"
+            }
+        }
+    ],
+    "rez_path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\rez",
+    "rez_version": "3.3.0",
+    "serialize_version": "4.9",
+    "solve_time": 0.005000591278076172,
+    "status": "solved",
+    "suite_context_name": null,
+    "testing": false,
+    "timestamp": 1776324065,
+    "user": "tan"
+}

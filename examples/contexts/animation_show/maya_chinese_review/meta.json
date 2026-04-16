@@ -1,0 +1,11 @@
+{
+  "name": "maya_chinese_review",
+  "description": "Localized Maya review setup with Chinese UI resources and scene assembly tools.",
+  "launch_target": "maya",
+  "custom_command": null,
+  "packages": [
+    "maya-2024",
+    "maya_language-chinese",
+    "scene_assembly-2.1.0"
+  ]
+}

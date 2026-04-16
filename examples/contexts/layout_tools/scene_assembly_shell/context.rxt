@@ -1,0 +1,82 @@
+{
+    "append_sys_path": true,
+    "arch": "AMD64",
+    "building": false,
+    "caching": true,
+    "created": 1776324065,
+    "default_patch_lock": "no_lock",
+    "failure_description": null,
+    "from_cache": false,
+    "graph": "{'nodes': [((('fillcolor', '#FFFFAA'), ('fontsize', 10), ('style', 'filled,dashed')), [('_1', 'maya-2023'), ('_2', 'scene_assembly-2.1.0'), ('_3', 'studio_core-1.0.0'), ('_4', '~platform==windows'), ('_5', '~arch==AMD64'), ('_6', '~os==windows-10.0.19045.SP0')]), ((('fillcolor', '#AAFFAA'), ('fontsize', 10), ('style', 'filled')), [('_7', 'maya-2023[]'), ('_8', 'studio_core-1.0.0[]'), ('_9', 'scene_assembly-2.1.0[]')]), ((('fillcolor', '#F6F6F6'), ('fontsize', 10), ('style', 'filled,dashed')), [('_10', 'maya-2023+<2026'), ('_11', 'studio_core-1.0+<2')])], 'edges': [((('arrowsize', '0.5'),), [('_1', '_7'), ('_2', '_9'), ('_3', '_8'), ('_9', '_10'), ('_9', '_11'), ('_10', '_7'), ('_11', '_8')])]}",
+    "host": "TanWin",
+    "implicit_packages": [
+        "~platform==windows",
+        "~arch==AMD64",
+        "~os==windows-10.0.19045.SP0"
+    ],
+    "load_time": 0.0,
+    "num_loaded_packages": 3,
+    "os": "windows-10.0.19045.SP0",
+    "package_cache_async": true,
+    "package_caching": true,
+    "package_filter": [],
+    "package_orderers": null,
+    "package_paths": [
+        "D:\\Code\\rez-manager\\examples\\packages\\maya",
+        "D:\\Code\\rez-manager\\examples\\packages\\houdini",
+        "D:\\Code\\rez-manager\\examples\\packages\\nuke",
+        "D:\\Code\\rez-manager\\examples\\packages\\python",
+        "D:\\Code\\rez-manager\\examples\\packages\\studio"
+    ],
+    "package_requests": [
+        "maya-2023",
+        "scene_assembly-2.1.0",
+        "studio_core-1.0.0"
+    ],
+    "parent_suite_path": null,
+    "patch_locks": {},
+    "platform": "windows",
+    "requested_timestamp": null,
+    "resolved_ephemerals": [],
+    "resolved_packages": [
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "maya",
+                "repository_type": "filesystem",
+                "version": "2023"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "studio_core",
+                "repository_type": "filesystem",
+                "version": "1.0.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "scene_assembly",
+                "repository_type": "filesystem",
+                "version": "2.1.0"
+            }
+        }
+    ],
+    "rez_path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\rez",
+    "rez_version": "3.3.0",
+    "serialize_version": "4.9",
+    "solve_time": 0.001001119613647461,
+    "status": "solved",
+    "suite_context_name": null,
+    "testing": false,
+    "timestamp": 1776324065,
+    "user": "tan"
+}

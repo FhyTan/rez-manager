@@ -1,0 +1,12 @@
+{
+  "name": "nuke_daily",
+  "description": "Daily review environment for NukeX, studio review tools, and farm submission.",
+  "launch_target": "custom",
+  "custom_command": "nuke --nukex",
+  "packages": [
+    "nuke-15.0",
+    "nukex-15.0",
+    "nuke_studio_tools-3.0.0",
+    "render_submit-1.2.0"
+  ]
+}

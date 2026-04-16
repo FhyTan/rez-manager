@@ -1,0 +1,11 @@
+{
+  "name": "scene_assembly_shell",
+  "description": "Shell context for Maya scene assembly and cache path troubleshooting.",
+  "launch_target": "shell",
+  "custom_command": null,
+  "packages": [
+    "maya-2023",
+    "scene_assembly-2.1.0",
+    "studio_core-1.0.0"
+  ]
+}

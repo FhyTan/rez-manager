@@ -1,0 +1,102 @@
+{
+    "append_sys_path": true,
+    "arch": "AMD64",
+    "building": false,
+    "caching": true,
+    "created": 1776324065,
+    "default_patch_lock": "no_lock",
+    "failure_description": null,
+    "from_cache": false,
+    "graph": "{'nodes': [((('fillcolor', '#FFFFAA'), ('fontsize', 10), ('style', 'filled,dashed')), [('_1', 'maya-2025'), ('_2', 'mtoa-5.5.6.1'), ('_3', 'lookdev_tools-1.4.0'), ('_4', '~platform==windows'), ('_5', '~arch==AMD64'), ('_6', '~os==windows-10.0.19045.SP0')]), ((('fillcolor', '#AAFFAA'), ('fontsize', 10), ('style', 'filled')), [('_7', 'maya-2025[]'), ('_8', 'mtoa-5.5.6.1[]'), ('_9', 'ocio-2.3.2[]'), ('_10', 'studio_core-1.1.0[]'), ('_11', 'lookdev_tools-1.4.0[]')]), ((('fillcolor', '#F6F6F6'), ('fontsize', 10), ('style', 'filled,dashed')), [('_12', 'maya'), ('_13', 'maya-2024+<2026'), ('_14', 'mtoa-5.5+<6'), ('_15', 'ocio-2.3+<3'), ('_16', 'studio_core-1.1+<2')])], 'edges': [((('arrowsize', '0.5'),), [('_1', '_7'), ('_2', '_8'), ('_3', '_11'), ('_8', '_12'), ('_11', '_13'), ('_11', '_14'), ('_11', '_15'), ('_11', '_16'), ('_13', '_7'), ('_14', '_8'), ('_15', '_9'), ('_16', '_10')]), ((('arrowhead', 'odot'), ('arrowsize', '1')), [('_12', '_13')])]}",
+    "host": "TanWin",
+    "implicit_packages": [
+        "~platform==windows",
+        "~arch==AMD64",
+        "~os==windows-10.0.19045.SP0"
+    ],
+    "load_time": 0.0,
+    "num_loaded_packages": 5,
+    "os": "windows-10.0.19045.SP0",
+    "package_cache_async": true,
+    "package_caching": true,
+    "package_filter": [],
+    "package_orderers": null,
+    "package_paths": [
+        "D:\\Code\\rez-manager\\examples\\packages\\maya",
+        "D:\\Code\\rez-manager\\examples\\packages\\houdini",
+        "D:\\Code\\rez-manager\\examples\\packages\\nuke",
+        "D:\\Code\\rez-manager\\examples\\packages\\python",
+        "D:\\Code\\rez-manager\\examples\\packages\\studio"
+    ],
+    "package_requests": [
+        "maya-2025",
+        "mtoa-5.5.6.1",
+        "lookdev_tools-1.4.0"
+    ],
+    "parent_suite_path": null,
+    "patch_locks": {},
+    "platform": "windows",
+    "requested_timestamp": null,
+    "resolved_ephemerals": [],
+    "resolved_packages": [
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "maya",
+                "repository_type": "filesystem",
+                "version": "2025"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "mtoa",
+                "repository_type": "filesystem",
+                "version": "5.5.6.1"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "ocio",
+                "repository_type": "filesystem",
+                "version": "2.3.2"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\studio",
+                "name": "studio_core",
+                "repository_type": "filesystem",
+                "version": "1.1.0"
+            }
+        },
+        {
+            "key": "filesystem.variant",
+            "variables": {
+                "index": null,
+                "location": "d:\\code\\rez-manager\\examples\\packages\\maya",
+                "name": "lookdev_tools",
+                "repository_type": "filesystem",
+                "version": "1.4.0"
+            }
+        }
+    ],
+    "rez_path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\rez",
+    "rez_version": "3.3.0",
+    "serialize_version": "4.9",
+    "solve_time": 0.004000425338745117,
+    "status": "solved",
+    "suite_context_name": null,
+    "testing": false,
+    "timestamp": 1776324065,
+    "user": "tan"
+}
