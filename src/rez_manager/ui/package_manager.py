@@ -33,8 +33,8 @@ from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
 
-_AUTO_VERSION = "Auto"
-_PACKAGE_REQUEST_WITH_VERSION = re.compile(r"^(?P<name>.+?)(?:-(?P<version>\d.*))?$")
+_AUTO_VERSION = "auto"
+_PACKAGE_REQUEST_WITH_VERSION = re.compile(r"^(?P<name>.+?)(?:-(?P<version>.*))?$")
 
 
 @dataclass(frozen=True)
@@ -75,8 +75,8 @@ def _split_package_request(request: str) -> _PackageRequestItem:
 
     >>> _split_package_request("foo-1.2.3")
     _PackageRequestItem(request='foo-1.2.3', name='foo', version='1.2.3')
-    >>> _split_package_request("foo-Auto")
-    _PackageRequestItem(request='foo-Auto', name='foo', version='Auto')
+    >>> _split_package_request("foo-auto")
+    _PackageRequestItem(request='foo-auto', name='foo', version='auto')
     """
 
     normalized_request = str(request).strip()
@@ -94,7 +94,7 @@ def _build_package_request(name: str, version: str) -> str:
 
     >>> _build_package_request("foo", "1.2.3")
     'foo-1.2.3'
-    >>> _build_package_request("foo", "Auto")
+    >>> _build_package_request("foo", "auto")
     'foo'
     """
 
@@ -104,11 +104,11 @@ def _build_package_request(name: str, version: str) -> str:
 
 
 def _normalize_version(version: str) -> str:
-    """Normalize a version string by trimming whitespace and converting 'Auto' to an empty string.
+    """Normalize a version string by trimming whitespace and converting 'auto' to an empty string.
 
     >>> _normalize_version(" 1.2.3 ")
     '1.2.3'
-    >>> _normalize_version("Auto")
+    >>> _normalize_version("auto")
     ''
     """
     trimmed_version = str(version).strip()
@@ -120,7 +120,7 @@ def _detail_versions(versions: Sequence[str], preferred_version: str) -> list[st
     ensuring the preferred version is included.
 
     >>> _detail_versions(["1.0", "2.0"], "1.2.3")
-    ['Auto', '1.0', '2.0', '1.2.3']
+    ['auto', '1.0', '2.0', '1.2.3']
     """
     detail_versions = [_AUTO_VERSION, *versions]
     normalized_preferred_version = _normalize_version(preferred_version)
@@ -402,6 +402,36 @@ class PackageDetailObject(QObject):
             code="",
         )
 
+    def setPackageWithSelectedVersion(  # noqa: N802
+        self,
+        package_name: str,
+        versions: Sequence[str],
+        selected_version_index: int,
+        package_info: PackageInfo | None,
+    ) -> None:
+        if package_info is None:
+            self.apply(
+                name=package_name,
+                versions=list(versions),
+                selected_version_index=selected_version_index,
+                description="",
+                requires=[],
+                variants=[],
+                tools=[],
+                code="",
+            )
+        else:
+            self.apply(
+                name=package_info.name,
+                versions=list(versions),
+                selected_version_index=selected_version_index,
+                description=package_info.description,
+                requires=list(package_info.requires),
+                variants=[" ".join(variant) for variant in package_info.variants],
+                tools=list(package_info.tools),
+                code=package_info.python_statements,
+            )
+
     def apply(
         self,
         *,
@@ -637,13 +667,11 @@ class PackageManagerController(QObject):
         package_info = (
             get_package_info(package_name, info_version, self._repo_paths) if info_version else None
         )
-        self._package_detail.apply(
-            **_package_detail_payload(
-                package_name,
-                detail_versions,
-                selected_version_index,
-                package_info,
-            )
+        self._package_detail.setPackageWithSelectedVersion(
+            package_name,
+            detail_versions,
+            selected_version_index,
+            package_info,
         )
 
     def _set_selected_request_row(self, row: int) -> None:
@@ -660,33 +688,3 @@ class PackageManagerController(QObject):
         if self._selected_repository_package_index != package_index:
             self._selected_repository_package_index = package_index
             self.selectedRepositoryPackageIndexChanged.emit()
-
-
-def _package_detail_payload(
-    package_name: str,
-    versions: Sequence[str],
-    selected_version_index: int,
-    package_info: PackageInfo | None,
-) -> dict[str, object]:
-    if package_info is None:
-        return {
-            "name": package_name,
-            "versions": list(versions),
-            "selected_version_index": selected_version_index,
-            "description": "",
-            "requires": [],
-            "variants": [],
-            "tools": [],
-            "code": "",
-        }
-
-    return {
-        "name": package_info.name,
-        "versions": list(versions),
-        "selected_version_index": selected_version_index,
-        "description": package_info.description,
-        "requires": list(package_info.requires),
-        "variants": [" ".join(variant) for variant in package_info.variants],
-        "tools": list(package_info.tools),
-        "code": package_info.python_statements,
-    }

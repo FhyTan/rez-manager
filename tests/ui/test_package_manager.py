@@ -27,7 +27,7 @@ def test_package_manager_controller_loads_context_and_repository_tree(tmp_path, 
     Project.create("Pipeline")
     RezContext.create(
         "Pipeline",
-        ContextMeta(name="Render", packages=["redshift-houdini-3.5", "python-3.11"]),
+        ContextMeta(name="Render", packages=["redshift_houdini-3.5", "python-3.11"]),
     )
 
     monkeypatch.setattr(
@@ -68,7 +68,7 @@ def test_package_manager_controller_loads_context_and_repository_tree(tmp_path, 
     model = controller.packageRequestsModel
     assert isinstance(model, PackageRequestListModel)
     assert model.rowCount() == 2
-    assert model.data(model.index(0, 0), PackageRequestListModel.NameRole) == "redshift-houdini"
+    assert model.data(model.index(0, 0), PackageRequestListModel.NameRole) == "redshift_houdini"
     assert model.data(model.index(0, 0), PackageRequestListModel.VersionRole) == "3.5"
     assert model.data(model.index(1, 0), PackageRequestListModel.DisplayVersionRole) == "3.11"
 
@@ -126,9 +126,9 @@ def test_package_manager_controller_selects_package_and_saves_requests(tmp_path,
     detail = controller.packageDetail
     assert isinstance(detail, PackageDetailObject)
     assert detail.name == "maya"
-    assert detail.versions == ["Auto", "2025.0", "2024.0"]
+    assert detail.versions == ["auto", "2025.0", "2024.0"]
     assert detail.variants == ["platform-windows arch-x86_64"]
-    assert detail.selectedVersion == "Auto"
+    assert detail.selectedVersion == "auto"
     assert detail.selectedVersionIndex == 0
 
     assert controller.selectDetailVersion(2)
@@ -136,7 +136,7 @@ def test_package_manager_controller_selects_package_and_saves_requests(tmp_path,
     assert detail.selectedVersion == "2024.0"
     assert detail.selectedVersionIndex == 2
 
-    assert controller.addPackageRequest("maya", "Auto")
+    assert controller.addPackageRequest("maya", "auto")
     assert controller.packageCount == 2
     assert controller.selectedRequestRow == 0
 
@@ -197,8 +197,8 @@ def test_package_manager_controller_selects_required_package_with_auto_version(
     assert controller.selectRequiredPackage(0)
     assert controller.selectedRequestRow == 0
     assert controller.selectedRepositoryIndex == -1
-    assert controller.packageDetail.selectedVersion == "Auto"
-    assert controller.packageDetail.versions == ["Auto", "2025.0", "2024.0"]
+    assert controller.packageDetail.selectedVersion == "auto"
+    assert controller.packageDetail.versions == ["auto", "2025.0", "2024.0"]
     assert controller.packageDetail.description == "maya 2025.0"
 
 

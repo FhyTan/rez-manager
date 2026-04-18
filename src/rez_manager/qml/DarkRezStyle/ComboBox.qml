@@ -27,6 +27,7 @@ T.ComboBox {
         required property int index
         required property var modelData
         readonly property string textValue: control.textRole.length > 0 && typeof comboDelegate_.modelData === "object" ? comboDelegate_.modelData[control.textRole] : comboDelegate_.modelData
+        highlighted: control.highlightedIndex === index
 
         width: ListView.view ? ListView.view.width : control.width
         height: 36
@@ -93,11 +94,6 @@ T.ComboBox {
         ]
         // qmllint enable
 
-        onClicked: {
-            control.currentIndex = index;
-            control.activated(index);
-            control.popup.close();
-        }
     }
 
     indicator: Text {
