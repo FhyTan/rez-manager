@@ -71,6 +71,14 @@ class _RepositoryTreeNode:
 
 
 def _split_package_request(request: str) -> _PackageRequestItem:
+    """Parse a package request string into its name and version components.
+
+    >>> _split_package_request("foo-1.2.3")
+    _PackageRequestItem(request='foo-1.2.3', name='foo', version='1.2.3')
+    >>> _split_package_request("foo-Auto")
+    _PackageRequestItem(request='foo-Auto', name='foo', version='Auto')
+    """
+
     normalized_request = str(request).strip()
     match = _PACKAGE_REQUEST_WITH_VERSION.match(normalized_request)
     if match is None:
@@ -82,17 +90,38 @@ def _split_package_request(request: str) -> _PackageRequestItem:
 
 
 def _build_package_request(name: str, version: str) -> str:
+    """Construct a package request string from its name and version components.
+
+    >>> _build_package_request("foo", "1.2.3")
+    'foo-1.2.3'
+    >>> _build_package_request("foo", "Auto")
+    'foo'
+    """
+
     trimmed_name = str(name).strip()
     normalized_version = _normalize_version(version)
     return f"{trimmed_name}-{normalized_version}" if normalized_version else trimmed_name
 
 
 def _normalize_version(version: str) -> str:
+    """Normalize a version string by trimming whitespace and converting 'Auto' to an empty string.
+
+    >>> _normalize_version(" 1.2.3 ")
+    '1.2.3'
+    >>> _normalize_version("Auto")
+    ''
+    """
     trimmed_version = str(version).strip()
     return "" if trimmed_version == _AUTO_VERSION else trimmed_version
 
 
 def _detail_versions(versions: Sequence[str], preferred_version: str) -> list[str]:
+    """Return a list of versions to show in the package detail view,
+    ensuring the preferred version is included.
+
+    >>> _detail_versions(["1.0", "2.0"], "1.2.3")
+    ['Auto', '1.0', '2.0', '1.2.3']
+    """
     detail_versions = [_AUTO_VERSION, *versions]
     normalized_preferred_version = _normalize_version(preferred_version)
     if normalized_preferred_version and normalized_preferred_version not in detail_versions:
