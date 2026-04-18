@@ -34,7 +34,15 @@ Use these rules when creating or modifying QML in a Python + Qt Quick project.
 - In Qt 6 projects, prefer unversioned imports such as `import QtQuick` and `import QtQuick.Controls` so QML can use the latest available API by default.
 - Add an import version only when a dependency, deployment target, or feature constraint specifically requires it.
 - Always set both `Style` and `FallbackStyle` in `qtquickcontrols2.conf`; do not rely on implicit platform defaults.
-- When implementing a custom styled control, it is acceptable to inspect the user's local Qt installation under `qml\\QtQuick\\Controls\\...` to follow the built-in style patterns for `QtQuick.Templates` usage.
+- When implementing a custom styled control, it is acceptable to inspect the user's local Qt installation under `qml/QtQuick/Controls/...` to follow the built-in style patterns for `QtQuick.Templates` usage.
+
+## Tooling
+
+- When modifying Python classes that are exposed to QML, regenerate the stub metadata with `pyside6-qml-stubgen.exe src --out-dir ./qmltypes`.
+- Keep the generated files in the repository root `./qmltypes` directory so QML tooling can resolve the Python-backed types consistently.
+- After editing QML files, run `pyside6-qmllint -I ./qmltypes <qml-files>` to catch unresolved types and related QML issues.
+- Format modified QML files with `pyside6-qmlformat -i <qml-files>`.
+- For editor support, point the QML language server at `./qmltypes` via `qt-qml.qmlls.additionalImportPaths` (for example in `.vscode/settings.json`).
 
 ## Input and state
 

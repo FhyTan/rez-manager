@@ -23,6 +23,9 @@ uvx ruff format src     # Format
 uv run pytest           # Test
 ```
 
+For correct QML hints and completion in editors such as VS Code, add `./qmltypes` to
+`qt-qml.qmlls.additionalImportPaths`.
+
 ## Project Layout
 
 ```

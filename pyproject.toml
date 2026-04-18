@@ -23,6 +23,7 @@ packages = ["src/rez_manager"]
 
 [dependency-groups]
 dev = [
+    "pyside6-qml-stubgen>=0.1.0a10",
     "pytest>=8.0",
     "ruff>=0.6",
 ]

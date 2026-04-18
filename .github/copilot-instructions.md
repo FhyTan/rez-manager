@@ -92,4 +92,7 @@ uv run rez-manager         # Launch the app
 uv run pytest              # Run tests
 uvx ruff check src         # Lint
 uvx ruff format src        # Format
+pyside6-qml-stubgen.exe src --out-dir ./qmltypes
+pyside6-qmllint -I ./qmltypes <qml-files>
+pyside6-qmlformat -i <qml-files>
 ```

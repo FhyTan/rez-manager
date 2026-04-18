@@ -1,0 +1,917 @@
+[
+    {
+        "classes": [
+            {
+                "className": "AppSettingsController",
+                "qualifiedClassName": "AppSettingsController",
+                "object": true,
+                "lineNumber": 20,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "lineNumber": 30,
+                        "name": "packageRepositories",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "read": "packageRepositories"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "lineNumber": 34,
+                        "name": "contextsLocation",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "read": "contextsLocation"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "packageRepositoriesChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 4,
+                        "lineNumber": 22,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "contextsLocationChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 5,
+                        "lineNumber": 23,
+                        "isConst": false
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "reload",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 6,
+                        "lineNumber": 38,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "save",
+                        "arguments": [
+                            {
+                                "name": "package_repositories",
+                                "type": "QVariantList"
+                            },
+                            {
+                                "name": "contexts_location",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 7,
+                        "lineNumber": 43,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "pathFromUrl",
+                        "arguments": [
+                            {
+                                "name": "value",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "QString",
+                        "index": 8,
+                        "lineNumber": 56,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "normalizeRepositoryPath",
+                        "arguments": [
+                            {
+                                "name": "value",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "QString",
+                        "index": 9,
+                        "lineNumber": 63,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "repositoryIdentity",
+                        "arguments": [
+                            {
+                                "name": "value",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "QString",
+                        "index": 10,
+                        "lineNumber": 67,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "importFromFile",
+                        "arguments": [
+                            {
+                                "name": "path",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 11,
+                        "lineNumber": 72,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "exportToFile",
+                        "arguments": [
+                            {
+                                "name": "package_repositories",
+                                "type": "QVariantList"
+                            },
+                            {
+                                "name": "contexts_location",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "path",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 12,
+                        "lineNumber": 94,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "revealInFileExplorer",
+                        "arguments": [
+                            {
+                                "name": "path",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 13,
+                        "lineNumber": 118,
+                        "isConst": false
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 69,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "D:/Code/rez-manager/src/rez_manager/ui/settings_controller.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "PackageManagerController",
+                "qualifiedClassName": "PackageManagerController",
+                "object": true,
+                "lineNumber": 453,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "lineNumber": 472,
+                        "name": "packageRequestsModel",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false,
+                        "read": "packageRequestsModel"
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "lineNumber": 476,
+                        "name": "repositoryModel",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false,
+                        "read": "repositoryModel"
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 3,
+                        "lineNumber": 480,
+                        "name": "packageDetail",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false,
+                        "read": "packageDetail"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 4,
+                        "lineNumber": 484,
+                        "name": "packageCount",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "notify": "packageCountChanged",
+                        "read": "packageCount"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 5,
+                        "lineNumber": 488,
+                        "name": "selectedRequestRow",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "notify": "selectedRequestRowChanged",
+                        "read": "selectedRequestRow"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 6,
+                        "lineNumber": 492,
+                        "name": "selectedRepositoryIndex",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "notify": "selectedRepositoryIndexChanged",
+                        "read": "selectedRepositoryIndex"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 7,
+                        "lineNumber": 496,
+                        "name": "selectedRepositoryPackageIndex",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "notify": "selectedRepositoryPackageIndexChanged",
+                        "read": "selectedRepositoryPackageIndex"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "packageCountChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 4,
+                        "lineNumber": 455,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectedRequestRowChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 5,
+                        "lineNumber": 456,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectedRepositoryIndexChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 6,
+                        "lineNumber": 457,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectedRepositoryPackageIndexChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 7,
+                        "lineNumber": 458,
+                        "isConst": false
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "loadContext",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 8,
+                        "lineNumber": 500,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "clearSelection",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 9,
+                        "lineNumber": 523,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "removePackageRequest",
+                        "arguments": [
+                            {
+                                "name": "row",
+                                "type": "int"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 10,
+                        "lineNumber": 527,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectRequiredPackage",
+                        "arguments": [
+                            {
+                                "name": "row",
+                                "type": "int"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 11,
+                        "lineNumber": 540,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "addPackageRequest",
+                        "arguments": [
+                            {
+                                "name": "name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "version",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 12,
+                        "lineNumber": 554,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectRepositoryPackage",
+                        "arguments": [
+                            {
+                                "name": "repo_index",
+                                "type": "int"
+                            },
+                            {
+                                "name": "package_index",
+                                "type": "int"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 13,
+                        "lineNumber": 569,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "selectDetailVersion",
+                        "arguments": [
+                            {
+                                "name": "index",
+                                "type": "int"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 14,
+                        "lineNumber": 583,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "save",
+                        "arguments": [],
+                        "returnType": "bool",
+                        "index": 15,
+                        "lineNumber": 599,
+                        "isConst": false
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 69,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "D:/Code/rez-manager/src/rez_manager/ui/package_manager.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "ProjectListModel",
+                "qualifiedClassName": "ProjectListModel",
+                "object": true,
+                "lineNumber": 51,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QAbstractListModel"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "lineNumber": 104,
+                        "name": "projectNames",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "notify": "projectNamesChanged",
+                        "read": "projectNames"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "projectNamesChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 76,
+                        "lineNumber": 53,
+                        "isConst": false
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "reload",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 77,
+                        "lineNumber": 89,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "get",
+                        "arguments": [
+                            {
+                                "name": "index",
+                                "type": "int"
+                            }
+                        ],
+                        "returnType": "QVariantMap",
+                        "index": 78,
+                        "lineNumber": 94,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "indexOfProject",
+                        "arguments": [
+                            {
+                                "name": "name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "int",
+                        "index": 79,
+                        "lineNumber": 150,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "ensureProjectExists",
+                        "arguments": [
+                            {
+                                "name": "name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 80,
+                        "lineNumber": 157,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "createProject",
+                        "arguments": [
+                            {
+                                "name": "name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 81,
+                        "lineNumber": 164,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "renameProject",
+                        "arguments": [
+                            {
+                                "name": "current_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "new_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 82,
+                        "lineNumber": 175,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "duplicateProject",
+                        "arguments": [
+                            {
+                                "name": "source_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "target_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 83,
+                        "lineNumber": 192,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "deleteProject",
+                        "arguments": [
+                            {
+                                "name": "name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 84,
+                        "lineNumber": 206,
+                        "isConst": false
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 69,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "D:/Code/rez-manager/src/rez_manager/ui/main_window.py"
+    },
+    {
+        "classes": [
+            {
+                "className": "RezContextListModel",
+                "qualifiedClassName": "RezContextListModel",
+                "object": true,
+                "lineNumber": 223,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QAbstractListModel"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "lineNumber": 253,
+                        "name": "projectModel",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QObject*",
+                        "user": false,
+                        "notify": "projectModelChanged",
+                        "read": "projectModel",
+                        "write": "projectModel"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "lineNumber": 313,
+                        "name": "contexts",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "notify": "contextsChanged",
+                        "read": "contexts"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "contextsChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 76,
+                        "lineNumber": 225,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "projectModelChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 77,
+                        "lineNumber": 226,
+                        "isConst": false
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "reload",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 78,
+                        "lineNumber": 299,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "loadProject",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 79,
+                        "lineNumber": 303,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "get",
+                        "arguments": [
+                            {
+                                "name": "index",
+                                "type": "int"
+                            }
+                        ],
+                        "returnType": "QVariantMap",
+                        "index": 80,
+                        "lineNumber": 307,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "filteredContexts",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "QVariantList",
+                        "index": 81,
+                        "lineNumber": 317,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "ensureContextExists",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 82,
+                        "lineNumber": 448,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "saveContext",
+                        "arguments": [
+                            {
+                                "name": "original_project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "original_context_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "description",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "launch_target",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "custom_command",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "packages",
+                                "type": "QVariantList"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 83,
+                        "lineNumber": 455,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "duplicateContext",
+                        "arguments": [
+                            {
+                                "name": "source_project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "source_context_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "target_project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "target_context_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 84,
+                        "lineNumber": 530,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "deleteContext",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 85,
+                        "lineNumber": 561,
+                        "isConst": false
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 69,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtGui",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "D:/Code/rez-manager/src/rez_manager/ui/main_window.py"
+    }
+]
