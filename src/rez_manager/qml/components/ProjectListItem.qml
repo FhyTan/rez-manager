@@ -76,11 +76,13 @@ Rectangle {
     }
 
     TapHandler {
+        gesturePolicy: TapHandler.WithinBounds
         acceptedButtons: Qt.LeftButton
         onTapped: root.clicked()
     }
 
     TapHandler {
+        gesturePolicy: TapHandler.WithinBounds
         acceptedButtons: Qt.RightButton
         onTapped: function(eventPoint) {
             projectMenu_.popup(root, eventPoint.position.x, eventPoint.position.y)

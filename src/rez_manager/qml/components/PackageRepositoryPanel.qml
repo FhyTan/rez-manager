@@ -143,6 +143,7 @@ Rectangle {
                 }
 
                 TapHandler {
+                    gesturePolicy: TapHandler.WithinBounds
                     acceptedButtons: Qt.LeftButton
                     onTapped: {
                         if (delegateRoot_.isRepository)

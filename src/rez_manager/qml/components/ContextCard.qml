@@ -92,6 +92,7 @@ Rectangle {
         id: hoverHandler_
     }
     TapHandler {
+        gesturePolicy: TapHandler.WithinBounds
         acceptedButtons: Qt.RightButton
         onTapped: function (eventPoint, button) {
             contextMenu_.popup(root, eventPoint.position.x, eventPoint.position.y);

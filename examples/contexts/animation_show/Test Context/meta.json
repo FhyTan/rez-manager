@@ -1,0 +1,14 @@
+{
+  "custom_command": null,
+  "description": "Just a test case",
+  "launch_target": "shell",
+  "name": "Test Context",
+  "packages": [
+    "maya",
+    "maya_language-english",
+    "maya_usd-0.30.0",
+    "scene_assembly-2.1.0",
+    "ocio-2.3.2",
+    "studio_core-1.1.0"
+  ]
+}

@@ -62,4 +62,4 @@ Use these rules when creating or modifying QML in a Python + Qt Quick project.
 - Keep inline JavaScript small and view-local. If logic becomes stateful, reusable, or data-oriented, move it to Python.
 - If using Qt Design Studio, keep `.ui.qml` files visual-only and move unsupported logic into plain `.qml` files.
 - If customizing controls, base them on a non-native customizable style such as `Basic` or `Fusion`, not a native platform style.
-- Keep QML comments rare and only for non-obvious behavior.
+- Tap handlers should use `gesturePolicy: TapHandler.WithinBounds` to avoid accidentally triggering taps when the user is trying to scroll or interact with something else nearby.

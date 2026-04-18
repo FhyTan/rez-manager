@@ -307,6 +307,7 @@ Window {
                             }
                         }
                         TapHandler {
+                            gesturePolicy: TapHandler.WithinBounds
                             acceptedButtons: Qt.RightButton
                             onTapped: function (eventPoint) {
                                 root.openContextMenu(cellDelegate_.row, cellDelegate_, eventPoint.position);

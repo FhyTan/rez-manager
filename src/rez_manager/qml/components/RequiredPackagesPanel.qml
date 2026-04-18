@@ -137,6 +137,7 @@ Rectangle {
 
                         TapHandler {
                             id: removeTap_
+                            gesturePolicy: TapHandler.WithinBounds
                             acceptedButtons: Qt.LeftButton
                             onTapped: root.removeRequested(index)
                         }
@@ -149,6 +150,7 @@ Rectangle {
                 }
 
                 TapHandler {
+                    gesturePolicy: TapHandler.WithinBounds
                     acceptedButtons: Qt.LeftButton
                     onTapped: root.packageSelected(requestDelegate_.index)
                 }
