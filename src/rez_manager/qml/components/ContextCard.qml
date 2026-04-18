@@ -133,8 +133,8 @@ Rectangle {
 
             // Avatar
             Rectangle {
-                width: 58
-                height: 58
+                implicitWidth: 58
+                implicitHeight: 58
                 radius: Style.radiusSm
                 color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.12)
                 border.width: 1
@@ -175,6 +175,7 @@ Rectangle {
                 // Description
                 Text {
                     Layout.fillWidth: true
+                    Layout.preferredHeight: (contentHeight / lineCount) * 2
                     text: root.description
                     color: Style.textSecondary
                     font.pixelSize: Style.fontMd
@@ -187,8 +188,8 @@ Rectangle {
             // Launch badge (top-right)
             Rectangle {
                 Layout.alignment: Qt.AlignTop
-                height: 22
-                width: badgeText_.implicitWidth + 16
+                implicitWidth: badgeText_.implicitWidth + 16
+                implicitHeight: 22
                 radius: 11
                 color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.14)
                 border.width: 1
@@ -208,18 +209,18 @@ Rectangle {
         // ── Separator ─────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 1
+            implicitHeight: 1
             color: Style.border
         }
 
         // Package chips row
         Item {
             Layout.fillWidth: true
+            Layout.preferredHeight: 26
             Layout.topMargin: Style.sm
             Layout.bottomMargin: Style.sm
             Layout.leftMargin: Style.lg
             Layout.rightMargin: Style.lg
-            height: 26
 
             Flickable {
                 anchors.fill: parent
@@ -244,7 +245,7 @@ Rectangle {
                             color: Style.elevated
                             border.width: 1
                             border.color: Style.borderBright
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.verticalCenter: chipRow_.verticalCenter
 
                             Text {
                                 id: chip_
@@ -272,7 +273,7 @@ Rectangle {
         // ── Separator ─────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 1
+            implicitHeight: 1
             color: Style.border
         }
 

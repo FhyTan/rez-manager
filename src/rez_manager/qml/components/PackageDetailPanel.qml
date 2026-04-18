@@ -82,7 +82,7 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 40
+            implicitHeight: 40
             color: "transparent"
 
             Text {
@@ -140,14 +140,9 @@ Rectangle {
                 CardButton {
                     Layout.fillWidth: true
                     implicitHeight: 38
-                    label: "Add  "
-                        + (root.packageDetail ? root.packageDetail.name : "Package")
-                        + (root.selectedVersion.length > 0 ? "  " + root.selectedVersion : "")
+                    label: "Add  " + (root.packageDetail ? root.packageDetail.name : "Package") + (root.selectedVersion.length > 0 ? "  " + root.selectedVersion : "")
                     accent: true
-                    onClicked: root.addPackageRequested(
-                        root.packageDetail ? root.packageDetail.name : "",
-                        root.selectedVersion
-                    )
+                    onClicked: root.addPackageRequested(root.packageDetail ? root.packageDetail.name : "", root.selectedVersion)
                 }
 
                 DetailBox {

@@ -133,7 +133,7 @@ Dialog {
         contentWidth: availableWidth
 
         ColumnLayout {
-            width: contentScroll_.availableWidth - contentScroll_.effectiveScrollBarWidth 
+            width: contentScroll_.availableWidth - contentScroll_.effectiveScrollBarWidth
             spacing: Style.xl
 
             // ── Package Repositories ───────────────────────────
@@ -200,8 +200,8 @@ Dialog {
                                 spacing: Style.sm
 
                                 Rectangle {
-                                    width: 6
-                                    height: 6
+                                    implicitWidth: 6
+                                    implicitHeight: 6
                                     radius: 3
                                     color: Style.accent
                                     Layout.alignment: Qt.AlignVCenter

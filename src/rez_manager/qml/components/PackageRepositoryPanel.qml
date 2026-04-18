@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import ".."
 
@@ -38,7 +37,7 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 40
+            implicitHeight: 40
             color: "transparent"
 
             Text {
@@ -65,7 +64,7 @@ Rectangle {
             Layout.fillHeight: true
             clip: true
             model: root.repositoryModel
-            columnWidthProvider: function(column) {
+            columnWidthProvider: function (column) {
                 return width;
             }
 
@@ -83,20 +82,16 @@ Rectangle {
                 required property int packageIndex
 
                 readonly property bool isRepository: nodeType === "repository"
-                readonly property bool isSelected: !isRepository
-                    && repoIndex === root.selectedRepoIndex
-                    && packageIndex === root.selectedPkgIndex
+                readonly property bool isSelected: !isRepository && repoIndex === root.selectedRepoIndex && packageIndex === root.selectedPkgIndex
 
                 implicitWidth: treeView.width
                 implicitHeight: isRepository ? 36 : 32
-                color: isSelected
-                    ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
-                    : (hoverHandler_.hovered
-                        ? (isRepository ? Style.elevated : Qt.rgba(1, 1, 1, 0.02))
-                        : (isRepository ? Style.surface : "transparent"))
+                color: isSelected ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12) : (hoverHandler_.hovered ? (isRepository ? Style.elevated : Qt.rgba(1, 1, 1, 0.02)) : (isRepository ? Style.surface : "transparent"))
 
                 Behavior on color {
-                    ColorAnimation { duration: 80 }
+                    ColorAnimation {
+                        duration: 80
+                    }
                 }
 
                 RowLayout {
@@ -115,8 +110,8 @@ Rectangle {
 
                     Rectangle {
                         visible: !delegateRoot_.isRepository
-                        width: 4
-                        height: 4
+                        implicitWidth: 4
+                        implicitHeight: 4
                         radius: 2
                         color: delegateRoot_.isSelected ? Style.accent : Style.textDisabled
                         Layout.alignment: Qt.AlignVCenter
@@ -125,14 +120,10 @@ Rectangle {
                     Text {
                         Layout.fillWidth: true
                         text: delegateRoot_.label
-                        color: delegateRoot_.isSelected
-                            ? Style.accent
-                            : (delegateRoot_.isRepository ? Style.textPrimary : Style.textSecondary)
+                        color: delegateRoot_.isSelected ? Style.accent : (delegateRoot_.isRepository ? Style.textPrimary : Style.textSecondary)
                         font.pixelSize: delegateRoot_.isRepository ? Style.fontSm : Style.fontMd
                         font.bold: delegateRoot_.isRepository
-                        font.family: delegateRoot_.isRepository
-                            ? font.family
-                            : "Consolas, Courier New, monospace"
+                        font.family: delegateRoot_.isRepository ? font.family : "Consolas, Courier New, monospace"
                         elide: Text.ElideRight
                     }
                 }
@@ -147,11 +138,7 @@ Rectangle {
                     acceptedButtons: Qt.LeftButton
                     onTapped: {
                         if (delegateRoot_.isRepository)
-                            root.toggleTopLevelRow(
-                                delegateRoot_.treeView,
-                                delegateRoot_.row,
-                                delegateRoot_.repoIndex
-                            );
+                            root.toggleTopLevelRow(delegateRoot_.treeView, delegateRoot_.row, delegateRoot_.repoIndex);
                         else
                             root.packageSelected(delegateRoot_.repoIndex, delegateRoot_.packageIndex);
                     }

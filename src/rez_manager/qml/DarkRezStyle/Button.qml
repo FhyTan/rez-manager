@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Templates as T
 import ".."
 
@@ -55,6 +54,7 @@ T.Button {
         }
     }
 
+    // qmllint disable
     states: [
         State {
             name: "disabled"
@@ -147,4 +147,5 @@ T.Button {
             }
         }
     ]
+    // qmllint enable
 }

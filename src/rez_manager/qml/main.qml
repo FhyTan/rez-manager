@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -100,7 +102,7 @@ ApplicationWindow {
         id: pkgManagerWin
         visible: false
         packageManagerController: packageManagerController_
-        onSaved: function(projectName, contextName) {
+        onSaved: function (projectName, contextName) {
             contextModel.reload();
             root.showStatus("Saved packages: " + projectName + " / " + contextName, false);
         }
@@ -255,7 +257,7 @@ ApplicationWindow {
     }
 
     Connections {
-        target: AppErrorHub
+        target: AppErrorHub // qmllint disable unqualified
         function onErrorOccurred(message) {
             root.showStatus(message, true);
         }
@@ -295,7 +297,7 @@ ApplicationWindow {
         Rectangle {
             id: sidebar_
             Layout.fillHeight: true
-            width: 240
+            Layout.preferredWidth: 240
             color: Style.sidebar
 
             ColumnLayout {
@@ -305,7 +307,7 @@ ApplicationWindow {
                 // App header
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 56
+                    implicitHeight: 56
                     color: "transparent"
 
                     RowLayout {
@@ -317,8 +319,8 @@ ApplicationWindow {
                         spacing: Style.sm
 
                         Rectangle {
-                            width: 30
-                            height: 30
+                            implicitWidth: 30
+                            implicitHeight: 30
                             radius: Style.radiusSm
                             gradient: Gradient {
                                 orientation: Gradient.Horizontal
@@ -361,7 +363,7 @@ ApplicationWindow {
                 // Section label
                 Item {
                     Layout.fillWidth: true
-                    height: 32
+                    implicitHeight: 32
                     Text {
                         anchors {
                             left: parent.left
@@ -388,6 +390,7 @@ ApplicationWindow {
                     ScrollIndicator.vertical: ScrollIndicator {}
 
                     delegate: Item {
+                        id: projectDelegate_
                         required property int index
                         required property string name
                         required property color avatarColor
@@ -400,13 +403,13 @@ ApplicationWindow {
                                 leftMargin: 6
                                 rightMargin: 6
                             }
-                            projectName: parent.name
-                            avatarColor: parent.avatarColor
-                            selected: root.selectedProjectIndex === parent.index
-                            onClicked: root.selectedProjectIndex = parent.index
-                            onEditRequested: root.openEditProjectDialog(parent.name)
-                            onDuplicateRequested: root.openDuplicateProjectDialog(parent.name)
-                            onDeleteRequested: root.confirmDeleteProject(parent.name)
+                            projectName: projectDelegate_.name
+                            avatarColor: projectDelegate_.avatarColor
+                            selected: root.selectedProjectIndex === projectDelegate_.index
+                            onClicked: root.selectedProjectIndex = projectDelegate_.index
+                            onEditRequested: root.openEditProjectDialog(projectDelegate_.name)
+                            onDuplicateRequested: root.openDuplicateProjectDialog(projectDelegate_.name)
+                            onDeleteRequested: root.confirmDeleteProject(projectDelegate_.name)
                         }
                     }
                 }
@@ -414,7 +417,7 @@ ApplicationWindow {
                 // Sidebar bottom toolbar
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 52
+                    implicitHeight: 52
                     color: "transparent"
                     Rectangle {
                         anchors.top: parent.top
@@ -449,7 +452,7 @@ ApplicationWindow {
 
         // Sidebar right border
         Rectangle {
-            width: 1
+            Layout.preferredWidth: 1
             Layout.fillHeight: true
             color: Style.border
         }
@@ -469,7 +472,7 @@ ApplicationWindow {
                 // Content header
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 56
+                    implicitHeight: 56
                     color: Style.surface
 
                     RowLayout {
@@ -544,6 +547,7 @@ ApplicationWindow {
                                 model: contextModel
 
                                 delegate: Item {
+                                    id: contextDelegate_
                                     required property string project
                                     required property string name
                                     required property string description
@@ -557,48 +561,48 @@ ApplicationWindow {
 
                                     ContextCard {
                                         id: contextCard_
-                                        contextName: parent.name
-                                        projectName: parent.project
-                                        description: parent.description
-                                        launchTarget: parent.launchTarget
-                                        packages: parent.packages
+                                        contextName: contextDelegate_.name
+                                        projectName: contextDelegate_.project
+                                        description: contextDelegate_.description
+                                        launchTarget: contextDelegate_.launchTarget
+                                        packages: contextDelegate_.packages
 
                                         onEditInfoRequested: {
                                             root.openEditContextDialog({
-                                                "project": parent.project,
-                                                "name": parent.name,
-                                                "description": parent.description,
-                                                "launchTarget": parent.launchTarget,
-                                                "packages": parent.packages,
-                                                "packageRequests": parent.packageRequests,
-                                                "customCommand": parent.customCommand
+                                                "project": contextDelegate_.project,
+                                                "name": contextDelegate_.name,
+                                                "description": contextDelegate_.description,
+                                                "launchTarget": contextDelegate_.launchTarget,
+                                                "packages": contextDelegate_.packages,
+                                                "packageRequests": contextDelegate_.packageRequests,
+                                                "customCommand": contextDelegate_.customCommand
                                             });
                                         }
                                         onEditPackagesRequested: {
-                                            if (!contextModel.ensureContextExists(parent.project, parent.name))
+                                            if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
-                                            if (!pkgManagerWin.loadContext(parent.project, parent.name))
+                                            if (!pkgManagerWin.loadContext(contextDelegate_.project, contextDelegate_.name))
                                                 return;
                                             pkgManagerWin.show();
                                             pkgManagerWin.requestActivate();
                                         }
                                         onPreviewRequested: {
-                                            if (!contextModel.ensureContextExists(parent.project, parent.name))
+                                            if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
-                                            previewWin.contextName_ = parent.name;
-                                            previewWin.projectName_ = parent.project;
+                                            previewWin.contextName_ = contextDelegate_.name;
+                                            previewWin.projectName_ = contextDelegate_.project;
                                             previewWin.show();
                                         }
                                         onLaunchRequested: {
-                                            if (!contextModel.ensureContextExists(parent.project, parent.name))
+                                            if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
-                                            statusToast_.show("Launching: " + parent.project + " / " + parent.name, Style.success);
+                                            statusToast_.show("Launching: " + contextDelegate_.project + " / " + contextDelegate_.name, Style.success);
                                         }
                                         onDuplicateRequested: root.openDuplicateContextDialog({
-                                            "project": parent.project,
-                                            "name": parent.name
+                                            "project": contextDelegate_.project,
+                                            "name": contextDelegate_.name
                                         })
-                                        onDeleteRequested: root.confirmDeleteContext(parent.project, parent.name)
+                                        onDeleteRequested: root.confirmDeleteContext(contextDelegate_.project, contextDelegate_.name)
                                     }
                                 }
                             }

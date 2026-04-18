@@ -38,7 +38,7 @@ Window {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 56
+            implicitHeight: 56
             color: Style.surface
 
             ColumnLayout {
@@ -108,12 +108,8 @@ Window {
             RequiredPackagesPanel {
                 SplitView.preferredWidth: 240
                 SplitView.minimumWidth: 160
-                packagesModel: root.packageManagerController
-                    ? root.packageManagerController.packageRequestsModel
-                    : null
-                selectedRow: root.packageManagerController
-                    ? root.packageManagerController.selectedRequestRow
-                    : -1
+                packagesModel: root.packageManagerController ? root.packageManagerController.packageRequestsModel : null
+                selectedRow: root.packageManagerController ? root.packageManagerController.selectedRequestRow : -1
                 onPackageSelected: function (index) {
                     if (root.packageManagerController)
                         root.packageManagerController.selectRequiredPackage(index);
@@ -127,15 +123,9 @@ Window {
             PackageRepositoryPanel {
                 SplitView.preferredWidth: 260
                 SplitView.minimumWidth: 180
-                repositoryModel: root.packageManagerController
-                    ? root.packageManagerController.repositoryModel
-                    : null
-                selectedRepoIndex: root.packageManagerController
-                    ? root.packageManagerController.selectedRepositoryIndex
-                    : -1
-                selectedPkgIndex: root.packageManagerController
-                    ? root.packageManagerController.selectedRepositoryPackageIndex
-                    : -1
+                repositoryModel: root.packageManagerController ? root.packageManagerController.repositoryModel : null
+                selectedRepoIndex: root.packageManagerController ? root.packageManagerController.selectedRepositoryIndex : -1
+                selectedPkgIndex: root.packageManagerController ? root.packageManagerController.selectedRepositoryPackageIndex : -1
                 onPackageSelected: function (repoIndex, pkgIndex) {
                     if (root.packageManagerController)
                         root.packageManagerController.selectRepositoryPackage(repoIndex, pkgIndex);
@@ -145,9 +135,7 @@ Window {
             PackageDetailPanel {
                 SplitView.fillWidth: true
                 SplitView.minimumWidth: 320
-                packageDetail: root.packageManagerController
-                    ? root.packageManagerController.packageDetail
-                    : null
+                packageDetail: root.packageManagerController ? root.packageManagerController.packageDetail : null
                 onDetailVersionSelected: function (index) {
                     if (root.packageManagerController)
                         root.packageManagerController.selectDetailVersion(index);
@@ -161,7 +149,7 @@ Window {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            implicitHeight: 52
             color: Style.surface
 
             Rectangle {
@@ -181,7 +169,7 @@ Window {
                     label: "Preview Resolve"
                 }
                 Item {
-                    width: Style.sm
+                    Layout.preferredWidth: Style.sm
                 }
                 CardButton {
                     glyph: "⌘"
@@ -195,7 +183,7 @@ Window {
                     onClicked: root.close()
                 }
                 Item {
-                    width: Style.sm
+                    Layout.preferredWidth: Style.sm
                 }
                 CardButton {
                     label: "Save"

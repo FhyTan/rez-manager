@@ -23,16 +23,7 @@ Dialog {
     property string customCommandValue: ""
     property var packagesValue: []
     property var projectOptions: []
-    signal saveRequested(
-        string originalProjectName,
-        string originalContextName,
-        string projectName,
-        string contextName,
-        string description,
-        string launchTarget,
-        string customCommand,
-        var packages
-    )
+    signal saveRequested(string originalProjectName, string originalContextName, string projectName, string contextName, string description, string launchTarget, string customCommand, var packages)
 
     function comboProjectOptions() {
         if (root.projectValue.length === 0)
@@ -52,16 +43,7 @@ Dialog {
         customCommandField_.text = root.customCommandValue;
     }
     onAccepted: {
-        root.saveRequested(
-            root.originalProjectValue,
-            root.originalContextNameValue,
-            projectCombo_.currentText,
-            projectNameField_.text,
-            descriptionField_.text,
-            root.launchTargetValue,
-            customCommandField_.text,
-            root.packagesValue
-        );
+        root.saveRequested(root.originalProjectValue, root.originalContextNameValue, projectCombo_.currentText, projectNameField_.text, descriptionField_.text, root.launchTargetValue, customCommandField_.text, root.packagesValue);
     }
     onRejected: root.close()
 
@@ -187,8 +169,8 @@ Dialog {
             Layout.fillWidth: true
             RowLayout {
                 Rectangle {
-                    width: 64
-                    height: 64
+                    implicitWidth: 64
+                    implicitHeight: 64
                     radius: Style.radiusSm
                     color: Style.surface
                     border.width: 1

@@ -58,6 +58,7 @@ T.ComboBox {
             }
         }
 
+        // qmllint disable
         states: [
             State {
                 name: "pressed"
@@ -90,6 +91,7 @@ T.ComboBox {
                 }
             }
         ]
+        // qmllint enable
 
         onClicked: {
             control.currentIndex = index;
@@ -140,6 +142,7 @@ T.ComboBox {
         }
     }
 
+    // qmllint disable
     states: [
         State {
             name: "disabled"
@@ -242,6 +245,7 @@ T.ComboBox {
             }
         }
     ]
+    // qmllint enable
 
     popup: Popup {
         y: control.height + Style.xs

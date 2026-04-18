@@ -42,6 +42,7 @@ T.MenuItem {
         elide: Text.ElideRight
     }
 
+    // qmllint disable
     states: [
         State {
             name: "disabled"
@@ -86,4 +87,5 @@ T.MenuItem {
             }
         }
     ]
+    // qmllint enable
 }

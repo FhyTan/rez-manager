@@ -22,7 +22,7 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 40
+            implicitHeight: 40
             color: "transparent"
 
             Text {
@@ -59,12 +59,12 @@ Rectangle {
 
                 width: ListView.view.width
                 height: 46
-                color: requestDelegate_.index === root.selectedRow
-                    ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12)
-                    : (rowHover_.hovered ? Style.elevated : "transparent")
+                color: requestDelegate_.index === root.selectedRow ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12) : (rowHover_.hovered ? Style.elevated : "transparent")
 
                 Behavior on color {
-                    ColorAnimation { duration: 80 }
+                    ColorAnimation {
+                        duration: 80
+                    }
                 }
 
                 RowLayout {
@@ -74,8 +74,8 @@ Rectangle {
                     spacing: Style.sm
 
                     Rectangle {
-                        width: 6
-                        height: 6
+                        implicitWidth: 6
+                        implicitHeight: 6
                         radius: 3
                         color: Style.accent
                         Layout.alignment: Qt.AlignVCenter
@@ -86,7 +86,7 @@ Rectangle {
                         spacing: 1
 
                         Text {
-                            text: pkgName
+                            text: requestDelegate_.pkgName
                             color: Style.textPrimary
                             font.pixelSize: Style.fontMd
                             font.bold: true
@@ -94,7 +94,7 @@ Rectangle {
                         }
 
                         Text {
-                            text: displayVersion
+                            text: requestDelegate_.displayVersion
                             color: Style.textSecondary
                             font.pixelSize: Style.fontXs
                             font.family: "Consolas, Courier New, monospace"
@@ -109,18 +109,12 @@ Rectangle {
                     Rectangle {
                         id: removeButton_
                         Layout.alignment: Qt.AlignVCenter
-                        width: 24
-                        height: 24
+                        implicitWidth: 24
+                        implicitHeight: 24
                         radius: Style.radiusSm
-                        color: removeTap_.pressed
-                            ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.20)
-                            : removeHover_.hovered
-                                ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.14)
-                                : "transparent"
+                        color: removeTap_.pressed ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.20) : removeHover_.hovered ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.14) : "transparent"
                         border.width: 1
-                        border.color: removeHover_.hovered
-                            ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.35)
-                            : Style.border
+                        border.color: removeHover_.hovered ? Qt.rgba(Style.error.r, Style.error.g, Style.error.b, 0.35) : Style.border
 
                         Text {
                             anchors.centerIn: parent
@@ -139,7 +133,7 @@ Rectangle {
                             id: removeTap_
                             gesturePolicy: TapHandler.WithinBounds
                             acceptedButtons: Qt.LeftButton
-                            onTapped: root.removeRequested(index)
+                            onTapped: root.removeRequested(requestDelegate_.index)
                         }
                     }
                 }

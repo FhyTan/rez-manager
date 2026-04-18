@@ -142,7 +142,7 @@ Window {
         // ── Title bar ─────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 56
+            implicitHeight: 56
             color: Style.surface
             ColumnLayout {
                 anchors {
@@ -184,7 +184,7 @@ Window {
         // ── Tab bar ───────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 42
+            implicitHeight: 42
             color: Style.surface
 
             TabBar {
@@ -373,8 +373,8 @@ Window {
                                 spacing: Style.lg
 
                                 Rectangle {
-                                    width: 8
-                                    height: 8
+                                    implicitWidth: 8
+                                    implicitHeight: 8
                                     radius: 4
                                     color: Style.success
                                     Layout.alignment: Qt.AlignVCenter

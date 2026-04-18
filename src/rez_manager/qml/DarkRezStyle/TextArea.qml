@@ -42,6 +42,7 @@ T.TextArea {
         }
     }
 
+    // qmllint disable
     states: [
         State {
             name: "disabled"
@@ -89,4 +90,6 @@ T.TextArea {
             }
         }
     ]
+    // qmllint enable
+
 }
