@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
 from importlib.resources import files
@@ -49,12 +49,12 @@ class _ResolvedContextLike(Protocol):
     def get_tools(self) -> Mapping[object, object]: ...
 
 
-def resolve_context(package_requests: list[str]) -> ResolveResult:
+def resolve_context(
+    package_requests: list[str], *, package_paths: Sequence[str] | None = None
+) -> ResolveResult:
     """Resolve a list of package requests using the Rez Python API."""
     try:
-        from rez.resolved_context import ResolvedContext  # noqa: PLC0415
-
-        ctx = ResolvedContext(package_requests)
+        ctx = _create_resolved_context(package_requests, package_paths=package_paths)
         return _resolve_result_from_context(ctx)
     except Exception as exc:  # noqa: BLE001
         return ResolveResult(
@@ -74,6 +74,16 @@ def build_environment_sections(
     platform_name: str | None = None,
 ) -> list[EnvironmentSection]:
     """Split an effective environment into user, system, and Rez-generated sections."""
+
+    def matching_path_key(environ_map: Mapping[str, str]) -> str | None:
+        if platform_key == _WINDOWS_PLATFORM:
+            for key in environ_map:
+                if str(key).upper() == "PATH":
+                    return str(key)
+            return None
+
+        return "PATH" if "PATH" in environ_map else None
+
     platform_key = _platform_key(platform_name)
     if platform_key == _WINDOWS_PLATFORM:
         system_lookup = {
@@ -97,6 +107,12 @@ def build_environment_sections(
             continue
         user_entries[name] = value
 
+    system_entries = dict(preserved_system_environ)
+    if matching_path_key(user_entries) is not None:
+        duplicate_system_path_key = matching_path_key(system_entries)
+        if duplicate_system_path_key is not None:
+            system_entries.pop(duplicate_system_path_key)
+
     return [
         EnvironmentSection(
             title=_SECTION_USER,
@@ -104,7 +120,7 @@ def build_environment_sections(
         ),
         EnvironmentSection(
             title=_SECTION_SYSTEM,
-            variables=_sorted_environment_map(preserved_system_environ),
+            variables=_sorted_environment_map(system_entries),
         ),
         EnvironmentSection(
             title=_SECTION_REZ,
@@ -160,12 +176,15 @@ def preserved_system_environment(
     return preserved
 
 
-def save_context(package_requests: list[str], path: str) -> tuple[bool, str]:
+def save_context(
+    package_requests: list[str],
+    path: str,
+    *,
+    package_paths: Sequence[str] | None = None,
+) -> tuple[bool, str]:
     """Serialize a resolved context to a .rxt file at the given path."""
     try:
-        from rez.resolved_context import ResolvedContext  # noqa: PLC0415
-
-        ctx = ResolvedContext(package_requests)
+        ctx = _create_resolved_context(package_requests, package_paths=package_paths)
         ctx.save(path)
         return True, ""
     except Exception as exc:  # noqa: BLE001
@@ -190,11 +209,14 @@ def load_context(path: str) -> ResolveResult:
         )
 
 
-def launch_context(package_requests: list[str], command: list[str]) -> subprocess.Popen:
+def launch_context(
+    package_requests: list[str],
+    command: list[str],
+    *,
+    package_paths: Sequence[str] | None = None,
+) -> subprocess.Popen:
     """Launch a subprocess inside a resolved Rez context."""
-    from rez.resolved_context import ResolvedContext  # noqa: PLC0415
-
-    ctx = ResolvedContext(package_requests)
+    ctx = _create_resolved_context(package_requests, package_paths=package_paths)
     return ctx.execute_shell(
         command=command,
         detached=True,
@@ -242,7 +264,7 @@ def _resolve_result_from_context(
     }
     return ResolveResult(
         success=True,
-        packages=[str(package) for package in context.resolved_packages],
+        packages=[package.qualified_package_name for package in context.resolved_packages],
         environ=effective_environ,
         environ_sections=build_environment_sections(
             effective_environ=effective_environ,
@@ -253,8 +275,27 @@ def _resolve_result_from_context(
     )
 
 
+def _create_resolved_context(
+    package_requests: Sequence[str],
+    *,
+    package_paths: Sequence[str] | None = None,
+) -> _ResolvedContextLike:
+    from rez.resolved_context import ResolvedContext  # noqa: PLC0415
+
+    resolved_package_paths = (
+        None if package_paths is None else [str(path) for path in package_paths]
+    )
+    return ResolvedContext(list(package_requests), package_paths=resolved_package_paths)
+
+
 def _sorted_environment_map(environ_map: Mapping[str, str]) -> dict[str, str]:
+    """Always sort `PATH` to the end of the section."""
+
+    def _environment_sort_key(item: tuple[str, str]) -> tuple[int, str]:
+        name = str(item[0])
+        return (int(name.upper() == "PATH"), name.lower())
+
     return {
         str(name): str(value)
-        for name, value in sorted(environ_map.items(), key=lambda item: item[0].lower())
+        for name, value in sorted(environ_map.items(), key=_environment_sort_key)
     }

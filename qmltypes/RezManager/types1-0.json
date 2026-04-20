@@ -209,7 +209,7 @@
                 "className": "ContextPreviewController",
                 "qualifiedClassName": "ContextPreviewController",
                 "object": true,
-                "lineNumber": 16,
+                "lineNumber": 17,
                 "superClasses": [
                     {
                         "access": "public",
@@ -229,7 +229,7 @@
                         "designable": true,
                         "final": false,
                         "index": 1,
-                        "lineNumber": 30,
+                        "lineNumber": 31,
                         "name": "projectName",
                         "required": false,
                         "scriptable": true,
@@ -244,7 +244,7 @@
                         "designable": true,
                         "final": false,
                         "index": 2,
-                        "lineNumber": 34,
+                        "lineNumber": 35,
                         "name": "contextName",
                         "required": false,
                         "scriptable": true,
@@ -259,7 +259,7 @@
                         "designable": true,
                         "final": false,
                         "index": 3,
-                        "lineNumber": 38,
+                        "lineNumber": 39,
                         "name": "hasData",
                         "required": false,
                         "scriptable": true,
@@ -274,7 +274,7 @@
                         "designable": true,
                         "final": false,
                         "index": 4,
-                        "lineNumber": 44,
+                        "lineNumber": 45,
                         "name": "isLoading",
                         "required": false,
                         "scriptable": true,
@@ -289,7 +289,7 @@
                         "designable": true,
                         "final": false,
                         "index": 5,
-                        "lineNumber": 48,
+                        "lineNumber": 49,
                         "name": "pathSeparator",
                         "required": false,
                         "scriptable": true,
@@ -303,7 +303,7 @@
                         "designable": true,
                         "final": false,
                         "index": 6,
-                        "lineNumber": 54,
+                        "lineNumber": 55,
                         "name": "environmentSections",
                         "required": false,
                         "scriptable": true,
@@ -318,7 +318,7 @@
                         "designable": true,
                         "final": false,
                         "index": 7,
-                        "lineNumber": 68,
+                        "lineNumber": 69,
                         "name": "resolvedPackages",
                         "required": false,
                         "scriptable": true,
@@ -333,7 +333,7 @@
                         "designable": true,
                         "final": false,
                         "index": 8,
-                        "lineNumber": 74,
+                        "lineNumber": 75,
                         "name": "tools",
                         "required": false,
                         "scriptable": true,
@@ -351,7 +351,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 4,
-                        "lineNumber": 18,
+                        "lineNumber": 19,
                         "isConst": false
                     }
                 ],
@@ -371,7 +371,7 @@
                         ],
                         "returnType": "bool",
                         "index": 5,
-                        "lineNumber": 80,
+                        "lineNumber": 81,
                         "isConst": false
                     },
                     {
@@ -380,7 +380,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 6,
-                        "lineNumber": 100,
+                        "lineNumber": 102,
                         "isConst": false
                     },
                     {
@@ -398,7 +398,7 @@
                         ],
                         "returnType": "void",
                         "index": 7,
-                        "lineNumber": 119,
+                        "lineNumber": 126,
                         "isConst": false
                     }
                 ]

@@ -984,7 +984,7 @@
             ]
         },
         "rez_manager.adapter.context": {
-            "modification_time": 1776668391.0105426,
+            "modification_time": 1776670149.8850918,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\context.py",
             "dependencies": [
                 "__future__",
@@ -1001,7 +1001,7 @@
             ]
         },
         "rez_manager.ui.context_preview": {
-            "modification_time": 1776668416.0041628,
+            "modification_time": 1776670116.9743633,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\context_preview.py",
             "dependencies": [
                 "PySide6.QtCore",
@@ -1009,6 +1009,7 @@
                 "__future__",
                 "rez_manager.adapter.context",
                 "rez_manager.models.rez_context",
+                "rez_manager.models.settings",
                 "rez_manager.ui.error_hub"
             ]
         },

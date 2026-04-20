@@ -16,19 +16,18 @@ Window {
     color: Style.bg
     flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
-    required property ContextPreviewController contextPreviewController
+    property ContextPreviewController contextPreviewController: null
     property var contextMenuEntry_: null
 
-    function isPathListVariable(variableName) {
-        const normalizedName = String(variableName ?? "").toUpperCase();
-        return normalizedName === "PATH" || normalizedName.endsWith("PATH");
+    function isPathVariable(variableName) {
+        return String(variableName ?? "").toUpperCase() === "PATH";
     }
 
     function formattedEnvValue(variableName, rawValue) {
         const value = String(rawValue ?? "");
         if (!root.contextPreviewController)
             return value;
-        if (!isPathListVariable(variableName))
+        if (!isPathVariable(variableName))
             return value;
         const separator = String(root.contextPreviewController.pathSeparator ?? "");
         if (separator.length === 1 && value.indexOf(separator) >= 0)
@@ -90,8 +89,8 @@ Window {
                         Layout.fillWidth: true
                     }
                     Badge {
-                        text: root.contextPreviewController.isLoading ? qsTr("Loading") : qsTr("Resolved")
-                        badgeColor: root.contextPreviewController.isLoading ? Style.warning : Style.success
+                        text: qsTr("Resolved")
+                        badgeColor: Style.success
                     }
                 }
 
@@ -181,12 +180,15 @@ Window {
             currentIndex: tabBar_.currentIndex
 
             ScrollView {
+                id: environmentScroll_
                 clip: true
+                leftPadding: Style.xl
+                topPadding: Style.xl
+                rightPadding: Style.xl
+                bottomPadding: Style.xl
 
                 ColumnLayout {
-                    width: root.width - Style.xl * 2
-                    x: Style.xl
-                    y: Style.xl
+                    width: environmentScroll_.availableWidth
                     spacing: Style.lg
 
                     Repeater {
@@ -232,8 +234,7 @@ Window {
                                         required property var modelData
                                         Layout.fillWidth: true
                                         implicitHeight: root.envRowHeight(rowDelegate_.modelData.name, rowDelegate_.modelData.value)
-                                        radius: Style.radiusSm
-                                        color: rowHover_.hovered ? Style.cardHover : index % 2 === 0 ? Style.surface : Style.bg
+                                        color: rowHover_.hovered ? Style.cardHover : index % 2 === 0 ? Style.elevated : Style.bg
 
                                         RowLayout {
                                             anchors {
@@ -291,32 +292,7 @@ Window {
                     }
 
                     Rectangle {
-                        visible: root.contextPreviewController.isLoading
-                        Layout.fillWidth: true
-                        radius: Style.radius
-                        color: Style.surface
-                        border.width: 1
-                        border.color: Style.border
-                        implicitHeight: 120
-
-                        RowLayout {
-                            anchors.centerIn: parent
-                            spacing: Style.md
-
-                            BusyIndicator {
-                                running: true
-                            }
-
-                            Text {
-                                text: qsTr("Resolving preview...")
-                                color: Style.textSecondary
-                                font.pixelSize: Style.fontMd
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        visible: !root.contextPreviewController.isLoading && !root.contextPreviewController.hasData
+                        visible: root.contextPreviewController && !root.contextPreviewController.hasData
                         Layout.fillWidth: true
                         radius: Style.radius
                         color: Style.surface
@@ -335,12 +311,15 @@ Window {
             }
 
             ScrollView {
+                id: packagesScroll_
                 clip: true
+                leftPadding: Style.xl
+                topPadding: Style.xl
+                rightPadding: Style.xl
+                bottomPadding: Style.xl
 
                 ColumnLayout {
-                    width: root.width - Style.xl * 2
-                    x: Style.xl
-                    y: Style.xl
+                    width: packagesScroll_.availableWidth
                     spacing: 2
 
                     Repeater {
@@ -404,32 +383,7 @@ Window {
                     }
 
                     Rectangle {
-                        visible: root.contextPreviewController.isLoading
-                        Layout.fillWidth: true
-                        radius: Style.radius
-                        color: Style.surface
-                        border.width: 1
-                        border.color: Style.border
-                        implicitHeight: 120
-
-                        RowLayout {
-                            anchors.centerIn: parent
-                            spacing: Style.md
-
-                            BusyIndicator {
-                                running: true
-                            }
-
-                            Text {
-                                text: qsTr("Resolving packages...")
-                                color: Style.textSecondary
-                                font.pixelSize: Style.fontMd
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        visible: !root.contextPreviewController.isLoading && root.contextPreviewController.resolvedPackages.length === 0
+                        visible: root.contextPreviewController && root.contextPreviewController.resolvedPackages.length === 0
                         Layout.fillWidth: true
                         radius: Style.radius
                         color: Style.surface

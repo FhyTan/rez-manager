@@ -52,6 +52,8 @@ src/rez_manager/
 - Prefer dataclasses or Pydantic models in `models/`; avoid mixing data with logic.
 - Keep `adapter/` thin — one module per concern (`context.py`, `packages.py`).
 - Never assume a Rez call succeeds — always check return codes and handle errors.
+- Prefer the narrowest practical scope for helpers: if a helper is only used inside one function and
+  does not need module-level reuse or separate testing, keep it local instead of adding a global helper.
 
 ### Logging and App Paths
 

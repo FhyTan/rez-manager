@@ -7,6 +7,7 @@ from PySide6.QtQml import QmlElement
 
 from rez_manager.adapter.context import ResolveResult, resolve_context
 from rez_manager.models.rez_context import RezContext
+from rez_manager.models.settings import AppSettings
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -83,6 +84,7 @@ class ContextPreviewController(QObject):
         request_id = self._request_id
         try:
             context = RezContext.load(project_name, context_name)
+            settings = AppSettings.load()
         except (KeyError, OSError, TypeError, ValueError) as exc:
             self._clear_state()
             report_ui_error(str(exc))
@@ -94,7 +96,7 @@ class ContextPreviewController(QObject):
         self._is_loading = True
         self.stateChanged.emit()
         clear_ui_error()
-        self._start_preview_job(request_id, context.packages)
+        self._start_preview_job(request_id, context.packages, settings.package_repositories)
         return True
 
     @Slot()
@@ -110,8 +112,13 @@ class ContextPreviewController(QObject):
         self._result = None
         self.stateChanged.emit()
 
-    def _start_preview_job(self, request_id: int, package_requests: list[str]) -> None:
-        worker = _ContextPreviewWorker(request_id, list(package_requests))
+    def _start_preview_job(
+        self,
+        request_id: int,
+        package_requests: list[str],
+        package_paths: list[str],
+    ) -> None:
+        worker = _ContextPreviewWorker(request_id, list(package_requests), list(package_paths))
         worker.signals.finished.connect(self._apply_preview_result)
         self._active_workers[request_id] = worker
         self._thread_pool.start(worker)
@@ -145,15 +152,21 @@ class _ContextPreviewWorkerSignals(QObject):
 
 
 class _ContextPreviewWorker(QRunnable):
-    def __init__(self, request_id: int, package_requests: list[str]) -> None:
+    def __init__(
+        self, request_id: int, package_requests: list[str], package_paths: list[str]
+    ) -> None:
         super().__init__()
         self._request_id = request_id
         self._package_requests = package_requests
+        self._package_paths = package_paths
         self.signals = _ContextPreviewWorkerSignals()
 
     @Slot()
     def run(self) -> None:
-        self.signals.finished.emit(self._request_id, resolve_context(self._package_requests))
+        self.signals.finished.emit(
+            self._request_id,
+            resolve_context(self._package_requests, package_paths=self._package_paths),
+        )
 
 
 def _package_entry(label: str) -> dict[str, str]:
