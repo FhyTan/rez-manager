@@ -879,36 +879,10 @@
                 "sys"
             ]
         },
-        "platform": {
-            "modification_time": 1748849781.59154,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\platform.py",
-            "dependencies": [
-                "_wmi",
-                "collections",
-                "functools",
-                "itertools",
-                "os",
-                "re",
-                "sys"
-            ]
-        },
-        "_wmi": {
-            "modification_time": 1748849780.9170215,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\DLLs\\_wmi.pyd",
-            "dependencies": []
-        },
         "importlib.resources": {
             "modification_time": 1748849781.4909005,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\importlib\\resources\\__init__.py",
             "dependencies": []
-        },
-        "rez_manager.models.context_preview": {
-            "modification_time": 1776658212.2996254,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\context_preview.py",
-            "dependencies": [
-                "__future__",
-                "dataclasses"
-            ]
         },
         "rez_manager.adapter.packages": {
             "modification_time": 1776656398.190063,
@@ -992,18 +966,25 @@
                 "rez_manager.ui.error_hub"
             ]
         },
+        "rez_manager.runtime": {
+            "modification_time": 1776668132.9674695,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\runtime.py",
+            "dependencies": [
+                "__future__",
+                "sys"
+            ]
+        },
         "rez_manager.models": {
-            "modification_time": 1776658458.758253,
+            "modification_time": 1776668132.9764688,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\__init__.py",
             "dependencies": [
-                "rez_manager.models.context_preview",
                 "rez_manager.models.project",
                 "rez_manager.models.rez_context",
                 "rez_manager.models.settings"
             ]
         },
         "rez_manager.adapter.context": {
-            "modification_time": 1776659059.21697,
+            "modification_time": 1776668391.0105426,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\context.py",
             "dependencies": [
                 "__future__",
@@ -1013,20 +994,20 @@
                 "importlib.resources",
                 "json",
                 "os",
-                "platform",
-                "rez_manager.models.context_preview",
-                "subprocess"
+                "rez_manager.runtime",
+                "subprocess",
+                "sys",
+                "typing"
             ]
         },
         "rez_manager.ui.context_preview": {
-            "modification_time": 1776659720.8106575,
+            "modification_time": 1776668416.0041628,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\context_preview.py",
             "dependencies": [
                 "PySide6.QtCore",
                 "PySide6.QtQml",
                 "__future__",
                 "rez_manager.adapter.context",
-                "rez_manager.models.context_preview",
                 "rez_manager.models.rez_context",
                 "rez_manager.ui.error_hub"
             ]

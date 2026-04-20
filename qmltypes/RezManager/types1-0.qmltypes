@@ -81,7 +81,7 @@ Module {
     }
     Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/context_preview.py"
-        lineNumber: 17
+        lineNumber: 16
         name: "ContextPreviewController"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -93,7 +93,7 @@ Module {
             read: "projectName"
             notify: "stateChanged"
             index: 1
-            lineNumber: 31
+            lineNumber: 30
             isReadonly: true
         }
         Property {
@@ -102,7 +102,7 @@ Module {
             read: "contextName"
             notify: "stateChanged"
             index: 2
-            lineNumber: 35
+            lineNumber: 34
             isReadonly: true
         }
         Property {
@@ -111,7 +111,7 @@ Module {
             read: "hasData"
             notify: "stateChanged"
             index: 3
-            lineNumber: 39
+            lineNumber: 38
             isReadonly: true
         }
         Property {
@@ -120,7 +120,7 @@ Module {
             read: "isLoading"
             notify: "stateChanged"
             index: 4
-            lineNumber: 43
+            lineNumber: 44
             isReadonly: true
         }
         Property {
@@ -128,7 +128,7 @@ Module {
             type: "QString"
             read: "pathSeparator"
             index: 5
-            lineNumber: 47
+            lineNumber: 48
             isReadonly: true
             isPropertyConstant: true
         }
@@ -138,7 +138,7 @@ Module {
             read: "environmentSections"
             notify: "stateChanged"
             index: 6
-            lineNumber: 53
+            lineNumber: 54
             isReadonly: true
         }
         Property {
@@ -147,7 +147,7 @@ Module {
             read: "resolvedPackages"
             notify: "stateChanged"
             index: 7
-            lineNumber: 63
+            lineNumber: 68
             isReadonly: true
         }
         Property {
@@ -159,20 +159,20 @@ Module {
             lineNumber: 74
             isReadonly: true
         }
-        Signal { name: "stateChanged"; lineNumber: 19 }
+        Signal { name: "stateChanged"; lineNumber: 18 }
         Method {
             name: "loadContext"
             type: "bool"
-            lineNumber: 78
+            lineNumber: 80
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
-        Method { name: "clear"; lineNumber: 98 }
+        Method { name: "clear"; lineNumber: 100 }
         Method {
             name: "_apply_preview_result"
-            lineNumber: 117
+            lineNumber: 119
             Parameter { name: "request_id"; type: "int" }
-            Parameter { name: "preview_result"; type: "PyObject" }
+            Parameter { name: "resolve_result"; type: "PyObject" }
         }
     }
     Component {

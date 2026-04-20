@@ -209,7 +209,7 @@
                 "className": "ContextPreviewController",
                 "qualifiedClassName": "ContextPreviewController",
                 "object": true,
-                "lineNumber": 17,
+                "lineNumber": 16,
                 "superClasses": [
                     {
                         "access": "public",
@@ -229,7 +229,7 @@
                         "designable": true,
                         "final": false,
                         "index": 1,
-                        "lineNumber": 31,
+                        "lineNumber": 30,
                         "name": "projectName",
                         "required": false,
                         "scriptable": true,
@@ -244,7 +244,7 @@
                         "designable": true,
                         "final": false,
                         "index": 2,
-                        "lineNumber": 35,
+                        "lineNumber": 34,
                         "name": "contextName",
                         "required": false,
                         "scriptable": true,
@@ -259,7 +259,7 @@
                         "designable": true,
                         "final": false,
                         "index": 3,
-                        "lineNumber": 39,
+                        "lineNumber": 38,
                         "name": "hasData",
                         "required": false,
                         "scriptable": true,
@@ -274,7 +274,7 @@
                         "designable": true,
                         "final": false,
                         "index": 4,
-                        "lineNumber": 43,
+                        "lineNumber": 44,
                         "name": "isLoading",
                         "required": false,
                         "scriptable": true,
@@ -289,7 +289,7 @@
                         "designable": true,
                         "final": false,
                         "index": 5,
-                        "lineNumber": 47,
+                        "lineNumber": 48,
                         "name": "pathSeparator",
                         "required": false,
                         "scriptable": true,
@@ -303,7 +303,7 @@
                         "designable": true,
                         "final": false,
                         "index": 6,
-                        "lineNumber": 53,
+                        "lineNumber": 54,
                         "name": "environmentSections",
                         "required": false,
                         "scriptable": true,
@@ -318,7 +318,7 @@
                         "designable": true,
                         "final": false,
                         "index": 7,
-                        "lineNumber": 63,
+                        "lineNumber": 68,
                         "name": "resolvedPackages",
                         "required": false,
                         "scriptable": true,
@@ -351,7 +351,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 4,
-                        "lineNumber": 19,
+                        "lineNumber": 18,
                         "isConst": false
                     }
                 ],
@@ -371,7 +371,7 @@
                         ],
                         "returnType": "bool",
                         "index": 5,
-                        "lineNumber": 78,
+                        "lineNumber": 80,
                         "isConst": false
                     },
                     {
@@ -380,7 +380,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 6,
-                        "lineNumber": 98,
+                        "lineNumber": 100,
                         "isConst": false
                     },
                     {
@@ -392,13 +392,13 @@
                                 "type": "int"
                             },
                             {
-                                "name": "preview_result",
+                                "name": "resolve_result",
                                 "type": "PyObject"
                             }
                         ],
                         "returnType": "void",
                         "index": 7,
-                        "lineNumber": 117,
+                        "lineNumber": 119,
                         "isConst": false
                     }
                 ]

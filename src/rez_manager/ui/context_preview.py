@@ -5,8 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Slot
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.context import ContextPreviewResult, build_context_preview
-from rez_manager.models.context_preview import ContextPreviewData
+from rez_manager.adapter.context import ResolveResult, resolve_context
 from rez_manager.models.rez_context import RezContext
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
@@ -23,7 +22,7 @@ class ContextPreviewController(QObject):
         self._project_name = ""
         self._context_name = ""
         self._is_loading = False
-        self._preview = ContextPreviewData()
+        self._result: ResolveResult | None = None
         self._request_id = 0
         self._thread_pool = QThreadPool.globalInstance()
         self._active_workers: dict[int, _ContextPreviewWorker] = {}
@@ -38,7 +37,9 @@ class ContextPreviewController(QObject):
 
     @Property(bool, notify=stateChanged)
     def hasData(self) -> bool:  # noqa: N802
-        return bool(self._preview.sections or self._preview.packages)
+        if self._result is None:
+            return False
+        return bool(self._result.environ_sections or self._result.packages)
 
     @Property(bool, notify=stateChanged)
     def isLoading(self) -> bool:  # noqa: N802
@@ -52,28 +53,29 @@ class ContextPreviewController(QObject):
 
     @Property("QVariantList", notify=stateChanged)
     def environmentSections(self) -> list[dict[str, object]]:  # noqa: N802
+        if self._result is None:
+            return []
         return [
             {
                 "title": section.title,
-                "rows": [{"name": entry.name, "value": entry.value} for entry in section.entries],
+                "rows": [
+                    {"name": name, "value": value} for name, value in section.variables.items()
+                ],
             }
-            for section in self._preview.sections
+            for section in self._result.environ_sections
         ]
 
     @Property("QVariantList", notify=stateChanged)
     def resolvedPackages(self) -> list[dict[str, str]]:  # noqa: N802
-        return [
-            {
-                "name": package.name,
-                "version": package.version,
-                "label": package.label,
-            }
-            for package in self._preview.packages
-        ]
+        if self._result is None:
+            return []
+        return [_package_entry(label) for label in self._result.packages]
 
     @Property("QVariantList", notify=stateChanged)
     def tools(self) -> list[str]:
-        return list(self._preview.tools)
+        if self._result is None:
+            return []
+        return list(self._result.tools)
 
     @Slot(str, str, result=bool)
     def loadContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
@@ -88,7 +90,7 @@ class ContextPreviewController(QObject):
 
         self._project_name = project_name
         self._context_name = context_name
-        self._preview = ContextPreviewData()
+        self._result = None
         self._is_loading = True
         self.stateChanged.emit()
         clear_ui_error()
@@ -105,7 +107,7 @@ class ContextPreviewController(QObject):
         self._project_name = ""
         self._context_name = ""
         self._is_loading = False
-        self._preview = ContextPreviewData()
+        self._result = None
         self.stateChanged.emit()
 
     def _start_preview_job(self, request_id: int, package_requests: list[str]) -> None:
@@ -115,25 +117,25 @@ class ContextPreviewController(QObject):
         self._thread_pool.start(worker)
 
     @Slot(int, object)
-    def _apply_preview_result(self, request_id: int, preview_result: object) -> None:
+    def _apply_preview_result(self, request_id: int, resolve_result: object) -> None:
         self._active_workers.pop(request_id, None)
         if request_id != self._request_id:
             return
 
         self._is_loading = False
-        if not isinstance(preview_result, ContextPreviewResult):
-            self._preview = ContextPreviewData()
+        if not isinstance(resolve_result, ResolveResult):
+            self._result = None
             self.stateChanged.emit()
             report_ui_error("Failed to resolve preview data.")
             return
 
-        if not preview_result.success or preview_result.preview is None:
-            self._preview = ContextPreviewData()
+        if not resolve_result.success:
+            self._result = None
             self.stateChanged.emit()
-            report_ui_error(preview_result.error or "Failed to resolve preview data.")
+            report_ui_error(resolve_result.error or "Failed to resolve preview data.")
             return
 
-        self._preview = preview_result.preview
+        self._result = resolve_result
         self.stateChanged.emit()
         clear_ui_error()
 
@@ -151,5 +153,16 @@ class _ContextPreviewWorker(QRunnable):
 
     @Slot()
     def run(self) -> None:
-        preview_result = build_context_preview(self._package_requests)
-        self.signals.finished.emit(self._request_id, preview_result)
+        self.signals.finished.emit(self._request_id, resolve_context(self._package_requests))
+
+
+def _package_entry(label: str) -> dict[str, str]:
+    name, separator, version = str(label).rpartition("-")
+    if not separator:
+        name = str(label)
+        version = ""
+    return {
+        "name": name,
+        "version": version,
+        "label": label,
+    }

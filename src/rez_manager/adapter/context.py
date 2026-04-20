@@ -4,19 +4,15 @@ from __future__ import annotations
 
 import json
 import subprocess
-from collections.abc import Mapping, Sequence
+import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cache
 from importlib.resources import files
 from os import environ
-from platform import system
+from typing import Protocol
 
-from rez_manager.models.context_preview import (
-    ContextPreviewData,
-    PreviewEnvironmentEntry,
-    PreviewEnvironmentSection,
-    PreviewResolvedPackage,
-)
+from rez_manager.runtime import IS_LINUX, IS_MACOS, IS_WINDOWS
 
 _SYSTEM_ENV_CATALOG_NAME = "system_env_vars.json"
 _WINDOWS_PLATFORM = "windows"
@@ -25,21 +21,32 @@ _SECTION_SYSTEM = "System Environment"
 _SECTION_REZ = "REZ_ Environment"
 
 
+@dataclass(frozen=True)
+class EnvironmentSection:
+    """A logical section of resolved environment variables."""
+
+    title: str
+    variables: dict[str, str]
+
+
 @dataclass
 class ResolveResult:
     success: bool
     packages: list[str]
     environ: dict[str, str]
+    environ_sections: list[EnvironmentSection]
     tools: list[str]
     error: str | None = None
 
 
-@dataclass
-class ContextPreviewResult:
-    success: bool
-    preview: ContextPreviewData | None
-    effective_environ: dict[str, str]
-    error: str | None = None
+class _ResolvedContextLike(Protocol):
+    resolved_packages: list[object]
+
+    def get_environ(
+        self, *, parent_environ: Mapping[str, str] | None = None
+    ) -> Mapping[object, object]: ...
+
+    def get_tools(self) -> Mapping[object, object]: ...
 
 
 def resolve_context(package_requests: list[str]) -> ResolveResult:
@@ -48,61 +55,33 @@ def resolve_context(package_requests: list[str]) -> ResolveResult:
         from rez.resolved_context import ResolvedContext  # noqa: PLC0415
 
         ctx = ResolvedContext(package_requests)
-        environ_map = {str(key): str(value) for key, value in ctx.get_environ().items()}
-        packages = [str(package) for package in ctx.resolved_packages]
-        tools = list(ctx.get_tools().keys())
-        return ResolveResult(success=True, packages=packages, environ=environ_map, tools=tools)
+        return _resolve_result_from_context(ctx)
     except Exception as exc:  # noqa: BLE001
-        return ResolveResult(success=False, packages=[], environ={}, tools=[], error=str(exc))
+        return ResolveResult(
+            success=False,
+            packages=[],
+            environ={},
+            environ_sections=[],
+            tools=[],
+            error=str(exc),
+        )
 
 
-def build_context_preview(
-    package_requests: list[str],
+def build_environment_sections(
     *,
-    process_environ: Mapping[str, str] | None = None,
-    platform_name: str | None = None,
-) -> ContextPreviewResult:
-    """Resolve a context and classify its effective environment for preview."""
-    try:
-        from rez.resolved_context import ResolvedContext  # noqa: PLC0415
-
-        ctx = ResolvedContext(package_requests)
-        preserved_system_environ = preserved_system_environment(
-            process_environ=process_environ,
-            platform_name=platform_name,
-        )
-        effective_environ = {
-            str(key): str(value)
-            for key, value in ctx.get_environ(parent_environ=preserved_system_environ).items()
-        }
-        preview = build_context_preview_data(
-            resolved_packages=ctx.resolved_packages,
-            effective_environ=effective_environ,
-            preserved_system_environ=preserved_system_environ,
-            tools=list(ctx.get_tools().keys()),
-            platform_name=platform_name,
-        )
-        return ContextPreviewResult(
-            success=True,
-            preview=preview,
-            effective_environ=effective_environ,
-        )
-    except Exception as exc:  # noqa: BLE001
-        return ContextPreviewResult(
-            success=False, preview=None, effective_environ={}, error=str(exc)
-        )
-
-
-def build_context_preview_data(
-    *,
-    resolved_packages: Sequence[object],
     effective_environ: Mapping[str, str],
     preserved_system_environ: Mapping[str, str],
-    tools: Sequence[str] = (),
     platform_name: str | None = None,
-) -> ContextPreviewData:
-    """Build UI-friendly preview data from resolved package and environment payloads."""
-    system_lookup = _environment_lookup(preserved_system_environ, platform_name=platform_name)
+) -> list[EnvironmentSection]:
+    """Split an effective environment into user, system, and Rez-generated sections."""
+    platform_key = _platform_key(platform_name)
+    if platform_key == _WINDOWS_PLATFORM:
+        system_lookup = {
+            str(key).upper(): str(value) for key, value in preserved_system_environ.items()
+        }
+    else:
+        system_lookup = {str(key): str(value) for key, value in preserved_system_environ.items()}
+
     user_entries: dict[str, str] = {}
     rez_entries: dict[str, str] = {}
 
@@ -113,31 +92,25 @@ def build_context_preview_data(
             rez_entries[name] = value
             continue
 
-        normalized_key = _normalize_env_key(name, platform_name=platform_name)
-        if normalized_key in system_lookup and system_lookup[normalized_key] == value:
+        lookup_key = name.upper() if platform_key == _WINDOWS_PLATFORM else name
+        if lookup_key in system_lookup and system_lookup[lookup_key] == value:
             continue
         user_entries[name] = value
 
-    sections = [
-        PreviewEnvironmentSection(
+    return [
+        EnvironmentSection(
             title=_SECTION_USER,
-            entries=_sorted_environment_entries(user_entries),
+            variables=_sorted_environment_map(user_entries),
         ),
-        PreviewEnvironmentSection(
+        EnvironmentSection(
             title=_SECTION_SYSTEM,
-            entries=_sorted_environment_entries(preserved_system_environ),
+            variables=_sorted_environment_map(preserved_system_environ),
         ),
-        PreviewEnvironmentSection(
+        EnvironmentSection(
             title=_SECTION_REZ,
-            entries=_sorted_environment_entries(rez_entries),
+            variables=_sorted_environment_map(rez_entries),
         ),
     ]
-
-    return ContextPreviewData(
-        packages=_preview_resolved_packages(resolved_packages),
-        sections=sections,
-        tools=[str(tool) for tool in tools],
-    )
 
 
 def system_environment_variable_names(platform_name: str | None = None) -> list[str]:
@@ -169,15 +142,19 @@ def preserved_system_environment(
 ) -> dict[str, str]:
     """Return the subset of host environment variables preserved for preview and launch."""
     source_environ = process_environ if process_environ is not None else environ
-    allowed_names = {
-        _normalize_env_key(name, platform_name=platform_name)
-        for name in system_environment_variable_names(platform_name)
-    }
+    platform_key = _platform_key(platform_name)
+    allowed_names = system_environment_variable_names(platform_name)
+    allowed_lookup = (
+        {name.upper() for name in allowed_names}
+        if platform_key == _WINDOWS_PLATFORM
+        else set(allowed_names)
+    )
 
     preserved: dict[str, str] = {}
     for key, raw_value in source_environ.items():
         name = str(key)
-        if _normalize_env_key(name, platform_name=platform_name) not in allowed_names:
+        lookup_key = name.upper() if platform_key == _WINDOWS_PLATFORM else name
+        if lookup_key not in allowed_lookup:
             continue
         preserved[name] = str(raw_value)
     return preserved
@@ -201,12 +178,16 @@ def load_context(path: str) -> ResolveResult:
         from rez.resolved_context import ResolvedContext  # noqa: PLC0415
 
         ctx = ResolvedContext.load(path)
-        environ_map = {str(key): str(value) for key, value in ctx.get_environ().items()}
-        packages = [str(package) for package in ctx.resolved_packages]
-        tools = list(ctx.get_tools().keys())
-        return ResolveResult(success=True, packages=packages, environ=environ_map, tools=tools)
+        return _resolve_result_from_context(ctx)
     except Exception as exc:  # noqa: BLE001
-        return ResolveResult(success=False, packages=[], environ={}, tools=[], error=str(exc))
+        return ResolveResult(
+            success=False,
+            packages=[],
+            environ={},
+            environ_sections=[],
+            tools=[],
+            error=str(exc),
+        )
 
 
 def launch_context(package_requests: list[str], command: list[str]) -> subprocess.Popen:
@@ -217,12 +198,25 @@ def launch_context(package_requests: list[str], command: list[str]) -> subproces
     return ctx.execute_shell(
         command=command,
         detached=True,
+        block=False,
+        start_new_session=True,
         parent_environ=preserved_system_environment(),
     )
 
 
 def _platform_key(platform_name: str | None) -> str:
-    resolved_platform = (platform_name or system()).strip().lower()
+    if platform_name is None:
+        if IS_WINDOWS:
+            return _WINDOWS_PLATFORM
+        if IS_MACOS:
+            return "macos"
+        if IS_LINUX:
+            return "linux"
+        raise ValueError(
+            f"Unsupported platform for system environment preservation: {sys.platform}"
+        )
+
+    resolved_platform = platform_name.strip().lower()
     if resolved_platform.startswith("win"):
         return _WINDOWS_PLATFORM
     if resolved_platform.startswith("darwin") or resolved_platform.startswith("mac"):
@@ -232,49 +226,35 @@ def _platform_key(platform_name: str | None) -> str:
     raise ValueError(f"Unsupported platform for system environment preservation: {platform_name}")
 
 
-def _normalize_env_key(name: str, *, platform_name: str | None = None) -> str:
-    normalized = str(name)
-    return normalized.upper() if _platform_key(platform_name) == _WINDOWS_PLATFORM else normalized
-
-
-def _environment_lookup(
-    environ_map: Mapping[str, str],
+def _resolve_result_from_context(
+    context: _ResolvedContextLike,
     *,
+    process_environ: Mapping[str, str] | None = None,
     platform_name: str | None = None,
-) -> dict[str, str]:
-    return {
-        _normalize_env_key(key, platform_name=platform_name): str(value)
-        for key, value in environ_map.items()
+) -> ResolveResult:
+    preserved_environ = preserved_system_environment(
+        process_environ=process_environ,
+        platform_name=platform_name,
+    )
+    effective_environ = {
+        str(key): str(value)
+        for key, value in context.get_environ(parent_environ=preserved_environ).items()
     }
+    return ResolveResult(
+        success=True,
+        packages=[str(package) for package in context.resolved_packages],
+        environ=effective_environ,
+        environ_sections=build_environment_sections(
+            effective_environ=effective_environ,
+            preserved_system_environ=preserved_environ,
+            platform_name=platform_name,
+        ),
+        tools=[str(tool) for tool in context.get_tools().keys()],
+    )
 
 
-def _sorted_environment_entries(environ_map: Mapping[str, str]) -> list[PreviewEnvironmentEntry]:
-    return [
-        PreviewEnvironmentEntry(name=str(name), value=str(value))
+def _sorted_environment_map(environ_map: Mapping[str, str]) -> dict[str, str]:
+    return {
+        str(name): str(value)
         for name, value in sorted(environ_map.items(), key=lambda item: item[0].lower())
-    ]
-
-
-def _preview_resolved_packages(packages: Sequence[object]) -> list[PreviewResolvedPackage]:
-    preview_packages: list[PreviewResolvedPackage] = []
-    for package in packages:
-        name = getattr(package, "name", "")
-        version = getattr(package, "version", "")
-        label = str(package)
-        if not name:
-            name, version = _split_package_label(label)
-        preview_packages.append(
-            PreviewResolvedPackage(
-                name=str(name),
-                version=str(version) if version else "",
-                label=label,
-            )
-        )
-    return preview_packages
-
-
-def _split_package_label(label: str) -> tuple[str, str]:
-    name, separator, version = str(label).rpartition("-")
-    if not separator:
-        return str(label), ""
-    return name, version
+    }

@@ -2,16 +2,9 @@
 
 from __future__ import annotations
 
-from rez_manager.models.context_preview import (
-    ContextPreviewData,
-    PreviewEnvironmentEntry,
-    PreviewEnvironmentSection,
-    PreviewResolvedPackage,
-)
-
 
 def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch):
-    from rez_manager.adapter.context import ContextPreviewResult
+    from rez_manager.adapter.context import EnvironmentSection, ResolveResult
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -24,37 +17,22 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0", "python-3.11"]))
 
-    preview_result = ContextPreviewResult(
+    preview_result = ResolveResult(
         success=True,
-        preview=ContextPreviewData(
-            packages=[
-                PreviewResolvedPackage(name="maya", version="2025.0", label="maya-2025.0"),
-                PreviewResolvedPackage(name="python", version="3.11", label="python-3.11"),
-            ],
-            sections=[
-                PreviewEnvironmentSection(
-                    title="User Environment",
-                    entries=[
-                        PreviewEnvironmentEntry(
-                            name="MAYA_LOCATION",
-                            value="D:\\packages\\maya\\2025.0",
-                        )
-                    ],
-                ),
-                PreviewEnvironmentSection(
-                    title="System Environment",
-                    entries=[
-                        PreviewEnvironmentEntry(
-                            name="PATH",
-                            value="C:\\Windows\\System32",
-                        )
-                    ],
-                ),
-                PreviewEnvironmentSection(title="REZ_ Environment", entries=[]),
-            ],
-            tools=["maya.exe"],
-        ),
-        effective_environ={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
+        packages=["maya-2025.0", "python-3.11"],
+        environ={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
+        environ_sections=[
+            EnvironmentSection(
+                title="User Environment",
+                variables={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
+            ),
+            EnvironmentSection(
+                title="System Environment",
+                variables={"PATH": "C:\\Windows\\System32"},
+            ),
+            EnvironmentSection(title="REZ_ Environment", variables={}),
+        ],
+        tools=["maya.exe"],
     )
     monkeypatch.setattr(
         ContextPreviewController,
@@ -90,7 +68,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
 
 
 def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_path, monkeypatch):
-    from rez_manager.adapter.context import ContextPreviewResult
+    from rez_manager.adapter.context import ResolveResult
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -103,10 +81,12 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
-    preview_result = ContextPreviewResult(
+    preview_result = ResolveResult(
         success=False,
-        preview=None,
-        effective_environ={},
+        packages=[],
+        environ={},
+        environ_sections=[],
+        tools=[],
         error="Resolve failed.",
     )
     monkeypatch.setattr(
@@ -150,7 +130,7 @@ def test_context_preview_controller_reports_invalid_context_metadata(tmp_path, m
 def test_context_preview_controller_ignores_stale_worker_results_after_failed_reload(
     tmp_path, monkeypatch
 ):
-    from rez_manager.adapter.context import ContextPreviewResult
+    from rez_manager.adapter.context import ResolveResult
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -173,14 +153,12 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
     controller = ContextPreviewController()
 
     assert controller.loadContext("Pipeline", "Base")
-    stale_result = ContextPreviewResult(
+    stale_result = ResolveResult(
         success=True,
-        preview=ContextPreviewData(
-            packages=[PreviewResolvedPackage(name="maya", version="2025.0", label="maya-2025.0")],
-            sections=[],
-            tools=[],
-        ),
-        effective_environ={},
+        packages=["maya-2025.0"],
+        environ={},
+        environ_sections=[],
+        tools=[],
     )
 
     assert not controller.loadContext("Pipeline", "Missing")

@@ -80,6 +80,9 @@ ctx = ResolvedContext(["maya-2024", "python-3.11"])
 
 - **Never** import `rez.*` outside of `src/rez_manager/adapter/`.
 - **Never** invent Rez API methods — verify against https://rez.readthedocs.io/en/stable/api.html
+- Rez package request strings always use `-` to separate package name and version. If a source package family
+  name contains `-`, Rez normalizes it before it enters the Rez API, so downstream code should not add extra
+  defensive parsing for labels like `my-tool`; treat the final `-` as the package/version separator.
 
 ---
 

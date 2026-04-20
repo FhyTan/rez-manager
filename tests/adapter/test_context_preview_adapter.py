@@ -11,11 +11,10 @@ def test_system_environment_variable_names_include_supported_platforms():
     assert "__CF_USER_TEXT_ENCODING" in system_environment_variable_names("macos")
 
 
-def test_build_context_preview_data_splits_user_system_and_rez_sections():
-    from rez_manager.adapter.context import build_context_preview_data
+def test_build_environment_sections_splits_user_system_and_rez_sections():
+    from rez_manager.adapter.context import build_environment_sections
 
-    preview = build_context_preview_data(
-        resolved_packages=["maya-2025.0", "python-3.11"],
+    sections = build_environment_sections(
         effective_environ={
             "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
             "PATH": "D:\\packages\\maya\\2025.0\\bin;C:\\Windows\\System32",
@@ -27,27 +26,21 @@ def test_build_context_preview_data_splits_user_system_and_rez_sections():
             "SYSTEMROOT": "C:\\Windows",
             "TEMP": "C:\\Temp",
         },
-        tools=["maya.exe"],
         platform_name="windows",
     )
 
-    sections = {
-        section.title: {entry.name: entry.value for entry in section.entries}
-        for section in preview.sections
-    }
+    sections_by_title = {section.title: section.variables for section in sections}
 
-    assert [package.label for package in preview.packages] == ["maya-2025.0", "python-3.11"]
-    assert preview.tools == ["maya.exe"]
-    assert sections["User Environment"] == {
+    assert sections_by_title["User Environment"] == {
         "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
         "PATH": "D:\\packages\\maya\\2025.0\\bin;C:\\Windows\\System32",
     }
-    assert sections["System Environment"] == {
+    assert sections_by_title["System Environment"] == {
         "PATH": "C:\\Windows\\System32",
         "SYSTEMROOT": "C:\\Windows",
         "TEMP": "C:\\Temp",
     }
-    assert sections["REZ_ Environment"] == {
+    assert sections_by_title["REZ_ Environment"] == {
         "REZ_USED_RESOLVE": "maya-2025.0 python-3.11",
     }
 
