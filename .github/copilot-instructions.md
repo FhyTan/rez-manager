@@ -27,6 +27,7 @@ Before writing any Rez-related code, consult:
 src/rez_manager/
 ├── adapter/        # ONLY layer that imports from rez.*
 ├── models/         # Pure Python dataclasses — NO rez.* or PySide6 imports
+├── persistence/    # Filesystem persistence helpers
 ├── ui/             # PySide6 QObject subclasses (controllers); exposed to QML via @Property/@Slot/Signal
 └── qml/            # Declarative QML UI — communicates with ui/ only
 ```
@@ -96,3 +97,7 @@ pyside6-qml-stubgen.exe src --out-dir ./qmltypes
 pyside6-qmllint -I ./qmltypes <qml-files>
 pyside6-qmlformat -i <qml-files>
 ```
+
+## Development
+
+The project is still in the development phase, so there’s no need for backward compatibility. Feel free to make any structural changes if they improve the design.
