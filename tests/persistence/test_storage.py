@@ -65,16 +65,35 @@ def test_load_settings_falls_back_to_default_on_invalid_json(tmp_path, monkeypat
 def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
     from rez_manager.persistence import app_paths, settings_store
 
+    cache_root = tmp_path / "cache-root"
     config_root = tmp_path / "config-root"
     data_root = tmp_path / "data-root"
+    log_root = tmp_path / "log-root"
     monkeypatch.delenv("REZ_MANAGER_HOME", raising=False)
+    monkeypatch.setattr(app_paths, "user_cache_path", lambda *args, **kwargs: cache_root)
     monkeypatch.setattr(app_paths, "user_config_path", lambda *args, **kwargs: config_root)
     monkeypatch.setattr(app_paths, "user_data_path", lambda *args, **kwargs: data_root)
+    monkeypatch.setattr(app_paths, "user_log_path", lambda *args, **kwargs: log_root)
 
+    assert app_paths.app_cache_dir() == cache_root
     assert app_paths.app_config_dir() == config_root
     assert app_paths.app_data_dir() == data_root
+    assert app_paths.app_log_dir() == log_root
+    assert app_paths.log_file_path() == log_root / "rez-manager.log"
     assert app_paths.settings_file_path() == config_root / "settings.json"
     assert settings_store.default_settings().contexts_location == str(data_root / "contexts")
+
+
+def test_app_home_override_provides_cache_and_log_directories(tmp_path, monkeypatch):
+    from rez_manager.persistence import app_paths
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+
+    assert app_paths.app_config_dir() == tmp_path
+    assert app_paths.app_data_dir() == tmp_path
+    assert app_paths.app_cache_dir() == tmp_path / "cache"
+    assert app_paths.app_log_dir() == tmp_path / "logs"
+    assert app_paths.log_file_path() == tmp_path / "logs" / "rez-manager.log"
 
 
 def test_list_contexts_skips_invalid_metadata(tmp_path):

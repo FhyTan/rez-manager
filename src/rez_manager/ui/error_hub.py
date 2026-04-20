@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from loguru import logger
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
 
@@ -29,8 +30,8 @@ class AppErrorHub(QObject):
         if not normalized:
             self.clear()
             return
-        self._set_message(normalized)
-        self.errorOccurred.emit(normalized)
+        logger.warning("UI-facing error: {}", normalized)
+        self._publish_message(normalized)
 
     @Slot()
     def clear(self) -> None:
@@ -38,13 +39,22 @@ class AppErrorHub(QObject):
 
     @Slot(str)
     def publishUnexpected(self, details: str) -> None:  # noqa: N802
+        self.publish_unexpected(details)
+
+    def publish_unexpected(self, details: str, *, already_logged: bool = False) -> None:
         summary = str(details).strip().splitlines()[-1] if str(details).strip() else "Unknown error"
-        self.publish(f"Unexpected application error: {summary}")
+        if not already_logged:
+            logger.error("Unexpected application error forwarded to UI: {}", summary)
+        self._publish_message(f"Unexpected application error: {summary}")
 
     def _set_message(self, message: str) -> None:
         if self._message != message:
             self._message = message
             self.messageChanged.emit()
+
+    def _publish_message(self, message: str) -> None:
+        self._set_message(message)
+        self.errorOccurred.emit(message)
 
 
 app_error_hub = AppErrorHub()
@@ -62,7 +72,7 @@ def clear_ui_error() -> None:
     app_error_hub.clear()
 
 
-def report_unexpected_exception(details: str) -> None:
+def report_unexpected_exception(details: str, *, already_logged: bool = False) -> None:
     """Publish an uncaught exception through the shared front-end error channel."""
 
-    app_error_hub.publishUnexpected(details)
+    app_error_hub.publish_unexpected(details, already_logged=already_logged)

@@ -47,9 +47,18 @@ src/rez_manager/
 - UI display strings are kept separate for i18n (do not hardcode translated text in logic).
 - Line length: **100 characters** (enforced by ruff).
 - Use `from __future__ import annotations` for forward references.
+- Use `loguru` as the default logging library; avoid ad-hoc `print()` debugging and only use the standard `logging` module when integration requires it.
+- Use `platformdirs` to determine application config, data, cache, and log directories; do not hardcode OS-specific storage paths.
 - Prefer dataclasses or Pydantic models in `models/`; avoid mixing data with logic.
 - Keep `adapter/` thin — one module per concern (`context.py`, `packages.py`).
 - Never assume a Rez call succeeds — always check return codes and handle errors.
+
+### Logging and App Paths
+
+- Centralize logger setup so log sinks, formatting, and rotation are configured in one place.
+- Write runtime logs to an application log directory resolved via `platformdirs`.
+- Store user configuration, persistent app data, cache data, and logs in their respective `platformdirs` locations rather than alongside source files.
+- Use `pathlib.Path` together with `platformdirs` results when composing filesystem paths.
 
 ---
 
