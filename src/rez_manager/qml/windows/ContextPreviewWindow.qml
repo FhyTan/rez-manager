@@ -19,15 +19,9 @@ Window {
     property ContextPreviewController contextPreviewController: null
     property var contextMenuEntry_: null
 
-    function isPathVariable(variableName) {
-        return String(variableName ?? "").toUpperCase() === "PATH";
-    }
-
     function formattedEnvValue(variableName, rawValue) {
         const value = String(rawValue ?? "");
         if (!root.contextPreviewController)
-            return value;
-        if (!isPathVariable(variableName))
             return value;
         const separator = String(root.contextPreviewController.pathSeparator ?? "");
         if (separator.length === 1 && value.indexOf(separator) >= 0)
@@ -38,6 +32,13 @@ Window {
     function envRowHeight(variableName, rawValue) {
         const lineCount = formattedEnvValue(variableName, rawValue).split("\n").length;
         return Math.max(42, 16 + lineCount * 18);
+    }
+
+    function tableHeight(rows) {
+        let total = 0;
+        for (let index = 0; index < rows.length; ++index)
+            total += envRowHeight(rows[index].name, rows[index].value);
+        return total;
     }
 
     function copyText(text) {
@@ -225,18 +226,54 @@ Window {
                                     color: Style.border
                                 }
 
-                                Repeater {
-                                    model: sectionDelegate_.modelData.rows
+                                TableView {
+                                    id: sectionTable_
+                                    visible: sectionDelegate_.modelData.rowCount > 0
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: root.tableHeight(sectionDelegate_.modelData.rows)
+                                    implicitHeight: Layout.preferredHeight
+                                    clip: true
+                                    interactive: false
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    columnSpacing: 0
+                                    rowSpacing: 0
+                                    model: sectionDelegate_.modelData.tableModel
 
-                                    Rectangle {
-                                        id: rowDelegate_
-                                        required property int index
-                                        required property var modelData
-                                        Layout.fillWidth: true
-                                        implicitHeight: root.envRowHeight(rowDelegate_.modelData.name, rowDelegate_.modelData.value)
-                                        color: rowHover_.hovered ? Style.cardHover : index % 2 === 0 ? Style.elevated : Style.bg
+                                    property real keyColumnWidth: Math.min(240, Math.max(180, width * 0.32))
+                                    property int hoveredRow: -1
 
-                                        RowLayout {
+                                    columnWidthProvider: function (column) {
+                                        if (column === 0)
+                                            return sectionTable_.keyColumnWidth;
+                                        return Math.max(220, sectionTable_.width - sectionTable_.keyColumnWidth);
+                                    }
+
+                                    rowHeightProvider: function (row) {
+                                        const rowData = sectionDelegate_.modelData.tableModel.rowData(row);
+                                        return root.envRowHeight(rowData.name, rowData.value);
+                                    }
+
+                                    delegate: Rectangle {
+                                        id: cellDelegate_
+                                        required property int row
+                                        required property int column
+
+                                        property var rowData: sectionDelegate_.modelData.tableModel.rowData(row)
+                                        implicitWidth: sectionTable_.columnWidthProvider(cellDelegate_.column)
+                                        implicitHeight: sectionTable_.rowHeightProvider(cellDelegate_.row)
+                                        color: sectionTable_.hoveredRow === cellDelegate_.row ? Style.cardHover : Style.surface
+
+                                        Rectangle {
+                                            anchors {
+                                                left: parent.left
+                                                right: parent.right
+                                                bottom: parent.bottom
+                                            }
+                                            height: 1
+                                            color: Style.border
+                                        }
+
+                                        Text {
                                             anchors {
                                                 fill: parent
                                                 leftMargin: Style.md
@@ -244,45 +281,38 @@ Window {
                                                 topMargin: Style.sm
                                                 bottomMargin: Style.sm
                                             }
-                                            spacing: Style.md
-
-                                            Text {
-                                                Layout.preferredWidth: 220
-                                                text: rowDelegate_.modelData.name
-                                                color: Style.accent
-                                                font.pixelSize: Style.fontSm
-                                                font.family: "Consolas, Courier New, monospace"
-                                                font.bold: true
-                                                wrapMode: Text.Wrap
-                                            }
-
-                                            Text {
-                                                Layout.fillWidth: true
-                                                text: root.formattedEnvValue(rowDelegate_.modelData.name, rowDelegate_.modelData.value)
-                                                color: Style.textPrimary
-                                                font.pixelSize: Style.fontSm
-                                                font.family: "Consolas, Courier New, monospace"
-                                                wrapMode: Text.Wrap
-                                            }
+                                            text: cellDelegate_.column === 0 ? cellDelegate_.rowData.name : root.formattedEnvValue(cellDelegate_.rowData.name, cellDelegate_.rowData.value)
+                                            color: cellDelegate_.column === 0 ? Style.accent : Style.textPrimary
+                                            font.pixelSize: Style.fontSm
+                                            font.family: "Consolas, Courier New, monospace"
+                                            font.bold: cellDelegate_.column === 0
+                                            wrapMode: Text.Wrap
+                                            verticalAlignment: Text.AlignVCenter
                                         }
 
                                         HoverHandler {
-                                            id: rowHover_
+                                            id: cellHover_
                                             cursorShape: Qt.PointingHandCursor
+                                            onHoveredChanged: {
+                                                if (hovered)
+                                                    sectionTable_.hoveredRow = cellDelegate_.row;
+                                                else if (sectionTable_.hoveredRow === cellDelegate_.row)
+                                                    sectionTable_.hoveredRow = -1;
+                                            }
                                         }
 
                                         TapHandler {
                                             gesturePolicy: TapHandler.WithinBounds
                                             acceptedButtons: Qt.RightButton
                                             onTapped: function (eventPoint) {
-                                                root.openContextMenu(rowDelegate_.modelData, rowDelegate_, eventPoint.position);
+                                                root.openContextMenu(cellDelegate_.rowData, cellDelegate_, eventPoint.position);
                                             }
                                         }
                                     }
                                 }
 
                                 Text {
-                                    visible: sectionDelegate_.modelData.rows.length === 0
+                                    visible: sectionDelegate_.modelData.rowCount === 0
                                     text: qsTr("No variables in this section.")
                                     color: Style.textSecondary
                                     font.pixelSize: Style.fontSm

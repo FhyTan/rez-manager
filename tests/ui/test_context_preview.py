@@ -9,7 +9,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
-    from rez_manager.ui.context_preview import ContextPreviewController
+    from rez_manager.ui.context_preview import ContextPreviewController, EnvironmentsTableModel
     from rez_manager.ui.error_hub import app_error_hub
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
@@ -52,17 +52,23 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
         {"name": "maya", "version": "2025.0", "label": "maya-2025.0"},
         {"name": "python", "version": "3.11", "label": "python-3.11"},
     ]
-    assert controller.environmentSections == [
-        {
-            "title": "User Environment",
-            "rows": [{"name": "MAYA_LOCATION", "value": "D:\\packages\\maya\\2025.0"}],
-        },
-        {
-            "title": "System Environment",
-            "rows": [{"name": "PATH", "value": "C:\\Windows\\System32"}],
-        },
-        {"title": "REZ_ Environment", "rows": []},
+    sections = controller.environmentSections
+    assert [section["title"] for section in sections] == [
+        "User Environment",
+        "System Environment",
+        "REZ_ Environment",
     ]
+    assert sections[0]["rows"] == [{"name": "MAYA_LOCATION", "value": "D:\\packages\\maya\\2025.0"}]
+    assert sections[0]["rowCount"] == 1
+    assert isinstance(sections[0]["tableModel"], EnvironmentsTableModel)
+    assert sections[0]["tableModel"].rowData(0) == {
+        "name": "MAYA_LOCATION",
+        "value": "D:\\packages\\maya\\2025.0",
+    }
+    assert sections[1]["rows"] == [{"name": "PATH", "value": "C:\\Windows\\System32"}]
+    assert sections[1]["rowCount"] == 1
+    assert sections[2]["rows"] == []
+    assert sections[2]["rowCount"] == 0
     assert controller.tools == ["maya.exe"]
     assert app_error_hub.message == ""
 

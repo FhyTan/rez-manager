@@ -2,10 +2,21 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Slot
+from PySide6.QtCore import (
+    Property,
+    QAbstractTableModel,
+    QByteArray,
+    QModelIndex,
+    QObject,
+    QRunnable,
+    Qt,
+    QThreadPool,
+    Signal,
+    Slot,
+)
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.context import ResolveResult, resolve_context
+from rez_manager.adapter.context import EnvironmentSection, ResolveResult, resolve_context
 from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
@@ -24,6 +35,8 @@ class ContextPreviewController(QObject):
         self._context_name = ""
         self._is_loading = False
         self._result: ResolveResult | None = None
+        self._environment_sections: list[dict[str, object]] = []
+        self._environment_models: list[EnvironmentsTableModel] = []
         self._request_id = 0
         self._thread_pool = QThreadPool.globalInstance()
         self._active_workers: dict[int, _ContextPreviewWorker] = {}
@@ -54,17 +67,7 @@ class ContextPreviewController(QObject):
 
     @Property("QVariantList", notify=stateChanged)
     def environmentSections(self) -> list[dict[str, object]]:  # noqa: N802
-        if self._result is None:
-            return []
-        return [
-            {
-                "title": section.title,
-                "rows": [
-                    {"name": name, "value": value} for name, value in section.variables.items()
-                ],
-            }
-            for section in self._result.environ_sections
-        ]
+        return list(self._environment_sections)
 
     @Property("QVariantList", notify=stateChanged)
     def resolvedPackages(self) -> list[dict[str, str]]:  # noqa: N802
@@ -110,6 +113,7 @@ class ContextPreviewController(QObject):
         self._context_name = ""
         self._is_loading = False
         self._result = None
+        self._set_environment_sections([])
         self.stateChanged.emit()
 
     def _start_preview_job(
@@ -132,19 +136,42 @@ class ContextPreviewController(QObject):
         self._is_loading = False
         if not isinstance(resolve_result, ResolveResult):
             self._result = None
+            self._set_environment_sections([])
             self.stateChanged.emit()
             report_ui_error("Failed to resolve preview data.")
             return
 
         if not resolve_result.success:
             self._result = None
+            self._set_environment_sections([])
             self.stateChanged.emit()
             report_ui_error(resolve_result.error or "Failed to resolve preview data.")
             return
 
         self._result = resolve_result
+        self._set_environment_sections(resolve_result.environ_sections)
         self.stateChanged.emit()
         clear_ui_error()
+
+    def _set_environment_sections(self, sections: list[EnvironmentSection]) -> None:
+        for model in self._environment_models:
+            model.deleteLater()
+
+        self._environment_models = []
+        self._environment_sections = []
+
+        for section in sections:
+            rows = [{"name": name, "value": value} for name, value in section.variables.items()]
+            table_model = EnvironmentsTableModel(rows, self)
+            self._environment_models.append(table_model)
+            self._environment_sections.append(
+                {
+                    "title": section.title,
+                    "rows": rows,
+                    "rowCount": len(rows),
+                    "tableModel": table_model,
+                }
+            )
 
 
 class _ContextPreviewWorkerSignals(QObject):
@@ -179,3 +206,47 @@ def _package_entry(label: str) -> dict[str, str]:
         "version": version,
         "label": label,
     }
+
+
+class EnvironmentsTableModel(QAbstractTableModel):
+    NameRole = Qt.UserRole + 1
+    ValueRole = Qt.UserRole + 2
+
+    def __init__(self, rows: list[dict[str, str]], parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._rows = [{"name": str(row["name"]), "value": str(row["value"])} for row in rows]
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
+        if parent.isValid():
+            return 0
+        return len(self._rows)
+
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802
+        if parent.isValid():
+            return 0
+        return 2
+
+    def roleNames(self) -> dict[int, QByteArray]:  # noqa: N802
+        return {
+            self.NameRole: QByteArray(b"envName"),
+            self.ValueRole: QByteArray(b"envValue"),
+        }
+
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
+        if not index.isValid() or index.row() < 0 or index.row() >= len(self._rows):
+            return None
+
+        row_data = self._rows[index.row()]
+        if role == self.NameRole:
+            return row_data["name"]
+        if role == self.ValueRole:
+            return row_data["value"]
+        if role == Qt.DisplayRole:
+            return row_data["name"] if index.column() == 0 else row_data["value"]
+        return None
+
+    @Slot(int, result="QVariantMap")
+    def rowData(self, row: int) -> dict[str, str]:  # noqa: N802
+        if row < 0 or row >= len(self._rows):
+            return {}
+        return dict(self._rows[row])
