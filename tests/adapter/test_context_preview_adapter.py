@@ -15,43 +15,6 @@ def test_system_environment_variable_names_include_supported_platforms():
     assert "__CF_USER_TEXT_ENCODING" in system_environment_variable_names("macos")
 
 
-def test_build_environment_sections_splits_user_system_and_rez_sections():
-    from rez_manager.adapter.context import build_environment_sections
-
-    sections = build_environment_sections(
-        effective_environ={
-            "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
-            "PATH": "D:\\packages\\maya\\2025.0\\bin;C:\\Windows\\System32",
-            "SYSTEMROOT": "C:\\Windows",
-            "REZ_USED_RESOLVE": "maya-2025.0 python-3.11",
-        },
-        preserved_system_environ={
-            "PATH": "C:\\Windows\\System32",
-            "SYSTEMROOT": "C:\\Windows",
-            "TEMP": "C:\\Temp",
-        },
-        platform_name="windows",
-    )
-
-    sections_by_title = {section.title: section.variables for section in sections}
-    user_keys = list(sections_by_title["User Environment"].keys())
-    system_keys = list(sections_by_title["System Environment"].keys())
-
-    assert sections_by_title["User Environment"] == {
-        "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
-        "PATH": "D:\\packages\\maya\\2025.0\\bin;C:\\Windows\\System32",
-    }
-    assert sections_by_title["System Environment"] == {
-        "SYSTEMROOT": "C:\\Windows",
-        "TEMP": "C:\\Temp",
-    }
-    assert sections_by_title["REZ_ Environment"] == {
-        "REZ_USED_RESOLVE": "maya-2025.0 python-3.11",
-    }
-    assert user_keys[-1] == "PATH"
-    assert "PATH" not in system_keys
-
-
 def test_preserved_system_environment_uses_case_insensitive_matching_on_windows():
     from rez_manager.adapter.context import preserved_system_environment
 
@@ -70,27 +33,6 @@ def test_preserved_system_environment_uses_case_insensitive_matching_on_windows(
         "SystemRoot": "C:\\Windows",
         "TEMP": "C:\\Temp",
     }
-
-
-def test_build_environment_sections_sorts_windows_path_last_and_hides_system_path():
-    from rez_manager.adapter.context import build_environment_sections
-
-    sections = build_environment_sections(
-        effective_environ={
-            "AAA": "1",
-            "PATH": "D:\\packages\\maya\\bin;C:\\Windows\\System32",
-        },
-        preserved_system_environ={
-            "Path": "C:\\Windows\\System32",
-            "ComSpec": "C:\\Windows\\System32\\cmd.exe",
-        },
-        platform_name="windows",
-    )
-
-    sections_by_title = {section.title: section.variables for section in sections}
-
-    assert list(sections_by_title["User Environment"].keys()) == ["AAA", "PATH"]
-    assert list(sections_by_title["System Environment"].keys()) == ["ComSpec"]
 
 
 def test_resolve_context_passes_package_paths_to_rez(monkeypatch):
@@ -121,6 +63,9 @@ def test_resolve_context_passes_package_paths_to_rez(monkeypatch):
     assert result.success is True
     assert captured["package_requests"] == ["maya-2025.0"]
     assert captured["package_paths"] == ["D:\\packages\\maya"]
+    assert result.environ == {"PATH": "C:\\Windows\\System32", "REZ_USED_RESOLVE": "maya-2025.0"}
+    assert result.tools == ["maya.exe"]
+    assert result.packages == ["maya-2025.0"]
 
 
 def test_save_context_passes_package_paths_to_rez(monkeypatch, tmp_path):

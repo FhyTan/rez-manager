@@ -29,18 +29,6 @@ Window {
         return value;
     }
 
-    function envRowHeight(variableName, rawValue) {
-        const lineCount = formattedEnvValue(variableName, rawValue).split("\n").length;
-        return Math.max(42, 16 + lineCount * 18);
-    }
-
-    function tableHeight(rows) {
-        let total = 0;
-        for (let index = 0; index < rows.length; ++index)
-            total += envRowHeight(rows[index].name, rows[index].value);
-        return total;
-    }
-
     function copyText(text) {
         clipboardProxy_.text = text;
         clipboardProxy_.selectAll();
@@ -230,8 +218,8 @@ Window {
                                     id: sectionTable_
                                     visible: sectionDelegate_.modelData.rowCount > 0
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: root.tableHeight(sectionDelegate_.modelData.rows)
-                                    implicitHeight: Layout.preferredHeight
+                                    Layout.preferredHeight: contentHeight
+                                    implicitHeight: contentHeight
                                     clip: true
                                     interactive: false
                                     boundsBehavior: Flickable.StopAtBounds
@@ -248,19 +236,16 @@ Window {
                                         return Math.max(220, sectionTable_.width - sectionTable_.keyColumnWidth);
                                     }
 
-                                    rowHeightProvider: function (row) {
-                                        const rowData = sectionDelegate_.modelData.tableModel.rowData(row);
-                                        return root.envRowHeight(rowData.name, rowData.value);
-                                    }
-
                                     delegate: Rectangle {
                                         id: cellDelegate_
                                         required property int row
                                         required property int column
+                                        readonly property real horizontalPadding: Style.md * 2
+                                        readonly property real verticalPadding: Style.sm * 2
 
                                         property var rowData: sectionDelegate_.modelData.tableModel.rowData(row)
                                         implicitWidth: sectionTable_.columnWidthProvider(cellDelegate_.column)
-                                        implicitHeight: sectionTable_.rowHeightProvider(cellDelegate_.row)
+                                        implicitHeight: Math.max(42, Math.ceil(Math.max(keyMeasure_.implicitHeight, valueMeasure_.implicitHeight)) + cellDelegate_.verticalPadding)
                                         color: sectionTable_.hoveredRow === cellDelegate_.row ? Style.cardHover : Style.surface
 
                                         Rectangle {
@@ -288,6 +273,27 @@ Window {
                                             font.bold: cellDelegate_.column === 0
                                             wrapMode: Text.Wrap
                                             verticalAlignment: Text.AlignVCenter
+                                        }
+
+                                        Text {
+                                            id: keyMeasure_
+                                            visible: false
+                                            width: sectionTable_.columnWidthProvider(0) - cellDelegate_.horizontalPadding
+                                            text: cellDelegate_.rowData.name
+                                            font.pixelSize: Style.fontSm
+                                            font.family: "Consolas, Courier New, monospace"
+                                            font.bold: true
+                                            wrapMode: Text.Wrap
+                                        }
+
+                                        Text {
+                                            id: valueMeasure_
+                                            visible: false
+                                            width: sectionTable_.columnWidthProvider(1) - cellDelegate_.horizontalPadding
+                                            text: root.formattedEnvValue(cellDelegate_.rowData.name, cellDelegate_.rowData.value)
+                                            font.pixelSize: Style.fontSm
+                                            font.family: "Consolas, Courier New, monospace"
+                                            wrapMode: Text.Wrap
                                         }
 
                                         HoverHandler {

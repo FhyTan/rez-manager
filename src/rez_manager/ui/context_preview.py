@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from collections import Counter
+from collections.abc import Mapping
+from os import environ, pathsep
+
 from PySide6.QtCore import (
     Property,
     QAbstractTableModel,
@@ -16,9 +20,14 @@ from PySide6.QtCore import (
 )
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.context import EnvironmentSection, ResolveResult, resolve_context
+from rez_manager.adapter.context import (
+    ResolveResult,
+    resolve_context,
+    system_environment_variable_names,
+)
 from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
+from rez_manager.runtime import IS_WINDOWS
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -53,7 +62,7 @@ class ContextPreviewController(QObject):
     def hasData(self) -> bool:  # noqa: N802
         if self._result is None:
             return False
-        return bool(self._result.environ_sections or self._result.packages)
+        return bool(self._environment_sections or self._result.packages)
 
     @Property(bool, notify=stateChanged)
     def isLoading(self) -> bool:  # noqa: N802
@@ -61,8 +70,6 @@ class ContextPreviewController(QObject):
 
     @Property(str, constant=True)
     def pathSeparator(self) -> str:  # noqa: N802
-        from os import pathsep  # noqa: PLC0415
-
         return pathsep
 
     @Property("QVariantList", notify=stateChanged)
@@ -113,7 +120,7 @@ class ContextPreviewController(QObject):
         self._context_name = ""
         self._is_loading = False
         self._result = None
-        self._set_environment_sections([])
+        self._set_environment_sections(None)
         self.stateChanged.emit()
 
     def _start_preview_job(
@@ -136,42 +143,120 @@ class ContextPreviewController(QObject):
         self._is_loading = False
         if not isinstance(resolve_result, ResolveResult):
             self._result = None
-            self._set_environment_sections([])
+            self._set_environment_sections(None)
             self.stateChanged.emit()
             report_ui_error("Failed to resolve preview data.")
             return
 
         if not resolve_result.success:
             self._result = None
-            self._set_environment_sections([])
+            self._set_environment_sections(None)
             self.stateChanged.emit()
             report_ui_error(resolve_result.error or "Failed to resolve preview data.")
             return
 
         self._result = resolve_result
-        self._set_environment_sections(resolve_result.environ_sections)
+        self._set_environment_sections(resolve_result.environ)
         self.stateChanged.emit()
         clear_ui_error()
 
-    def _set_environment_sections(self, sections: list[EnvironmentSection]) -> None:
+    def _set_environment_sections(self, resolved_environ: Mapping[str, str] | None) -> None:
+        if resolved_environ is None:
+            resolved_environ = {}
         for model in self._environment_models:
             model.deleteLater()
 
         self._environment_models = []
         self._environment_sections = []
+        if not resolved_environ:
+            return
 
-        for section in sections:
-            rows = [{"name": name, "value": value} for name, value in section.variables.items()]
+        section_rows = self._build_environment_sections(resolved_environ)
+
+        for title, entries in section_rows:
+            rows = [{"name": name, "value": value} for name, value in entries.items()]
             table_model = EnvironmentsTableModel(rows, self)
             self._environment_models.append(table_model)
             self._environment_sections.append(
                 {
-                    "title": section.title,
+                    "title": title,
                     "rows": rows,
                     "rowCount": len(rows),
                     "tableModel": table_model,
                 }
             )
+
+    def _build_environment_sections(
+        self, resolved_environ: Mapping[str, str]
+    ) -> list[tuple[str, dict[str, str]]]:
+        system_names = system_environment_variable_names()
+        system_lookup = {name.upper() for name in system_names} if IS_WINDOWS else set(system_names)
+        remaining_system_path_entries = Counter(_split_path_entries(environ.get("PATH", "")))
+        user_entries: dict[str, str] = {}
+        system_entries: dict[str, str] = {}
+        rez_entries: dict[str, str] = {}
+
+        # Classify variables into REZ_, system, and user sections.
+        for raw_name, raw_value in resolved_environ.items():
+            name = str(raw_name)
+            value = str(raw_value)
+
+            if name.startswith("REZ_"):
+                rez_entries[name] = value
+                continue
+
+            lookup_name = name.upper() if IS_WINDOWS else name
+            if lookup_name == "PATH":
+                continue
+
+            if lookup_name in system_lookup:
+                system_entries[name] = value
+                continue
+
+            user_entries[name] = value
+
+        # Special handling for PATH.
+        system_path_entries: list[str] = []
+        user_path_entries: list[str] = []
+        for entry in _split_path_entries(resolved_environ.get("PATH", "")):
+            if remaining_system_path_entries[entry] > 0:
+                remaining_system_path_entries[entry] -= 1
+                system_path_entries.append(entry)
+            else:
+                user_path_entries.append(entry)
+
+        if user_path_entries:
+            user_entries["PATH"] = pathsep.join(user_path_entries)
+        if system_path_entries:
+            system_entries["PATH"] = pathsep.join(system_path_entries)
+
+        # Rez resolves against the preserved system environment, but the preview payload only
+        # contains variables that Rez returns explicitly. Launch still inherits the preserved
+        # system variables from the current process, so the preview must add them back here to
+        # reflect the effective launch environment and avoid future regressions.
+        for key, value in environ.items():
+            for name in system_names:
+                if IS_WINDOWS:
+                    if (
+                        key.upper() == name.upper()
+                        and key not in system_entries
+                        and key not in user_entries
+                    ):
+                        system_entries[key] = value
+                        break
+                else:
+                    if key == name and key not in system_entries and key not in user_entries:
+                        system_entries[key] = value
+                        break
+
+        def sort_dict(d: dict[str, str]) -> dict[str, str]:
+            return dict(sorted(d.items(), key=lambda item: item[0].lower()))
+
+        return [
+            ("User Environment", sort_dict(user_entries)),
+            ("System Environment", sort_dict(system_entries)),
+            ("REZ_ Environment", sort_dict(rez_entries)),
+        ]
 
 
 class _ContextPreviewWorkerSignals(QObject):
@@ -206,6 +291,12 @@ def _package_entry(label: str) -> dict[str, str]:
         "version": version,
         "label": label,
     }
+
+
+def _split_path_entries(path_value: str) -> list[str]:
+    if not path_value:
+        return []
+    return [entry for entry in path_value.split(pathsep) if entry]
 
 
 class EnvironmentsTableModel(QAbstractTableModel):

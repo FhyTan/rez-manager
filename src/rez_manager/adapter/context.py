@@ -1,4 +1,4 @@
-"""Rez context adapter — create, resolve, serialize, launch, and preview contexts."""
+"""Rez context adapter — create, resolve, serialize, and launch contexts."""
 
 from __future__ import annotations
 
@@ -16,17 +16,6 @@ from rez_manager.runtime import IS_LINUX, IS_MACOS, IS_WINDOWS
 
 _SYSTEM_ENV_CATALOG_NAME = "system_env_vars.json"
 _WINDOWS_PLATFORM = "windows"
-_SECTION_USER = "User Environment"
-_SECTION_SYSTEM = "System Environment"
-_SECTION_REZ = "REZ_ Environment"
-
-
-@dataclass(frozen=True)
-class EnvironmentSection:
-    """A logical section of resolved environment variables."""
-
-    title: str
-    variables: dict[str, str]
 
 
 @dataclass
@@ -34,7 +23,6 @@ class ResolveResult:
     success: bool
     packages: list[str]
     environ: dict[str, str]
-    environ_sections: list[EnvironmentSection]
     tools: list[str]
     error: str | None = None
 
@@ -61,72 +49,9 @@ def resolve_context(
             success=False,
             packages=[],
             environ={},
-            environ_sections=[],
             tools=[],
             error=str(exc),
         )
-
-
-def build_environment_sections(
-    *,
-    effective_environ: Mapping[str, str],
-    preserved_system_environ: Mapping[str, str],
-    platform_name: str | None = None,
-) -> list[EnvironmentSection]:
-    """Split an effective environment into user, system, and Rez-generated sections."""
-
-    def matching_path_key(environ_map: Mapping[str, str]) -> str | None:
-        if platform_key == _WINDOWS_PLATFORM:
-            for key in environ_map:
-                if str(key).upper() == "PATH":
-                    return str(key)
-            return None
-
-        return "PATH" if "PATH" in environ_map else None
-
-    platform_key = _platform_key(platform_name)
-    if platform_key == _WINDOWS_PLATFORM:
-        system_lookup = {
-            str(key).upper(): str(value) for key, value in preserved_system_environ.items()
-        }
-    else:
-        system_lookup = {str(key): str(value) for key, value in preserved_system_environ.items()}
-
-    user_entries: dict[str, str] = {}
-    rez_entries: dict[str, str] = {}
-
-    for key, raw_value in effective_environ.items():
-        name = str(key)
-        value = str(raw_value)
-        if name.startswith("REZ_"):
-            rez_entries[name] = value
-            continue
-
-        lookup_key = name.upper() if platform_key == _WINDOWS_PLATFORM else name
-        if lookup_key in system_lookup and system_lookup[lookup_key] == value:
-            continue
-        user_entries[name] = value
-
-    system_entries = dict(preserved_system_environ)
-    if matching_path_key(user_entries) is not None:
-        duplicate_system_path_key = matching_path_key(system_entries)
-        if duplicate_system_path_key is not None:
-            system_entries.pop(duplicate_system_path_key)
-
-    return [
-        EnvironmentSection(
-            title=_SECTION_USER,
-            variables=_sorted_environment_map(user_entries),
-        ),
-        EnvironmentSection(
-            title=_SECTION_SYSTEM,
-            variables=_sorted_environment_map(system_entries),
-        ),
-        EnvironmentSection(
-            title=_SECTION_REZ,
-            variables=_sorted_environment_map(rez_entries),
-        ),
-    ]
 
 
 def system_environment_variable_names(platform_name: str | None = None) -> list[str]:
@@ -203,7 +128,6 @@ def load_context(path: str) -> ResolveResult:
             success=False,
             packages=[],
             environ={},
-            environ_sections=[],
             tools=[],
             error=str(exc),
         )
@@ -266,11 +190,6 @@ def _resolve_result_from_context(
         success=True,
         packages=[package.qualified_package_name for package in context.resolved_packages],
         environ=effective_environ,
-        environ_sections=build_environment_sections(
-            effective_environ=effective_environ,
-            preserved_system_environ=preserved_environ,
-            platform_name=platform_name,
-        ),
         tools=[str(tool) for tool in context.get_tools().keys()],
     )
 
@@ -286,16 +205,3 @@ def _create_resolved_context(
         None if package_paths is None else [str(path) for path in package_paths]
     )
     return ResolvedContext(list(package_requests), package_paths=resolved_package_paths)
-
-
-def _sorted_environment_map(environ_map: Mapping[str, str]) -> dict[str, str]:
-    """Always sort `PATH` to the end of the section."""
-
-    def _environment_sort_key(item: tuple[str, str]) -> tuple[int, str]:
-        name = str(item[0])
-        return (int(name.upper() == "PATH"), name.lower())
-
-    return {
-        str(name): str(value)
-        for name, value in sorted(environ_map.items(), key=_environment_sort_key)
-    }

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch):
-    from rez_manager.adapter.context import EnvironmentSection, ResolveResult
+    from rez_manager.adapter.context import ResolveResult
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -13,6 +13,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     from rez_manager.ui.error_hub import app_error_hub
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    monkeypatch.setenv("PATH", "C:\\Windows\\System32")
     save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0", "python-3.11"]))
@@ -20,18 +21,11 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     preview_result = ResolveResult(
         success=True,
         packages=["maya-2025.0", "python-3.11"],
-        environ={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
-        environ_sections=[
-            EnvironmentSection(
-                title="User Environment",
-                variables={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
-            ),
-            EnvironmentSection(
-                title="System Environment",
-                variables={"PATH": "C:\\Windows\\System32"},
-            ),
-            EnvironmentSection(title="REZ_ Environment", variables={}),
-        ],
+        environ={
+            "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
+            "PATH": "C:\\Windows\\System32",
+            "REZ_USED_RESOLVE": "maya-2025.0 python-3.11",
+        },
         tools=["maya.exe"],
     )
     monkeypatch.setattr(
@@ -53,6 +47,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
         {"name": "python", "version": "3.11", "label": "python-3.11"},
     ]
     sections = controller.environmentSections
+    system_rows = {row["name"]: row["value"] for row in sections[1]["rows"]}
     assert [section["title"] for section in sections] == [
         "User Environment",
         "System Environment",
@@ -65,10 +60,12 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
         "name": "MAYA_LOCATION",
         "value": "D:\\packages\\maya\\2025.0",
     }
-    assert sections[1]["rows"] == [{"name": "PATH", "value": "C:\\Windows\\System32"}]
-    assert sections[1]["rowCount"] == 1
-    assert sections[2]["rows"] == []
-    assert sections[2]["rowCount"] == 0
+    assert system_rows["PATH"] == "C:\\Windows\\System32"
+    assert sections[1]["rowCount"] >= 1
+    assert sections[2]["rows"] == [
+        {"name": "REZ_USED_RESOLVE", "value": "maya-2025.0 python-3.11"}
+    ]
+    assert sections[2]["rowCount"] == 1
     assert controller.tools == ["maya.exe"]
     assert app_error_hub.message == ""
 
@@ -91,7 +88,6 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
         success=False,
         packages=[],
         environ={},
-        environ_sections=[],
         tools=[],
         error="Resolve failed.",
     )
@@ -163,7 +159,6 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
         success=True,
         packages=["maya-2025.0"],
         environ={},
-        environ_sections=[],
         tools=[],
     )
 
@@ -211,3 +206,137 @@ def test_context_preview_controller_passes_settings_package_paths(tmp_path, monk
     assert controller.loadContext("Pipeline", "Base")
     assert captured["package_requests"] == ["maya-2025.0"]
     assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
+
+
+def test_context_preview_controller_splits_path_into_user_and_system_sections(
+    tmp_path, monkeypatch
+):
+    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.models.project import Project
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.context_preview import ContextPreviewController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    monkeypatch.setenv("PATH", "C:\\Windows\\System32;C:\\Tools")
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
+
+    preview_result = ResolveResult(
+        success=True,
+        packages=["maya-2025.0"],
+        environ={
+            "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
+            "PATH": "D:\\packages\\maya\\bin;C:\\Windows\\System32;C:\\Tools",
+        },
+        tools=["maya.exe"],
+    )
+    monkeypatch.setattr(
+        ContextPreviewController,
+        "_start_preview_job",
+        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+            request_id, preview_result
+        ),
+    )
+
+    controller = ContextPreviewController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    sections = {section["title"]: section["rows"] for section in controller.environmentSections}
+    system_rows = {row["name"]: row["value"] for row in sections["System Environment"]}
+    assert sections["User Environment"] == [
+        {"name": "MAYA_LOCATION", "value": "D:\\packages\\maya\\2025.0"},
+        {"name": "PATH", "value": "D:\\packages\\maya\\bin"},
+    ]
+    assert system_rows["PATH"] == "C:\\Windows\\System32;C:\\Tools"
+    assert sections["REZ_ Environment"] == []
+
+
+def test_context_preview_controller_classifies_windows_system_names_case_insensitively(
+    tmp_path, monkeypatch
+):
+    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.models.project import Project
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.context_preview import ContextPreviewController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    monkeypatch.setenv("SystemRoot", "C:\\Windows")
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
+
+    preview_result = ResolveResult(
+        success=True,
+        packages=["maya-2025.0"],
+        environ={
+            "SystemRoot": "C:\\Windows",
+            "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
+        },
+        tools=[],
+    )
+    monkeypatch.setattr(
+        ContextPreviewController,
+        "_start_preview_job",
+        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+            request_id, preview_result
+        ),
+    )
+
+    controller = ContextPreviewController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    sections = {section["title"]: section["rows"] for section in controller.environmentSections}
+    system_rows = {row["name"]: row["value"] for row in sections["System Environment"]}
+    assert sections["User Environment"] == [
+        {"name": "MAYA_LOCATION", "value": "D:\\packages\\maya\\2025.0"}
+    ]
+    assert system_rows["SystemRoot"] == "C:\\Windows"
+
+
+def test_context_preview_controller_adds_launch_system_variables_missing_from_resolve(
+    tmp_path, monkeypatch
+):
+    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.models.project import Project
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.context_preview import ContextPreviewController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    monkeypatch.setenv("SystemRoot", "C:\\Windows")
+    monkeypatch.setenv("COMSPEC", "C:\\Windows\\System32\\cmd.exe")
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
+
+    preview_result = ResolveResult(
+        success=True,
+        packages=["maya-2025.0"],
+        environ={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
+        tools=[],
+    )
+    monkeypatch.setattr(
+        ContextPreviewController,
+        "_start_preview_job",
+        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+            request_id, preview_result
+        ),
+    )
+
+    controller = ContextPreviewController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    sections = {section["title"]: section["rows"] for section in controller.environmentSections}
+    system_rows = {
+        row["name"].upper(): row["value"] for row in sections["System Environment"]
+    }
+    assert sections["User Environment"] == [
+        {"name": "MAYA_LOCATION", "value": "D:\\packages\\maya\\2025.0"}
+    ]
+    assert system_rows["SYSTEMROOT"] == "C:\\Windows"
