@@ -206,10 +206,221 @@
     {
         "classes": [
             {
+                "className": "ContextPreviewController",
+                "qualifiedClassName": "ContextPreviewController",
+                "object": true,
+                "lineNumber": 17,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "lineNumber": 31,
+                        "name": "projectName",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "projectName"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "lineNumber": 35,
+                        "name": "contextName",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "contextName"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 3,
+                        "lineNumber": 39,
+                        "name": "hasData",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "hasData"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 4,
+                        "lineNumber": 43,
+                        "name": "isLoading",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "isLoading"
+                    },
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 5,
+                        "lineNumber": 47,
+                        "name": "pathSeparator",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "read": "pathSeparator"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 6,
+                        "lineNumber": 53,
+                        "name": "environmentSections",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "environmentSections"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 7,
+                        "lineNumber": 63,
+                        "name": "resolvedPackages",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "resolvedPackages"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 8,
+                        "lineNumber": 74,
+                        "name": "tools",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "tools"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "stateChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 4,
+                        "lineNumber": 19,
+                        "isConst": false
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "loadContext",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 5,
+                        "lineNumber": 78,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "clear",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 6,
+                        "lineNumber": 98,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "_apply_preview_result",
+                        "arguments": [
+                            {
+                                "name": "request_id",
+                                "type": "int"
+                            },
+                            {
+                                "name": "preview_result",
+                                "type": "PyObject"
+                            }
+                        ],
+                        "returnType": "void",
+                        "index": 7,
+                        "lineNumber": 117,
+                        "isConst": false
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 69,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "D:/Code/rez-manager/src/rez_manager/ui/context_preview.py"
+    },
+    {
+        "classes": [
+            {
                 "className": "PackageManagerController",
                 "qualifiedClassName": "PackageManagerController",
                 "object": true,
-                "lineNumber": 453,
+                "lineNumber": 483,
                 "superClasses": [
                     {
                         "access": "public",
@@ -229,7 +440,7 @@
                         "designable": true,
                         "final": false,
                         "index": 1,
-                        "lineNumber": 472,
+                        "lineNumber": 502,
                         "name": "packageRequestsModel",
                         "required": false,
                         "scriptable": true,
@@ -243,7 +454,7 @@
                         "designable": true,
                         "final": false,
                         "index": 2,
-                        "lineNumber": 476,
+                        "lineNumber": 506,
                         "name": "repositoryModel",
                         "required": false,
                         "scriptable": true,
@@ -257,7 +468,7 @@
                         "designable": true,
                         "final": false,
                         "index": 3,
-                        "lineNumber": 480,
+                        "lineNumber": 510,
                         "name": "packageDetail",
                         "required": false,
                         "scriptable": true,
@@ -271,7 +482,7 @@
                         "designable": true,
                         "final": false,
                         "index": 4,
-                        "lineNumber": 484,
+                        "lineNumber": 514,
                         "name": "packageCount",
                         "required": false,
                         "scriptable": true,
@@ -286,7 +497,7 @@
                         "designable": true,
                         "final": false,
                         "index": 5,
-                        "lineNumber": 488,
+                        "lineNumber": 518,
                         "name": "selectedRequestRow",
                         "required": false,
                         "scriptable": true,
@@ -301,7 +512,7 @@
                         "designable": true,
                         "final": false,
                         "index": 6,
-                        "lineNumber": 492,
+                        "lineNumber": 522,
                         "name": "selectedRepositoryIndex",
                         "required": false,
                         "scriptable": true,
@@ -316,7 +527,7 @@
                         "designable": true,
                         "final": false,
                         "index": 7,
-                        "lineNumber": 496,
+                        "lineNumber": 526,
                         "name": "selectedRepositoryPackageIndex",
                         "required": false,
                         "scriptable": true,
@@ -334,7 +545,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 4,
-                        "lineNumber": 455,
+                        "lineNumber": 485,
                         "isConst": false
                     },
                     {
@@ -343,7 +554,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 5,
-                        "lineNumber": 456,
+                        "lineNumber": 486,
                         "isConst": false
                     },
                     {
@@ -352,7 +563,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 6,
-                        "lineNumber": 457,
+                        "lineNumber": 487,
                         "isConst": false
                     },
                     {
@@ -361,7 +572,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 7,
-                        "lineNumber": 458,
+                        "lineNumber": 488,
                         "isConst": false
                     }
                 ],
@@ -381,7 +592,7 @@
                         ],
                         "returnType": "bool",
                         "index": 8,
-                        "lineNumber": 500,
+                        "lineNumber": 530,
                         "isConst": false
                     },
                     {
@@ -390,7 +601,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 9,
-                        "lineNumber": 523,
+                        "lineNumber": 553,
                         "isConst": false
                     },
                     {
@@ -404,7 +615,7 @@
                         ],
                         "returnType": "bool",
                         "index": 10,
-                        "lineNumber": 527,
+                        "lineNumber": 557,
                         "isConst": false
                     },
                     {
@@ -418,7 +629,7 @@
                         ],
                         "returnType": "bool",
                         "index": 11,
-                        "lineNumber": 540,
+                        "lineNumber": 570,
                         "isConst": false
                     },
                     {
@@ -436,7 +647,7 @@
                         ],
                         "returnType": "bool",
                         "index": 12,
-                        "lineNumber": 554,
+                        "lineNumber": 584,
                         "isConst": false
                     },
                     {
@@ -454,7 +665,7 @@
                         ],
                         "returnType": "bool",
                         "index": 13,
-                        "lineNumber": 569,
+                        "lineNumber": 599,
                         "isConst": false
                     },
                     {
@@ -468,7 +679,7 @@
                         ],
                         "returnType": "bool",
                         "index": 14,
-                        "lineNumber": 583,
+                        "lineNumber": 613,
                         "isConst": false
                     },
                     {
@@ -477,7 +688,7 @@
                         "arguments": [],
                         "returnType": "bool",
                         "index": 15,
-                        "lineNumber": 599,
+                        "lineNumber": 629,
                         "isConst": false
                     }
                 ]

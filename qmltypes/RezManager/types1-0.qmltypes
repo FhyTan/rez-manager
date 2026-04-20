@@ -80,8 +80,104 @@ Module {
         }
     }
     Component {
+        file: "D:/Code/rez-manager/src/rez_manager/ui/context_preview.py"
+        lineNumber: 17
+        name: "ContextPreviewController"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["RezManager/ContextPreviewController 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property {
+            name: "projectName"
+            type: "QString"
+            read: "projectName"
+            notify: "stateChanged"
+            index: 1
+            lineNumber: 31
+            isReadonly: true
+        }
+        Property {
+            name: "contextName"
+            type: "QString"
+            read: "contextName"
+            notify: "stateChanged"
+            index: 2
+            lineNumber: 35
+            isReadonly: true
+        }
+        Property {
+            name: "hasData"
+            type: "bool"
+            read: "hasData"
+            notify: "stateChanged"
+            index: 3
+            lineNumber: 39
+            isReadonly: true
+        }
+        Property {
+            name: "isLoading"
+            type: "bool"
+            read: "isLoading"
+            notify: "stateChanged"
+            index: 4
+            lineNumber: 43
+            isReadonly: true
+        }
+        Property {
+            name: "pathSeparator"
+            type: "QString"
+            read: "pathSeparator"
+            index: 5
+            lineNumber: 47
+            isReadonly: true
+            isPropertyConstant: true
+        }
+        Property {
+            name: "environmentSections"
+            type: "QVariantList"
+            read: "environmentSections"
+            notify: "stateChanged"
+            index: 6
+            lineNumber: 53
+            isReadonly: true
+        }
+        Property {
+            name: "resolvedPackages"
+            type: "QVariantList"
+            read: "resolvedPackages"
+            notify: "stateChanged"
+            index: 7
+            lineNumber: 63
+            isReadonly: true
+        }
+        Property {
+            name: "tools"
+            type: "QVariantList"
+            read: "tools"
+            notify: "stateChanged"
+            index: 8
+            lineNumber: 74
+            isReadonly: true
+        }
+        Signal { name: "stateChanged"; lineNumber: 19 }
+        Method {
+            name: "loadContext"
+            type: "bool"
+            lineNumber: 78
+            Parameter { name: "project_name"; type: "QString" }
+            Parameter { name: "context_name"; type: "QString" }
+        }
+        Method { name: "clear"; lineNumber: 98 }
+        Method {
+            name: "_apply_preview_result"
+            lineNumber: 117
+            Parameter { name: "request_id"; type: "int" }
+            Parameter { name: "preview_result"; type: "PyObject" }
+        }
+    }
+    Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/package_manager.py"
-        lineNumber: 453
+        lineNumber: 483
         name: "PackageManagerController"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -93,7 +189,7 @@ Module {
             isPointer: true
             read: "packageRequestsModel"
             index: 1
-            lineNumber: 472
+            lineNumber: 502
             isReadonly: true
             isPropertyConstant: true
         }
@@ -103,7 +199,7 @@ Module {
             isPointer: true
             read: "repositoryModel"
             index: 2
-            lineNumber: 476
+            lineNumber: 506
             isReadonly: true
             isPropertyConstant: true
         }
@@ -113,7 +209,7 @@ Module {
             isPointer: true
             read: "packageDetail"
             index: 3
-            lineNumber: 480
+            lineNumber: 510
             isReadonly: true
             isPropertyConstant: true
         }
@@ -123,7 +219,7 @@ Module {
             read: "packageCount"
             notify: "packageCountChanged"
             index: 4
-            lineNumber: 484
+            lineNumber: 514
             isReadonly: true
         }
         Property {
@@ -132,7 +228,7 @@ Module {
             read: "selectedRequestRow"
             notify: "selectedRequestRowChanged"
             index: 5
-            lineNumber: 488
+            lineNumber: 518
             isReadonly: true
         }
         Property {
@@ -141,7 +237,7 @@ Module {
             read: "selectedRepositoryIndex"
             notify: "selectedRepositoryIndexChanged"
             index: 6
-            lineNumber: 492
+            lineNumber: 522
             isReadonly: true
         }
         Property {
@@ -150,54 +246,54 @@ Module {
             read: "selectedRepositoryPackageIndex"
             notify: "selectedRepositoryPackageIndexChanged"
             index: 7
-            lineNumber: 496
+            lineNumber: 526
             isReadonly: true
         }
-        Signal { name: "packageCountChanged"; lineNumber: 455 }
-        Signal { name: "selectedRequestRowChanged"; lineNumber: 456 }
-        Signal { name: "selectedRepositoryIndexChanged"; lineNumber: 457 }
-        Signal { name: "selectedRepositoryPackageIndexChanged"; lineNumber: 458 }
+        Signal { name: "packageCountChanged"; lineNumber: 485 }
+        Signal { name: "selectedRequestRowChanged"; lineNumber: 486 }
+        Signal { name: "selectedRepositoryIndexChanged"; lineNumber: 487 }
+        Signal { name: "selectedRepositoryPackageIndexChanged"; lineNumber: 488 }
         Method {
             name: "loadContext"
             type: "bool"
-            lineNumber: 500
+            lineNumber: 530
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
-        Method { name: "clearSelection"; lineNumber: 523 }
+        Method { name: "clearSelection"; lineNumber: 553 }
         Method {
             name: "removePackageRequest"
             type: "bool"
-            lineNumber: 527
+            lineNumber: 557
             Parameter { name: "row"; type: "int" }
         }
         Method {
             name: "selectRequiredPackage"
             type: "bool"
-            lineNumber: 540
+            lineNumber: 570
             Parameter { name: "row"; type: "int" }
         }
         Method {
             name: "addPackageRequest"
             type: "bool"
-            lineNumber: 554
+            lineNumber: 584
             Parameter { name: "name"; type: "QString" }
             Parameter { name: "version"; type: "QString" }
         }
         Method {
             name: "selectRepositoryPackage"
             type: "bool"
-            lineNumber: 569
+            lineNumber: 599
             Parameter { name: "repo_index"; type: "int" }
             Parameter { name: "package_index"; type: "int" }
         }
         Method {
             name: "selectDetailVersion"
             type: "bool"
-            lineNumber: 583
+            lineNumber: 613
             Parameter { name: "index"; type: "int" }
         }
-        Method { name: "save"; type: "bool"; lineNumber: 599 }
+        Method { name: "save"; type: "bool"; lineNumber: 629 }
     }
     Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/main_window.py"

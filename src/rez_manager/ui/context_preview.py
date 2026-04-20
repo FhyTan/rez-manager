@@ -1,0 +1,155 @@
+"""QML-facing controller for resolved context preview data."""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Slot
+from PySide6.QtQml import QmlElement
+
+from rez_manager.adapter.context import ContextPreviewResult, build_context_preview
+from rez_manager.models.context_preview import ContextPreviewData
+from rez_manager.models.rez_context import RezContext
+from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
+
+QML_IMPORT_NAME = "RezManager"
+QML_IMPORT_MAJOR_VERSION = 1
+
+
+@QmlElement
+class ContextPreviewController(QObject):
+    stateChanged = Signal()
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._project_name = ""
+        self._context_name = ""
+        self._is_loading = False
+        self._preview = ContextPreviewData()
+        self._request_id = 0
+        self._thread_pool = QThreadPool.globalInstance()
+        self._active_workers: dict[int, _ContextPreviewWorker] = {}
+
+    @Property(str, notify=stateChanged)
+    def projectName(self) -> str:  # noqa: N802
+        return self._project_name
+
+    @Property(str, notify=stateChanged)
+    def contextName(self) -> str:  # noqa: N802
+        return self._context_name
+
+    @Property(bool, notify=stateChanged)
+    def hasData(self) -> bool:  # noqa: N802
+        return bool(self._preview.sections or self._preview.packages)
+
+    @Property(bool, notify=stateChanged)
+    def isLoading(self) -> bool:  # noqa: N802
+        return self._is_loading
+
+    @Property(str, constant=True)
+    def pathSeparator(self) -> str:  # noqa: N802
+        from os import pathsep  # noqa: PLC0415
+
+        return pathsep
+
+    @Property("QVariantList", notify=stateChanged)
+    def environmentSections(self) -> list[dict[str, object]]:  # noqa: N802
+        return [
+            {
+                "title": section.title,
+                "rows": [{"name": entry.name, "value": entry.value} for entry in section.entries],
+            }
+            for section in self._preview.sections
+        ]
+
+    @Property("QVariantList", notify=stateChanged)
+    def resolvedPackages(self) -> list[dict[str, str]]:  # noqa: N802
+        return [
+            {
+                "name": package.name,
+                "version": package.version,
+                "label": package.label,
+            }
+            for package in self._preview.packages
+        ]
+
+    @Property("QVariantList", notify=stateChanged)
+    def tools(self) -> list[str]:
+        return list(self._preview.tools)
+
+    @Slot(str, str, result=bool)
+    def loadContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
+        self._request_id += 1
+        request_id = self._request_id
+        try:
+            context = RezContext.load(project_name, context_name)
+        except (KeyError, OSError, TypeError, ValueError) as exc:
+            self._clear_state()
+            report_ui_error(str(exc))
+            return False
+
+        self._project_name = project_name
+        self._context_name = context_name
+        self._preview = ContextPreviewData()
+        self._is_loading = True
+        self.stateChanged.emit()
+        clear_ui_error()
+        self._start_preview_job(request_id, context.packages)
+        return True
+
+    @Slot()
+    def clear(self) -> None:
+        self._request_id += 1
+        self._clear_state()
+        clear_ui_error()
+
+    def _clear_state(self) -> None:
+        self._project_name = ""
+        self._context_name = ""
+        self._is_loading = False
+        self._preview = ContextPreviewData()
+        self.stateChanged.emit()
+
+    def _start_preview_job(self, request_id: int, package_requests: list[str]) -> None:
+        worker = _ContextPreviewWorker(request_id, list(package_requests))
+        worker.signals.finished.connect(self._apply_preview_result)
+        self._active_workers[request_id] = worker
+        self._thread_pool.start(worker)
+
+    @Slot(int, object)
+    def _apply_preview_result(self, request_id: int, preview_result: object) -> None:
+        self._active_workers.pop(request_id, None)
+        if request_id != self._request_id:
+            return
+
+        self._is_loading = False
+        if not isinstance(preview_result, ContextPreviewResult):
+            self._preview = ContextPreviewData()
+            self.stateChanged.emit()
+            report_ui_error("Failed to resolve preview data.")
+            return
+
+        if not preview_result.success or preview_result.preview is None:
+            self._preview = ContextPreviewData()
+            self.stateChanged.emit()
+            report_ui_error(preview_result.error or "Failed to resolve preview data.")
+            return
+
+        self._preview = preview_result.preview
+        self.stateChanged.emit()
+        clear_ui_error()
+
+
+class _ContextPreviewWorkerSignals(QObject):
+    finished = Signal(int, object)
+
+
+class _ContextPreviewWorker(QRunnable):
+    def __init__(self, request_id: int, package_requests: list[str]) -> None:
+        super().__init__()
+        self._request_id = request_id
+        self._package_requests = package_requests
+        self.signals = _ContextPreviewWorkerSignals()
+
+    @Slot()
+    def run(self) -> None:
+        preview_result = build_context_preview(self._package_requests)
+        self.signals.finished.emit(self._request_id, preview_result)

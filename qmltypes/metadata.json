@@ -1,20 +1,5 @@
 {
     "modules": {
-        "rez_manager.app": {
-            "modification_time": 1776218151.8193927,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\app.py",
-            "dependencies": [
-                "PySide6.QtCore",
-                "PySide6.QtGui",
-                "PySide6.QtQml",
-                "__future__",
-                "os",
-                "pathlib",
-                "rez_manager",
-                "rez_manager.ui.error_hub",
-                "sys"
-            ]
-        },
         "os": {
             "modification_time": 1748849781.5865788,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\os.py",
@@ -50,27 +35,7 @@
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\pathlib.py",
             "dependencies": []
         },
-        "rez_manager.ui.error_hub": {
-            "modification_time": 1776217404.8474646,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\error_hub.py",
-            "dependencies": [
-                "PySide6.QtCore",
-                "__future__"
-            ]
-        },
         "sys": null,
-        "rez_manager.exception_hook": {
-            "modification_time": 1776217404.8514662,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\exception_hook.py",
-            "dependencies": [
-                "PySide6.QtCore",
-                "__future__",
-                "loguru",
-                "rez_manager.ui.error_hub",
-                "sys",
-                "traceback"
-            ]
-        },
         "traceback": {
             "modification_time": 1748849782.3143384,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\traceback.py",
@@ -704,24 +669,6 @@
             "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\__init__.py",
             "dependencies": []
         },
-        "rez_manager.__main__": {
-            "modification_time": 1775358319.8750155,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\__main__.py",
-            "dependencies": [
-                "__future__",
-                "rez_manager.app",
-                "sys"
-            ]
-        },
-        "rez_manager.adapter.context": {
-            "modification_time": 1775272745.8407578,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\context.py",
-            "dependencies": [
-                "__future__",
-                "dataclasses",
-                "subprocess"
-            ]
-        },
         "subprocess": {
             "modification_time": 1748849782.2894902,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\subprocess.py",
@@ -731,15 +678,6 @@
             "modification_time": 1748849781.2737484,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\dataclasses.py",
             "dependencies": []
-        },
-        "rez_manager.adapter.packages": {
-            "modification_time": 1775275177.7224677,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\packages.py",
-            "dependencies": [
-                "__future__",
-                "dataclasses",
-                "os"
-            ]
         },
         "rez_manager.adapter": {
             "modification_time": 1775272745.8407578,
@@ -782,25 +720,6 @@
                 "dataclasses",
                 "os",
                 "pathlib"
-            ]
-        },
-        "rez_manager.models": {
-            "modification_time": 1776147662.3425746,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\__init__.py",
-            "dependencies": [
-                "rez_manager.models.project",
-                "rez_manager.models.rez_context",
-                "rez_manager.models.settings"
-            ]
-        },
-        "rez_manager.persistence.app_paths": {
-            "modification_time": 1776147662.343576,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\app_paths.py",
-            "dependencies": [
-                "__future__",
-                "os",
-                "pathlib",
-                "platformdirs"
             ]
         },
         "platformdirs": {
@@ -886,6 +805,125 @@
                 "warnings"
             ]
         },
+        "collections.abc": {
+            "modification_time": 1748849781.2517433,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\collections\\abc.py",
+            "dependencies": []
+        },
+        "rez_manager.app": {
+            "modification_time": 1776654740.7573233,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\app.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "PySide6.QtGui",
+                "PySide6.QtQml",
+                "__future__",
+                "loguru",
+                "os",
+                "pathlib",
+                "rez_manager",
+                "rez_manager.logging_config",
+                "rez_manager.ui.error_hub",
+                "sys"
+            ]
+        },
+        "rez_manager.logging_config": {
+            "modification_time": 1776654862.8917181,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\logging_config.py",
+            "dependencies": [
+                "__future__",
+                "loguru",
+                "pathlib",
+                "rez_manager.persistence.app_paths",
+                "sys"
+            ]
+        },
+        "rez_manager.persistence.app_paths": {
+            "modification_time": 1776654720.537961,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\app_paths.py",
+            "dependencies": [
+                "__future__",
+                "os",
+                "pathlib",
+                "platformdirs"
+            ]
+        },
+        "rez_manager.ui.error_hub": {
+            "modification_time": 1776654850.5009675,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\error_hub.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "__future__",
+                "loguru"
+            ]
+        },
+        "rez_manager.exception_hook": {
+            "modification_time": 1776654810.6522534,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\exception_hook.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "__future__",
+                "loguru",
+                "rez_manager.ui.error_hub",
+                "sys",
+                "traceback",
+                "types"
+            ]
+        },
+        "rez_manager.__main__": {
+            "modification_time": 1775358319.8750155,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\__main__.py",
+            "dependencies": [
+                "__future__",
+                "rez_manager.app",
+                "sys"
+            ]
+        },
+        "platform": {
+            "modification_time": 1748849781.59154,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\platform.py",
+            "dependencies": [
+                "_wmi",
+                "collections",
+                "functools",
+                "itertools",
+                "os",
+                "re",
+                "sys"
+            ]
+        },
+        "_wmi": {
+            "modification_time": 1748849780.9170215,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\DLLs\\_wmi.pyd",
+            "dependencies": []
+        },
+        "importlib.resources": {
+            "modification_time": 1748849781.4909005,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\importlib\\resources\\__init__.py",
+            "dependencies": []
+        },
+        "rez_manager.models.context_preview": {
+            "modification_time": 1776658212.2996254,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\context_preview.py",
+            "dependencies": [
+                "__future__",
+                "dataclasses"
+            ]
+        },
+        "rez_manager.adapter.packages": {
+            "modification_time": 1776656398.190063,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\packages.py",
+            "dependencies": [
+                "__future__",
+                "dataclasses",
+                "os"
+            ]
+        },
+        "rez_manager.data": {
+            "modification_time": 1776658212.2960567,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\data\\__init__.py",
+            "dependencies": []
+        },
         "rez_manager.persistence.settings_store": {
             "modification_time": 1776225590.7769997,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\settings_store.py",
@@ -900,7 +938,7 @@
             ]
         },
         "rez_manager.persistence": {
-            "modification_time": 1776147662.343576,
+            "modification_time": 1776654858.2934923,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\__init__.py",
             "dependencies": [
                 "rez_manager.persistence.app_paths",
@@ -923,13 +961,8 @@
                 "rez_manager.ui.error_hub"
             ]
         },
-        "collections.abc": {
-            "modification_time": 1748849781.2517433,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\collections\\abc.py",
-            "dependencies": []
-        },
         "rez_manager.ui.package_manager": {
-            "modification_time": 1776479054.1678672,
+            "modification_time": 1776655169.1124492,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\package_manager.py",
             "dependencies": [
                 "PySide6.QtCore",
@@ -959,10 +992,50 @@
                 "rez_manager.ui.error_hub"
             ]
         },
+        "rez_manager.models": {
+            "modification_time": 1776658458.758253,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\__init__.py",
+            "dependencies": [
+                "rez_manager.models.context_preview",
+                "rez_manager.models.project",
+                "rez_manager.models.rez_context",
+                "rez_manager.models.settings"
+            ]
+        },
+        "rez_manager.adapter.context": {
+            "modification_time": 1776659059.21697,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\context.py",
+            "dependencies": [
+                "__future__",
+                "collections.abc",
+                "dataclasses",
+                "functools",
+                "importlib.resources",
+                "json",
+                "os",
+                "platform",
+                "rez_manager.models.context_preview",
+                "subprocess"
+            ]
+        },
+        "rez_manager.ui.context_preview": {
+            "modification_time": 1776659720.8106575,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\context_preview.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "PySide6.QtQml",
+                "__future__",
+                "rez_manager.adapter.context",
+                "rez_manager.models.context_preview",
+                "rez_manager.models.rez_context",
+                "rez_manager.ui.error_hub"
+            ]
+        },
         "rez_manager.ui": {
-            "modification_time": 1776307670.2545462,
+            "modification_time": 1776658458.758253,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\__init__.py",
             "dependencies": [
+                "rez_manager.ui.context_preview",
                 "rez_manager.ui.main_window",
                 "rez_manager.ui.package_manager",
                 "rez_manager.ui.settings_controller"

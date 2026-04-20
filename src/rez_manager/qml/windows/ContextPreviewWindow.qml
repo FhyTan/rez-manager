@@ -3,107 +3,41 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.qmlmodels
+import RezManager
 import ".."
 import "../components"
 
 // Context preview window — read-only inspection of a resolved context.
-// Shows: environment variables and resolved package list.
 Window {
     id: root
-    title: "Preview — " + contextName_
+    title: qsTr("Preview - ") + (root.contextPreviewController ? root.contextPreviewController.contextName : "")
     width: 820
     height: 640
     color: Style.bg
     flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
-    property string contextName_: "Maya 2024 Base"
-    property string projectName_: "VFX Pipeline"
-    property int contextMenuRow_: -1
-    property int hoveredEnvRow_: -1
+    required property ContextPreviewController contextPreviewController
+    property var contextMenuEntry_: null
 
-    // ── Dummy resolved data ────────────────────────────────────
-    readonly property var resolvedPkgs: [
-        {
-            name: "maya",
-            version: "2024.0.2"
-        },
-        {
-            name: "python",
-            version: "3.11.5"
-        },
-        {
-            name: "mtoa",
-            version: "5.3.4.1"
-        },
-        {
-            name: "usd",
-            version: "23.11.1"
-        },
-        {
-            name: "openexr",
-            version: "3.1.10"
-        },
-        {
-            name: "boost",
-            version: "1.76.0"
-        },
-        {
-            name: "tbb",
-            version: "2021.8.0"
-        }
-    ]
+    function isPathListVariable(variableName) {
+        const normalizedName = String(variableName ?? "").toUpperCase();
+        return normalizedName === "PATH" || normalizedName.endsWith("PATH");
+    }
 
-    readonly property var envVars: [
-        {
-            name: "MAYA_LOCATION",
-            value: "/packages/maya/2024.0.2"
-        },
-        {
-            name: "MAYA_VERSION",
-            value: "2024"
-        },
-        {
-            name: "PYTHONPATH",
-            value: "/packages/maya/2024.0.2/lib/python3.11;/packages/mtoa/5.3.4.1/lib/python3.11"
-        },
-        {
-            name: "MTOA_HOME",
-            value: "/packages/mtoa/5.3.4.1"
-        },
-        {
-            name: "USD_INSTALL_ROOT",
-            value: "/packages/usd/23.11.1"
-        },
-        {
-            name: "PATH",
-            value: "/packages/maya/2024.0.2/bin;/packages/python/3.11.5/bin;/usr/bin"
-        },
-        {
-            name: "LD_LIBRARY_PATH",
-            value: "/packages/maya/2024.0.2/lib;/packages/openexr/3.1.10/lib"
-        },
-        {
-            name: "MAYA_PLUG_IN_PATH",
-            value: "/packages/mtoa/5.3.4.1/plug-ins"
-        },
-        {
-            name: "OCIO",
-            value: "/packages/maya/2024.0.2/resources/ACES_1.2/config.ocio"
-        }
-    ]
-
-    readonly property var contextMenuEntry_: contextMenuRow_ >= 0 && contextMenuRow_ < envVars.length ? envVars[contextMenuRow_] : null
-
-    function formattedEnvValue(rawValue) {
+    function formattedEnvValue(variableName, rawValue) {
         const value = String(rawValue ?? "");
-        if (value.indexOf(";") >= 0)
-            return value.replace(/;/g, "\n");
+        if (!root.contextPreviewController)
+            return value;
+        if (!isPathListVariable(variableName))
+            return value;
+        const separator = String(root.contextPreviewController.pathSeparator ?? "");
+        if (separator.length === 1 && value.indexOf(separator) >= 0)
+            return value.split(separator).join("\n");
         return value;
     }
 
-    function envRowHeight(rawValue) {
-        const lineCount = formattedEnvValue(rawValue).split("\n").length;
+    function envRowHeight(variableName, rawValue) {
+        const lineCount = formattedEnvValue(variableName, rawValue).split("\n").length;
         return Math.max(42, 16 + lineCount * 18);
     }
 
@@ -114,8 +48,8 @@ Window {
         clipboardProxy_.deselect();
     }
 
-    function openContextMenu(row, item, point) {
-        contextMenuRow_ = row;
+    function openContextMenu(entry, item, point) {
+        contextMenuEntry_ = entry;
         contextMenu_.popup(item, point.x, point.y);
     }
 
@@ -124,26 +58,15 @@ Window {
         visible: false
     }
 
-    TableModel {
-        id: envModel_
-        TableModelColumn {
-            display: "name"
-        }
-        TableModelColumn {
-            display: "value"
-        }
-        rows: root.envVars
-    }
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        // ── Title bar ─────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 56
             color: Style.surface
+
             ColumnLayout {
                 anchors {
                     fill: parent
@@ -151,12 +74,14 @@ Window {
                     rightMargin: Style.xl
                 }
                 spacing: 2
+
                 Item {
                     Layout.fillHeight: true
                 }
+
                 RowLayout {
                     Text {
-                        text: root.projectName_ + "  /  " + root.contextName_
+                        text: root.contextPreviewController ? root.contextPreviewController.projectName + "  /  " + root.contextPreviewController.contextName : ""
                         color: Style.textPrimary
                         font.pixelSize: Style.fontLg
                         font.bold: true
@@ -165,14 +90,16 @@ Window {
                         Layout.fillWidth: true
                     }
                     Badge {
-                        text: "Resolved"
-                        badgeColor: Style.success
+                        text: root.contextPreviewController.isLoading ? qsTr("Loading") : qsTr("Resolved")
+                        badgeColor: root.contextPreviewController.isLoading ? Style.warning : Style.success
                     }
                 }
+
                 Item {
                     Layout.fillHeight: true
                 }
             }
+
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
@@ -181,7 +108,6 @@ Window {
             }
         }
 
-        // ── Tab bar ───────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 42
@@ -192,7 +118,8 @@ Window {
                 contentHeight: parent.height
 
                 Repeater {
-                    model: ["Environment", "Packages"]
+                    model: [qsTr("Environment"), qsTr("Packages")]
+
                     TabButton {
                         id: tabButton_
                         required property string modelData
@@ -203,13 +130,16 @@ Window {
                         bottomPadding: 0
                         leftPadding: 0
                         rightPadding: 0
+
                         background: Rectangle {
                             color: "transparent"
+
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 width: parent.width
                                 height: 2
                                 color: tabButton_.checked ? Style.accent : "transparent"
+
                                 Behavior on color {
                                     ColorAnimation {
                                         duration: 100
@@ -217,6 +147,7 @@ Window {
                                 }
                             }
                         }
+
                         contentItem: Text {
                             anchors.fill: parent
                             text: tabButton_.text
@@ -225,6 +156,7 @@ Window {
                             font.bold: tabButton_.checked
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+
                             Behavior on color {
                                 ColorAnimation {
                                     duration: 100
@@ -234,6 +166,7 @@ Window {
                     }
                 }
             }
+
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
@@ -242,107 +175,168 @@ Window {
             }
         }
 
-        // ── Tab content ───────────────────────────────────────
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             currentIndex: tabBar_.currentIndex
 
-            // ── Tab 0: Environment ────────────────────────────
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                color: "transparent"
+            ScrollView {
+                clip: true
 
-                TableView {
-                    id: envTable_
-                    anchors.fill: parent
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    columnSpacing: 0
-                    rowSpacing: 1
-                    model: envModel_
+                ColumnLayout {
+                    width: root.width - Style.xl * 2
+                    x: Style.xl
+                    y: Style.xl
+                    spacing: Style.lg
 
-                    columnWidthProvider: function (column) {
-                        if (column === 0)
-                            return 220;
-                        return Math.max(320, envTable_.width - 221);
+                    Repeater {
+                        model: root.contextPreviewController ? root.contextPreviewController.environmentSections : []
+
+                        Rectangle {
+                            id: sectionDelegate_
+                            required property var modelData
+                            Layout.fillWidth: true
+                            radius: Style.radius
+                            color: Style.surface
+                            border.width: 1
+                            border.color: Style.border
+                            implicitHeight: sectionLayout_.implicitHeight + Style.lg * 2
+
+                            ColumnLayout {
+                                id: sectionLayout_
+                                anchors {
+                                    fill: parent
+                                    margins: Style.lg
+                                }
+                                spacing: Style.md
+
+                                Text {
+                                    text: sectionDelegate_.modelData.title
+                                    color: Style.textPrimary
+                                    font.pixelSize: Style.fontLg
+                                    font.bold: true
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 1
+                                    color: Style.border
+                                }
+
+                                Repeater {
+                                    model: sectionDelegate_.modelData.rows
+
+                                    Rectangle {
+                                        id: rowDelegate_
+                                        required property int index
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        implicitHeight: root.envRowHeight(rowDelegate_.modelData.name, rowDelegate_.modelData.value)
+                                        radius: Style.radiusSm
+                                        color: rowHover_.hovered ? Style.cardHover : index % 2 === 0 ? Style.surface : Style.bg
+
+                                        RowLayout {
+                                            anchors {
+                                                fill: parent
+                                                leftMargin: Style.md
+                                                rightMargin: Style.md
+                                                topMargin: Style.sm
+                                                bottomMargin: Style.sm
+                                            }
+                                            spacing: Style.md
+
+                                            Text {
+                                                Layout.preferredWidth: 220
+                                                text: rowDelegate_.modelData.name
+                                                color: Style.accent
+                                                font.pixelSize: Style.fontSm
+                                                font.family: "Consolas, Courier New, monospace"
+                                                font.bold: true
+                                                wrapMode: Text.Wrap
+                                            }
+
+                                            Text {
+                                                Layout.fillWidth: true
+                                                text: root.formattedEnvValue(rowDelegate_.modelData.name, rowDelegate_.modelData.value)
+                                                color: Style.textPrimary
+                                                font.pixelSize: Style.fontSm
+                                                font.family: "Consolas, Courier New, monospace"
+                                                wrapMode: Text.Wrap
+                                            }
+                                        }
+
+                                        HoverHandler {
+                                            id: rowHover_
+                                            cursorShape: Qt.PointingHandCursor
+                                        }
+
+                                        TapHandler {
+                                            gesturePolicy: TapHandler.WithinBounds
+                                            acceptedButtons: Qt.RightButton
+                                            onTapped: function (eventPoint) {
+                                                root.openContextMenu(rowDelegate_.modelData, rowDelegate_, eventPoint.position);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    visible: sectionDelegate_.modelData.rows.length === 0
+                                    text: qsTr("No variables in this section.")
+                                    color: Style.textSecondary
+                                    font.pixelSize: Style.fontSm
+                                }
+                            }
+                        }
                     }
-                    rowHeightProvider: function (row) {
-                        return root.envRowHeight(root.envVars[row].value);
+
+                    Rectangle {
+                        visible: root.contextPreviewController.isLoading
+                        Layout.fillWidth: true
+                        radius: Style.radius
+                        color: Style.surface
+                        border.width: 1
+                        border.color: Style.border
+                        implicitHeight: 120
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: Style.md
+
+                            BusyIndicator {
+                                running: true
+                            }
+
+                            Text {
+                                text: qsTr("Resolving preview...")
+                                color: Style.textSecondary
+                                font.pixelSize: Style.fontMd
+                            }
+                        }
                     }
 
-                    delegate: Rectangle {
-                        id: cellDelegate_
-                        required property bool current
-                        required property bool selected
-                        required property int row
-                        required property int column
-                        required property var display
-
-                        color: root.hoveredEnvRow_ === cellDelegate_.row ? Style.cardHover : cellDelegate_.row % 2 === 0 ? Style.surface : Style.bg
+                    Rectangle {
+                        visible: !root.contextPreviewController.isLoading && !root.contextPreviewController.hasData
+                        Layout.fillWidth: true
+                        radius: Style.radius
+                        color: Style.surface
+                        border.width: 1
+                        border.color: Style.border
+                        implicitHeight: 120
 
                         Text {
-                            anchors.fill: parent
-                            anchors.leftMargin: Style.md
-                            anchors.rightMargin: Style.md
-                            anchors.topMargin: Style.sm
-                            anchors.bottomMargin: Style.sm
-                            verticalAlignment: Text.AlignVCenter
-                            text: cellDelegate_.column === 0 ? cellDelegate_.display : root.formattedEnvValue(cellDelegate_.display)
-                            color: cellDelegate_.column === 0 ? Style.accent : Style.textPrimary
-                            font.pixelSize: Style.fontSm
-                            font.family: "Consolas, Courier New, monospace"
-                            font.bold: cellDelegate_.column === 0
-                            wrapMode: Text.Wrap
+                            anchors.centerIn: parent
+                            text: qsTr("No preview data loaded.")
+                            color: Style.textSecondary
+                            font.pixelSize: Style.fontMd
                         }
-
-                        HoverHandler {
-                            cursorShape: Qt.PointingHandCursor
-                            onHoveredChanged: {
-                                if (hovered)
-                                    root.hoveredEnvRow_ = cellDelegate_.row;
-                                else if (root.hoveredEnvRow_ === cellDelegate_.row)
-                                    root.hoveredEnvRow_ = -1;
-                            }
-                        }
-                        TapHandler {
-                            gesturePolicy: TapHandler.WithinBounds
-                            acceptedButtons: Qt.RightButton
-                            onTapped: function (eventPoint) {
-                                root.openContextMenu(cellDelegate_.row, cellDelegate_, eventPoint.position);
-                            }
-                        }
-                    }
-
-                    ScrollBar.vertical: ScrollBar {}
-                    ScrollBar.horizontal: ScrollBar {}
-                }
-
-                Menu {
-                    id: contextMenu_
-
-                    MenuItem {
-                        text: qsTr("Copy key")
-                        enabled: root.contextMenuEntry_ !== null
-                        onTriggered: root.copyText(root.contextMenuEntry_.name)
-                    }
-                    MenuItem {
-                        text: qsTr("Copy value")
-                        enabled: root.contextMenuEntry_ !== null
-                        onTriggered: root.copyText(root.contextMenuEntry_.value)
-                    }
-                    MenuItem {
-                        text: qsTr("Copy key=value")
-                        enabled: root.contextMenuEntry_ !== null
-                        onTriggered: root.copyText(root.contextMenuEntry_.name + "=" + root.contextMenuEntry_.value)
                     }
                 }
             }
 
-            // ── Tab 1: Packages ───────────────────────────────
             ScrollView {
                 clip: true
+
                 ColumnLayout {
                     width: root.width - Style.xl * 2
                     x: Style.xl
@@ -350,14 +344,16 @@ Window {
                     spacing: 2
 
                     Repeater {
-                        model: root.resolvedPkgs
+                        model: root.contextPreviewController ? root.contextPreviewController.resolvedPackages : []
+
                         Rectangle {
                             id: pkgDelegate_
                             required property var modelData
                             Layout.fillWidth: true
                             height: 40
                             radius: Style.radiusSm
-                            color: pkgHov_.hovered ? Style.card : "transparent"
+                            color: pkgHover_.hovered ? Style.card : "transparent"
+
                             Behavior on color {
                                 ColorAnimation {
                                     duration: 80
@@ -388,23 +384,90 @@ Window {
                                     font.bold: true
                                     Layout.preferredWidth: 160
                                 }
+
                                 Text {
-                                    text: pkgDelegate_.modelData.version
+                                    text: pkgDelegate_.modelData.version.length > 0 ? pkgDelegate_.modelData.version : pkgDelegate_.modelData.label
                                     color: Style.textSecondary
                                     font.pixelSize: Style.fontMd
                                     font.family: "Consolas, Courier New, monospace"
                                 }
+
                                 Item {
                                     Layout.fillWidth: true
                                 }
                             }
+
                             HoverHandler {
-                                id: pkgHov_
+                                id: pkgHover_
                             }
+                        }
+                    }
+
+                    Rectangle {
+                        visible: root.contextPreviewController.isLoading
+                        Layout.fillWidth: true
+                        radius: Style.radius
+                        color: Style.surface
+                        border.width: 1
+                        border.color: Style.border
+                        implicitHeight: 120
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: Style.md
+
+                            BusyIndicator {
+                                running: true
+                            }
+
+                            Text {
+                                text: qsTr("Resolving packages...")
+                                color: Style.textSecondary
+                                font.pixelSize: Style.fontMd
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        visible: !root.contextPreviewController.isLoading && root.contextPreviewController.resolvedPackages.length === 0
+                        Layout.fillWidth: true
+                        radius: Style.radius
+                        color: Style.surface
+                        border.width: 1
+                        border.color: Style.border
+                        implicitHeight: 120
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("No packages resolved yet.")
+                            color: Style.textSecondary
+                            font.pixelSize: Style.fontMd
                         }
                     }
                 }
             }
+        }
+    }
+
+    Menu {
+        id: contextMenu_
+
+        MenuItem {
+            text: qsTr("Copy key")
+            enabled: root.contextMenuEntry_ !== null
+            onTriggered: root.copyText(root.contextMenuEntry_.name)
+        }
+
+        MenuItem {
+            text: qsTr("Copy value")
+            enabled: root.contextMenuEntry_ !== null
+            onTriggered: root.copyText(root.contextMenuEntry_.value)
+        }
+
+        MenuItem {
+            text: qsTr("Copy key=value")
+            enabled: root.contextMenuEntry_ !== null
+            onTriggered: root.copyText(root.contextMenuEntry_.name + "=" + root.contextMenuEntry_.value)
         }
     }
 }

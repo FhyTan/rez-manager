@@ -27,6 +27,9 @@ ApplicationWindow {
     PackageManagerController {
         id: packageManagerController_
     }
+    ContextPreviewController {
+        id: contextPreviewController_
+    }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog {
@@ -110,6 +113,7 @@ ApplicationWindow {
     ContextPreviewWindow {
         id: previewWin
         visible: false
+        contextPreviewController: contextPreviewController_
     }
 
     // ── State ─────────────────────────────────────────────────
@@ -589,9 +593,10 @@ ApplicationWindow {
                                         onPreviewRequested: {
                                             if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
-                                            previewWin.contextName_ = contextDelegate_.name;
-                                            previewWin.projectName_ = contextDelegate_.project;
+                                            if (!contextPreviewController_.loadContext(contextDelegate_.project, contextDelegate_.name))
+                                                return;
                                             previewWin.show();
+                                            previewWin.requestActivate();
                                         }
                                         onLaunchRequested: {
                                             if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
