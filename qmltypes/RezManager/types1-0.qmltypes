@@ -80,6 +80,63 @@ Module {
         }
     }
     Component {
+        file: "D:/Code/rez-manager/src/rez_manager/ui/context_launcher.py"
+        lineNumber: 60
+        name: "ContextLauncherController"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["RezManager/ContextLauncherController 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property {
+            name: "projectName"
+            type: "QString"
+            read: "projectName"
+            notify: "stateChanged"
+            index: 1
+            lineNumber: 77
+            isReadonly: true
+        }
+        Property {
+            name: "contextName"
+            type: "QString"
+            read: "contextName"
+            notify: "stateChanged"
+            index: 2
+            lineNumber: 81
+            isReadonly: true
+        }
+        Property {
+            name: "isLaunching"
+            type: "bool"
+            read: "isLaunching"
+            notify: "stateChanged"
+            index: 3
+            lineNumber: 85
+            isReadonly: true
+        }
+        Signal { name: "stateChanged"; lineNumber: 64 }
+        Signal {
+            name: "launchSucceeded"
+            lineNumber: 65
+            Parameter { type: "QString" }
+            Parameter { type: "QString" }
+        }
+        Method {
+            name: "launchContext"
+            type: "bool"
+            lineNumber: 89
+            Parameter { name: "project_name"; type: "QString" }
+            Parameter { name: "context_name"; type: "QString" }
+        }
+        Method { name: "clear"; lineNumber: 116 }
+        Method {
+            name: "_apply_launch_result"
+            lineNumber: 145
+            Parameter { name: "request_id"; type: "int" }
+            Parameter { name: "launch_result"; type: "PyObject" }
+        }
+    }
+    Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/context_preview.py"
         lineNumber: 37
         name: "ContextPreviewController"

@@ -206,6 +206,161 @@
     {
         "classes": [
             {
+                "className": "ContextLauncherController",
+                "qualifiedClassName": "ContextLauncherController",
+                "object": true,
+                "lineNumber": 60,
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ],
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [],
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 1,
+                        "lineNumber": 77,
+                        "name": "projectName",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "projectName"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 2,
+                        "lineNumber": 81,
+                        "name": "contextName",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QString",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "contextName"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 3,
+                        "lineNumber": 85,
+                        "name": "isLaunching",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "isLaunching"
+                    }
+                ],
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "stateChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 4,
+                        "lineNumber": 64,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "launchSucceeded",
+                        "arguments": [
+                            {
+                                "name": "",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "void",
+                        "index": 5,
+                        "lineNumber": 65,
+                        "isConst": false
+                    }
+                ],
+                "slots": [
+                    {
+                        "access": "public",
+                        "name": "launchContext",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 6,
+                        "lineNumber": 89,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "clear",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 7,
+                        "lineNumber": 116,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "_apply_launch_result",
+                        "arguments": [
+                            {
+                                "name": "request_id",
+                                "type": "int"
+                            },
+                            {
+                                "name": "launch_result",
+                                "type": "PyObject"
+                            }
+                        ],
+                        "returnType": "void",
+                        "index": 8,
+                        "lineNumber": 145,
+                        "isConst": false
+                    }
+                ]
+            }
+        ],
+        "outputRevision": 69,
+        "QML_IMPORT_MAJOR_VERSION": 1,
+        "QML_IMPORT_MINOR_VERSION": 0,
+        "QT_MODULES": [
+            "QtCore",
+            "QtQml"
+        ],
+        "PY_MODULES": [],
+        "inputFile": "D:/Code/rez-manager/src/rez_manager/ui/context_launcher.py"
+    },
+    {
+        "classes": [
+            {
                 "className": "ContextPreviewController",
                 "qualifiedClassName": "ContextPreviewController",
                 "object": true,

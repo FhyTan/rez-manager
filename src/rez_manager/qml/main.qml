@@ -27,6 +27,9 @@ ApplicationWindow {
     PackageManagerController {
         id: packageManagerController_
     }
+    ContextLauncherController {
+        id: contextLauncherController_
+    }
     ContextPreviewController {
         id: contextPreviewController_
     }
@@ -264,6 +267,12 @@ ApplicationWindow {
         target: AppErrorHub // qmllint disable unqualified
         function onErrorOccurred(message) {
             root.showStatus(message, true);
+        }
+    }
+    Connections {
+        target: contextLauncherController_
+        function onLaunchSucceeded(projectName, contextName) {
+            root.showStatus("Launched context: " + projectName + " / " + contextName, false);
         }
     }
 
@@ -601,7 +610,9 @@ ApplicationWindow {
                                         onLaunchRequested: {
                                             if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
-                                            statusToast_.show("Launching: " + contextDelegate_.project + " / " + contextDelegate_.name, Style.success);
+                                            if (!contextLauncherController_.launchContext(contextDelegate_.project, contextDelegate_.name))
+                                                return;
+                                            root.showStatus("Launching context: " + contextDelegate_.project + " / " + contextDelegate_.name, false);
                                         }
                                         onDuplicateRequested: root.openDuplicateContextDialog({
                                             "project": contextDelegate_.project,

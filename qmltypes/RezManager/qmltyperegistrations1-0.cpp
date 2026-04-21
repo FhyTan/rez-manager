@@ -7,6 +7,9 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlmoduleregistration.h>
 
+#if __has_include(<D:/Code/rez-manager/src/rez_manager/ui/context_launcher.py>)
+#  include <D:/Code/rez-manager/src/rez_manager/ui/context_launcher.py>
+#endif
 #if __has_include(<D:/Code/rez-manager/src/rez_manager/ui/context_preview.py>)
 #  include <D:/Code/rez-manager/src/rez_manager/ui/context_preview.py>
 #endif
@@ -30,6 +33,7 @@ Q_QMLTYPE_EXPORT void qml_register_types_RezManager()
 {
     QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     qmlRegisterTypesAndRevisions<AppSettingsController>("RezManager", 1);
+    qmlRegisterTypesAndRevisions<ContextLauncherController>("RezManager", 1);
     qmlRegisterTypesAndRevisions<ContextPreviewController>("RezManager", 1);
     qmlRegisterTypesAndRevisions<PackageManagerController>("RezManager", 1);
     qmlRegisterTypesAndRevisions<ProjectListModel>("RezManager", 1);

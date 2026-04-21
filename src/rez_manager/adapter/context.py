@@ -135,14 +135,14 @@ def load_context(path: str) -> ResolveResult:
 
 def launch_context(
     package_requests: list[str],
-    command: list[str],
+    command: None | str | Sequence[str],
     *,
     package_paths: Sequence[str] | None = None,
 ) -> subprocess.Popen:
     """Launch a subprocess inside a resolved Rez context."""
     ctx = _create_resolved_context(package_requests, package_paths=package_paths)
     return ctx.execute_shell(
-        command=command,
+        command=_normalized_launch_command(command),
         detached=True,
         block=False,
         start_new_session=True,
@@ -205,3 +205,12 @@ def _create_resolved_context(
         None if package_paths is None else [str(path) for path in package_paths]
     )
     return ResolvedContext(list(package_requests), package_paths=resolved_package_paths)
+
+
+def _normalized_launch_command(command: None | str | Sequence[str]) -> str | list[str]:
+    if isinstance(command, str):
+        return command
+    if command is None:
+        return None
+
+    return [str(part) for part in command]
