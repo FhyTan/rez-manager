@@ -41,6 +41,7 @@ Window {
         spacing: 0
 
         Rectangle {
+            id: header_
             Layout.fillWidth: true
             implicitHeight: 56
             color: Style.surface
@@ -87,6 +88,7 @@ Window {
         }
 
         SplitView {
+            id: content_
             Layout.fillWidth: true
             Layout.fillHeight: true
             orientation: Qt.Horizontal
@@ -152,6 +154,7 @@ Window {
         }
 
         Rectangle {
+            id: footer_
             Layout.fillWidth: true
             implicitHeight: 52
             color: Style.surface

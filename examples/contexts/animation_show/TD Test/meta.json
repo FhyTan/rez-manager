@@ -1,0 +1,9 @@
+{
+  "custom_command": null,
+  "description": "A test context",
+  "launch_target": "shell",
+  "name": "TD Test",
+  "packages": [
+    "studio_core-1.1.0"
+  ]
+}

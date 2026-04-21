@@ -1,0 +1,12 @@
+{
+  "custom_command": null,
+  "description": "Houdini is used to generate the animation effects, offering flexible and high-quality VFX.",
+  "launch_target": "houdini",
+  "name": "houdini_vfx",
+  "packages": [
+    "houdini-20.0",
+    "solaris_bridge",
+    "shot_tools",
+    "ocio-2.3.2"
+  ]
+}

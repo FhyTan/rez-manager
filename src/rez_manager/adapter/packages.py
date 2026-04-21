@@ -74,3 +74,10 @@ def get_package_versions(name: str, repo_paths: list[str]) -> list[str]:
     pkgs = list(iter_packages(name, paths=repo_paths))
     pkgs.sort(key=lambda p: p.version, reverse=True)
     return [str(p.version) for p in pkgs]
+
+
+def clear_package_cache():
+    """Clear the Rez package cache."""
+    from rez.packages import package_repository_manager  # noqa: PLC0415
+
+    package_repository_manager.clear_caches()
