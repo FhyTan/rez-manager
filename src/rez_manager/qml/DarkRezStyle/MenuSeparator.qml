@@ -5,17 +5,18 @@ import ".."
 T.MenuSeparator {
     id: control
 
-    implicitWidth: 160
-    implicitHeight: Style.md + 1
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
     leftPadding: Style.md
     rightPadding: Style.md
-    topPadding: Style.xs
-    bottomPadding: Style.xs
+    topPadding: Style.sm
+    bottomPadding: Style.sm
 
     contentItem: Rectangle {
-        implicitWidth: 160
+        implicitWidth: 188
         implicitHeight: 1
-        color: Style.border
-        opacity: 0.9
+        radius: 0.5
+        color: Style.borderBright
+        opacity: 0.8
     }
 }

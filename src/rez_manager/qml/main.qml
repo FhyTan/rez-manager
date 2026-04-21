@@ -104,6 +104,11 @@ ApplicationWindow {
             }
         }
     }
+    AboutDialog {
+        id: aboutDlg
+        anchors.centerIn: root.contentItem
+        onGithubRequested: root.openGithubPage()
+    }
     PackageManagerWindow {
         id: pkgManagerWin
         visible: false
@@ -169,6 +174,23 @@ ApplicationWindow {
 
     function showStatus(message, isError) {
         statusToast_.show(message, isError ? Style.error : Style.success);
+    }
+
+    function openImportProjectDialog() {
+        showStatus(qsTr("Import Project is not implemented yet."), true);
+    }
+
+    function openImportContextDialog() {
+        showStatus(qsTr("Import Context is not implemented yet."), true);
+    }
+
+    function openGithubPage() {
+        if (!Qt.openUrlExternally("https://github.com/FhyTan/rez-manager"))
+            showStatus(qsTr("Failed to open the GitHub page."), true);
+    }
+
+    function openAboutDialog() {
+        aboutDlg.open();
     }
 
     function openCreateProjectDialog() {
@@ -288,22 +310,38 @@ ApplicationWindow {
     // ── Menu bar ──────────────────────────────────────────────
     menuBar: MenuBar {
         Menu {
-            title: "File"
+            title: qsTr("File")
+
             Action {
-                text: "Settings…"
+                text: qsTr("Import Project")
+                onTriggered: root.openImportProjectDialog()
+            }
+            Action {
+                text: qsTr("Import Context")
+                onTriggered: root.openImportContextDialog()
+            }
+            MenuSeparator {}
+            Action {
+                text: qsTr("Settings...")
                 onTriggered: settingsDlg.open()
             }
             MenuSeparator {}
             Action {
-                text: "Quit"
+                text: qsTr("Quit")
                 onTriggered: Qt.quit()
             }
         }
 
         Menu {
-            title: "Help"
+            title: qsTr("Help")
+
             Action {
-                text: "About rez-manager"
+                text: qsTr("Github")
+                onTriggered: root.openGithubPage()
+            }
+            Action {
+                text: qsTr("About")
+                onTriggered: root.openAboutDialog()
             }
         }
     }

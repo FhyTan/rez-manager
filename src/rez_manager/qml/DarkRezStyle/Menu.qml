@@ -8,15 +8,8 @@ T.Menu {
 
     property int minimumWidth: 176
 
-    implicitWidth: Math.max(
-        minimumWidth,
-        implicitBackgroundWidth + leftInset + rightInset,
-        implicitContentWidth + leftPadding + rightPadding
-    )
-    implicitHeight: Math.max(
-        implicitBackgroundHeight + topInset + bottomInset,
-        implicitContentHeight + topPadding + bottomPadding
-    )
+    implicitWidth: Math.max(minimumWidth, implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
 
     modal: false
     dim: false
@@ -28,6 +21,8 @@ T.Menu {
     leftPadding: Style.xs
     rightPadding: Style.xs
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+    delegate: MenuItem {}
 
     enter: Transition {
         ParallelAnimation {
@@ -80,9 +75,7 @@ T.Menu {
     contentItem: ListView {
         implicitHeight: contentHeight
         model: control.contentModel
-        interactive: Window.window
-            ? contentHeight + control.topPadding + control.bottomPadding > control.height
-            : false
+        interactive: Window.window ? contentHeight + control.topPadding + control.bottomPadding > control.height : false
         clip: true
         currentIndex: control.currentIndex
 

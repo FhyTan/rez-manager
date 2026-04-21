@@ -1,4 +1,5 @@
 # RezManager window and dialog types
+AboutDialog 1.0 AboutDialog.qml
 ContextEditorDialog 1.0 ContextEditorDialog.qml
 ContextPreviewWindow 1.0 ContextPreviewWindow.qml
 PackageManagerWindow 1.0 PackageManagerWindow.qml

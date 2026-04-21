@@ -40,3 +40,7 @@ docs/
 ```
 
 See `docs/design.md` for full architecture and UI specification.
+
+## License
+
+MIT. See `LICENSE`.
