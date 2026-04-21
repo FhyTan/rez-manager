@@ -41,6 +41,13 @@ def list_repositories(repo_paths: list[str]) -> list[RepositoryInfo]:
     return repos
 
 
+def clear_package_cache() -> None:
+    """Clear cached Rez package repository data."""
+    from rez.packages import package_repository_manager
+
+    package_repository_manager.clear_caches()
+
+
 def get_package_info(name: str, version: str, repo_paths: list[str]) -> PackageInfo | None:
     """Retrieve detailed info for a specific package name and version."""
     from rez.packages import Package, get_package  # noqa: PLC0415
@@ -74,10 +81,3 @@ def get_package_versions(name: str, repo_paths: list[str]) -> list[str]:
     pkgs = list(iter_packages(name, paths=repo_paths))
     pkgs.sort(key=lambda p: p.version, reverse=True)
     return [str(p.version) for p in pkgs]
-
-
-def clear_package_cache():
-    """Clear the Rez package cache."""
-    from rez.packages import package_repository_manager  # noqa: PLC0415
-
-    package_repository_manager.clear_caches()

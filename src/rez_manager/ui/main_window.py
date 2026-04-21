@@ -314,6 +314,10 @@ class RezContextListModel(QAbstractListModel):
     def contexts(self) -> list[dict[str, object]]:
         return [self._context_payload(context) for context in self._items]
 
+    @Property(int, notify=contextsChanged)
+    def contextCount(self) -> int:  # noqa: N802
+        return len(self._items)
+
     @Slot(str, result="QVariantList")
     def filteredContexts(self, project_name: str) -> list[dict[str, object]]:  # noqa: N802
         if project_name != self._current_project_name:

@@ -250,7 +250,7 @@ Module {
     }
     Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/package_manager.py"
-        lineNumber: 483
+        lineNumber: 533
         name: "PackageManagerController"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -262,7 +262,7 @@ Module {
             isPointer: true
             read: "packageRequestsModel"
             index: 1
-            lineNumber: 502
+            lineNumber: 557
             isReadonly: true
             isPropertyConstant: true
         }
@@ -272,7 +272,7 @@ Module {
             isPointer: true
             read: "repositoryModel"
             index: 2
-            lineNumber: 506
+            lineNumber: 561
             isReadonly: true
             isPropertyConstant: true
         }
@@ -282,17 +282,26 @@ Module {
             isPointer: true
             read: "packageDetail"
             index: 3
-            lineNumber: 510
+            lineNumber: 565
             isReadonly: true
             isPropertyConstant: true
+        }
+        Property {
+            name: "isLoadingRepositories"
+            type: "bool"
+            read: "isLoadingRepositories"
+            notify: "stateChanged"
+            index: 4
+            lineNumber: 569
+            isReadonly: true
         }
         Property {
             name: "packageCount"
             type: "int"
             read: "packageCount"
             notify: "packageCountChanged"
-            index: 4
-            lineNumber: 514
+            index: 5
+            lineNumber: 573
             isReadonly: true
         }
         Property {
@@ -300,8 +309,8 @@ Module {
             type: "QVariantList"
             read: "packageRequests"
             notify: "packageCountChanged"
-            index: 5
-            lineNumber: 518
+            index: 6
+            lineNumber: 577
             isReadonly: true
         }
         Property {
@@ -309,8 +318,8 @@ Module {
             type: "int"
             read: "selectedRequestRow"
             notify: "selectedRequestRowChanged"
-            index: 6
-            lineNumber: 522
+            index: 7
+            lineNumber: 581
             isReadonly: true
         }
         Property {
@@ -318,8 +327,8 @@ Module {
             type: "int"
             read: "selectedRepositoryIndex"
             notify: "selectedRepositoryIndexChanged"
-            index: 7
-            lineNumber: 526
+            index: 8
+            lineNumber: 585
             isReadonly: true
         }
         Property {
@@ -327,55 +336,63 @@ Module {
             type: "int"
             read: "selectedRepositoryPackageIndex"
             notify: "selectedRepositoryPackageIndexChanged"
-            index: 8
-            lineNumber: 530
+            index: 9
+            lineNumber: 589
             isReadonly: true
         }
-        Signal { name: "packageCountChanged"; lineNumber: 485 }
-        Signal { name: "selectedRequestRowChanged"; lineNumber: 486 }
-        Signal { name: "selectedRepositoryIndexChanged"; lineNumber: 487 }
-        Signal { name: "selectedRepositoryPackageIndexChanged"; lineNumber: 488 }
+        Signal { name: "stateChanged"; lineNumber: 535 }
+        Signal { name: "packageCountChanged"; lineNumber: 536 }
+        Signal { name: "selectedRequestRowChanged"; lineNumber: 537 }
+        Signal { name: "selectedRepositoryIndexChanged"; lineNumber: 538 }
+        Signal { name: "selectedRepositoryPackageIndexChanged"; lineNumber: 539 }
         Method {
             name: "loadContext"
             type: "bool"
-            lineNumber: 534
+            lineNumber: 593
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
-        Method { name: "clearSelection"; lineNumber: 557 }
+        Method { name: "refresh"; type: "bool"; lineNumber: 617 }
+        Method { name: "clearSelection"; lineNumber: 630 }
         Method {
             name: "removePackageRequest"
             type: "bool"
-            lineNumber: 561
+            lineNumber: 634
             Parameter { name: "row"; type: "int" }
         }
         Method {
             name: "selectRequiredPackage"
             type: "bool"
-            lineNumber: 574
+            lineNumber: 647
             Parameter { name: "row"; type: "int" }
         }
         Method {
             name: "addPackageRequest"
             type: "bool"
-            lineNumber: 588
+            lineNumber: 661
             Parameter { name: "name"; type: "QString" }
             Parameter { name: "version"; type: "QString" }
         }
         Method {
             name: "selectRepositoryPackage"
             type: "bool"
-            lineNumber: 603
+            lineNumber: 676
             Parameter { name: "repo_index"; type: "int" }
             Parameter { name: "package_index"; type: "int" }
         }
         Method {
             name: "selectDetailVersion"
             type: "bool"
-            lineNumber: 617
+            lineNumber: 690
             Parameter { name: "index"; type: "int" }
         }
-        Method { name: "save"; type: "bool"; lineNumber: 633 }
+        Method { name: "save"; type: "bool"; lineNumber: 706 }
+        Method {
+            name: "_apply_repository_refresh_result"
+            lineNumber: 819
+            Parameter { name: "request_id"; type: "int" }
+            Parameter { name: "refresh_result"; type: "PyObject" }
+        }
     }
     Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/main_window.py"
@@ -468,6 +485,15 @@ Module {
             lineNumber: 313
             isReadonly: true
         }
+        Property {
+            name: "contextCount"
+            type: "int"
+            read: "contextCount"
+            notify: "contextsChanged"
+            index: 3
+            lineNumber: 317
+            isReadonly: true
+        }
         Signal { name: "contextsChanged"; lineNumber: 225 }
         Signal { name: "projectModelChanged"; lineNumber: 226 }
         Method { name: "reload"; lineNumber: 299 }
@@ -486,20 +512,20 @@ Module {
         Method {
             name: "filteredContexts"
             type: "QVariantList"
-            lineNumber: 317
+            lineNumber: 321
             Parameter { name: "project_name"; type: "QString" }
         }
         Method {
             name: "ensureContextExists"
             type: "bool"
-            lineNumber: 448
+            lineNumber: 452
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
         Method {
             name: "saveContext"
             type: "bool"
-            lineNumber: 455
+            lineNumber: 459
             Parameter { name: "original_project_name"; type: "QString" }
             Parameter { name: "original_context_name"; type: "QString" }
             Parameter { name: "project_name"; type: "QString" }
@@ -512,7 +538,7 @@ Module {
         Method {
             name: "duplicateContext"
             type: "bool"
-            lineNumber: 530
+            lineNumber: 534
             Parameter { name: "source_project_name"; type: "QString" }
             Parameter { name: "source_context_name"; type: "QString" }
             Parameter { name: "target_project_name"; type: "QString" }
@@ -521,7 +547,7 @@ Module {
         Method {
             name: "deleteContext"
             type: "bool"
-            lineNumber: 561
+            lineNumber: 565
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }

@@ -619,7 +619,7 @@
                 "className": "PackageManagerController",
                 "qualifiedClassName": "PackageManagerController",
                 "object": true,
-                "lineNumber": 483,
+                "lineNumber": 533,
                 "superClasses": [
                     {
                         "access": "public",
@@ -639,7 +639,7 @@
                         "designable": true,
                         "final": false,
                         "index": 1,
-                        "lineNumber": 502,
+                        "lineNumber": 557,
                         "name": "packageRequestsModel",
                         "required": false,
                         "scriptable": true,
@@ -653,7 +653,7 @@
                         "designable": true,
                         "final": false,
                         "index": 2,
-                        "lineNumber": 506,
+                        "lineNumber": 561,
                         "name": "repositoryModel",
                         "required": false,
                         "scriptable": true,
@@ -667,7 +667,7 @@
                         "designable": true,
                         "final": false,
                         "index": 3,
-                        "lineNumber": 510,
+                        "lineNumber": 565,
                         "name": "packageDetail",
                         "required": false,
                         "scriptable": true,
@@ -681,7 +681,22 @@
                         "designable": true,
                         "final": false,
                         "index": 4,
-                        "lineNumber": 514,
+                        "lineNumber": 569,
+                        "name": "isLoadingRepositories",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "bool",
+                        "user": false,
+                        "notify": "stateChanged",
+                        "read": "isLoadingRepositories"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 5,
+                        "lineNumber": 573,
                         "name": "packageCount",
                         "required": false,
                         "scriptable": true,
@@ -695,8 +710,8 @@
                         "constant": false,
                         "designable": true,
                         "final": false,
-                        "index": 5,
-                        "lineNumber": 518,
+                        "index": 6,
+                        "lineNumber": 577,
                         "name": "packageRequests",
                         "required": false,
                         "scriptable": true,
@@ -710,8 +725,8 @@
                         "constant": false,
                         "designable": true,
                         "final": false,
-                        "index": 6,
-                        "lineNumber": 522,
+                        "index": 7,
+                        "lineNumber": 581,
                         "name": "selectedRequestRow",
                         "required": false,
                         "scriptable": true,
@@ -725,8 +740,8 @@
                         "constant": false,
                         "designable": true,
                         "final": false,
-                        "index": 7,
-                        "lineNumber": 526,
+                        "index": 8,
+                        "lineNumber": 585,
                         "name": "selectedRepositoryIndex",
                         "required": false,
                         "scriptable": true,
@@ -740,8 +755,8 @@
                         "constant": false,
                         "designable": true,
                         "final": false,
-                        "index": 8,
-                        "lineNumber": 530,
+                        "index": 9,
+                        "lineNumber": 589,
                         "name": "selectedRepositoryPackageIndex",
                         "required": false,
                         "scriptable": true,
@@ -755,11 +770,20 @@
                 "signals": [
                     {
                         "access": "public",
-                        "name": "packageCountChanged",
+                        "name": "stateChanged",
                         "arguments": [],
                         "returnType": "void",
                         "index": 4,
-                        "lineNumber": 485,
+                        "lineNumber": 535,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "packageCountChanged",
+                        "arguments": [],
+                        "returnType": "void",
+                        "index": 5,
+                        "lineNumber": 536,
                         "isConst": false
                     },
                     {
@@ -767,8 +791,8 @@
                         "name": "selectedRequestRowChanged",
                         "arguments": [],
                         "returnType": "void",
-                        "index": 5,
-                        "lineNumber": 486,
+                        "index": 6,
+                        "lineNumber": 537,
                         "isConst": false
                     },
                     {
@@ -776,8 +800,8 @@
                         "name": "selectedRepositoryIndexChanged",
                         "arguments": [],
                         "returnType": "void",
-                        "index": 6,
-                        "lineNumber": 487,
+                        "index": 7,
+                        "lineNumber": 538,
                         "isConst": false
                     },
                     {
@@ -785,8 +809,8 @@
                         "name": "selectedRepositoryPackageIndexChanged",
                         "arguments": [],
                         "returnType": "void",
-                        "index": 7,
-                        "lineNumber": 488,
+                        "index": 8,
+                        "lineNumber": 539,
                         "isConst": false
                     }
                 ],
@@ -805,8 +829,17 @@
                             }
                         ],
                         "returnType": "bool",
-                        "index": 8,
-                        "lineNumber": 534,
+                        "index": 9,
+                        "lineNumber": 593,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "refresh",
+                        "arguments": [],
+                        "returnType": "bool",
+                        "index": 10,
+                        "lineNumber": 617,
                         "isConst": false
                     },
                     {
@@ -814,8 +847,8 @@
                         "name": "clearSelection",
                         "arguments": [],
                         "returnType": "void",
-                        "index": 9,
-                        "lineNumber": 557,
+                        "index": 11,
+                        "lineNumber": 630,
                         "isConst": false
                     },
                     {
@@ -828,8 +861,8 @@
                             }
                         ],
                         "returnType": "bool",
-                        "index": 10,
-                        "lineNumber": 561,
+                        "index": 12,
+                        "lineNumber": 634,
                         "isConst": false
                     },
                     {
@@ -842,8 +875,8 @@
                             }
                         ],
                         "returnType": "bool",
-                        "index": 11,
-                        "lineNumber": 574,
+                        "index": 13,
+                        "lineNumber": 647,
                         "isConst": false
                     },
                     {
@@ -860,8 +893,8 @@
                             }
                         ],
                         "returnType": "bool",
-                        "index": 12,
-                        "lineNumber": 588,
+                        "index": 14,
+                        "lineNumber": 661,
                         "isConst": false
                     },
                     {
@@ -878,8 +911,8 @@
                             }
                         ],
                         "returnType": "bool",
-                        "index": 13,
-                        "lineNumber": 603,
+                        "index": 15,
+                        "lineNumber": 676,
                         "isConst": false
                     },
                     {
@@ -892,8 +925,8 @@
                             }
                         ],
                         "returnType": "bool",
-                        "index": 14,
-                        "lineNumber": 617,
+                        "index": 16,
+                        "lineNumber": 690,
                         "isConst": false
                     },
                     {
@@ -901,8 +934,26 @@
                         "name": "save",
                         "arguments": [],
                         "returnType": "bool",
-                        "index": 15,
-                        "lineNumber": 633,
+                        "index": 17,
+                        "lineNumber": 706,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "_apply_repository_refresh_result",
+                        "arguments": [
+                            {
+                                "name": "request_id",
+                                "type": "int"
+                            },
+                            {
+                                "name": "refresh_result",
+                                "type": "PyObject"
+                            }
+                        ],
+                        "returnType": "void",
+                        "index": 18,
+                        "lineNumber": 819,
                         "isConst": false
                     }
                 ]
@@ -1147,6 +1198,21 @@
                         "user": false,
                         "notify": "contextsChanged",
                         "read": "contexts"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 3,
+                        "lineNumber": 317,
+                        "name": "contextCount",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "notify": "contextsChanged",
+                        "read": "contextCount"
                     }
                 ],
                 "signals": [
@@ -1218,7 +1284,7 @@
                         ],
                         "returnType": "QVariantList",
                         "index": 81,
-                        "lineNumber": 317,
+                        "lineNumber": 321,
                         "isConst": false
                     },
                     {
@@ -1236,7 +1302,7 @@
                         ],
                         "returnType": "bool",
                         "index": 82,
-                        "lineNumber": 448,
+                        "lineNumber": 452,
                         "isConst": false
                     },
                     {
@@ -1278,7 +1344,7 @@
                         ],
                         "returnType": "bool",
                         "index": 83,
-                        "lineNumber": 455,
+                        "lineNumber": 459,
                         "isConst": false
                     },
                     {
@@ -1304,7 +1370,7 @@
                         ],
                         "returnType": "bool",
                         "index": 84,
-                        "lineNumber": 530,
+                        "lineNumber": 534,
                         "isConst": false
                     },
                     {
@@ -1322,7 +1388,7 @@
                         ],
                         "returnType": "bool",
                         "index": 85,
-                        "lineNumber": 561,
+                        "lineNumber": 565,
                         "isConst": false
                     }
                 ]

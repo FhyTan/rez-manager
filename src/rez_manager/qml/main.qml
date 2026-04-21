@@ -18,11 +18,11 @@ ApplicationWindow {
     color: Style.bg
 
     ProjectListModel {
-        id: projectModel
+        id: projectModel_
     }
     RezContextListModel {
-        id: contextModel
-        projectModel: projectModel
+        id: contextModel_
+        projectModel: projectModel_
     }
     PackageManagerController {
         id: packageManagerController_
@@ -46,9 +46,9 @@ ApplicationWindow {
     ContextEditorDialog {
         id: editorDlg
         anchors.centerIn: root.contentItem
-        projectOptions: projectModel.projectNames
+        projectOptions: projectModel_.projectNames
         onSaveRequested: function (originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages) {
-            const saved = contextModel.saveContext(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages);
+            const saved = contextModel_.saveContext(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages);
             if (saved) {
                 editorDlg.close();
                 root.selectProjectByName(projectName);
@@ -62,11 +62,11 @@ ApplicationWindow {
         onSubmitted: function (projectName) {
             let success = false;
             if (root.projectDialogMode === "create")
-                success = projectModel.createProject(projectName);
+                success = projectModel_.createProject(projectName);
             else if (root.projectDialogMode === "edit")
-                success = projectModel.renameProject(root.projectDialogSourceName, projectName);
+                success = projectModel_.renameProject(root.projectDialogSourceName, projectName);
             else if (root.projectDialogMode === "duplicate")
-                success = projectModel.duplicateProject(root.projectDialogSourceName, projectName);
+                success = projectModel_.duplicateProject(root.projectDialogSourceName, projectName);
 
             if (success) {
                 projectNameDlg.close();
@@ -78,9 +78,9 @@ ApplicationWindow {
     ContextDuplicateDialog {
         id: contextDuplicateDlg
         anchors.centerIn: root.contentItem
-        projectOptions: projectModel.projectNames
+        projectOptions: projectModel_.projectNames
         onSubmitted: function (projectName, contextName) {
-            const duplicated = contextModel.duplicateContext(root.duplicateSourceProjectName, root.duplicateSourceContextName, projectName, contextName);
+            const duplicated = contextModel_.duplicateContext(root.duplicateSourceProjectName, root.duplicateSourceContextName, projectName, contextName);
             if (duplicated) {
                 contextDuplicateDlg.close();
                 root.selectProjectByName(projectName);
@@ -93,12 +93,12 @@ ApplicationWindow {
         anchors.centerIn: root.contentItem
         onConfirmed: {
             if (root.pendingDeleteKind === "project") {
-                if (projectModel.deleteProject(root.pendingDeleteProjectName)) {
+                if (projectModel_.deleteProject(root.pendingDeleteProjectName)) {
                     root.clampSelectedProjectIndex();
                     root.showStatus("Deleted project: " + root.pendingDeleteProjectName, false);
                 }
             } else if (root.pendingDeleteKind === "context") {
-                if (contextModel.deleteContext(root.pendingDeleteProjectName, root.pendingDeleteContextName)) {
+                if (contextModel_.deleteContext(root.pendingDeleteProjectName, root.pendingDeleteContextName)) {
                     root.showStatus("Deleted context: " + root.pendingDeleteProjectName + " / " + root.pendingDeleteContextName, false);
                 }
             }
@@ -111,7 +111,7 @@ ApplicationWindow {
         contextPreviewController: contextPreviewController_
         contextLauncherController: contextLauncherController_
         onSaved: function (projectName, contextName) {
-            contextModel.reload();
+            contextModel_.reload();
             root.showStatus("Saved packages: " + projectName + " / " + contextName, false);
         }
         onPreviewRequested: {
@@ -130,7 +130,7 @@ ApplicationWindow {
 
     // ── State ─────────────────────────────────────────────────
     property int selectedProjectIndex: 0
-    property string selectedProject: selectedProjectIndex >= 0 && selectedProjectIndex < projectModel.projectNames.length ? (projectModel.projectNames[selectedProjectIndex] || "") : ""
+    property string selectedProject: selectedProjectIndex >= 0 && selectedProjectIndex < projectModel_.projectNames.length ? (projectModel_.projectNames[selectedProjectIndex] || "") : ""
     property string projectDialogMode: "create"
     property string projectDialogSourceName: ""
     property string duplicateSourceProjectName: ""
@@ -139,28 +139,28 @@ ApplicationWindow {
     property string pendingDeleteProjectName: ""
     property string pendingDeleteContextName: ""
 
-    Component.onCompleted: contextModel.loadProject(selectedProject)
-    onSelectedProjectChanged: contextModel.loadProject(selectedProject)
+    Component.onCompleted: contextModel_.loadProject(selectedProject)
+    onSelectedProjectChanged: contextModel_.loadProject(selectedProject)
 
     function reloadModels() {
-        projectModel.reload();
+        projectModel_.reload();
         clampSelectedProjectIndex();
-        contextModel.reload();
+        contextModel_.reload();
     }
 
     function clampSelectedProjectIndex() {
-        if (projectModel.projectNames.length === 0) {
+        if (projectModel_.projectNames.length === 0) {
             selectedProjectIndex = 0;
             return;
         }
         if (selectedProjectIndex < 0)
             selectedProjectIndex = 0;
-        else if (selectedProjectIndex >= projectModel.projectNames.length)
-            selectedProjectIndex = projectModel.projectNames.length - 1;
+        else if (selectedProjectIndex >= projectModel_.projectNames.length)
+            selectedProjectIndex = projectModel_.projectNames.length - 1;
     }
 
     function selectProjectByName(projectName) {
-        const targetIndex = projectModel.indexOfProject(projectName);
+        const targetIndex = projectModel_.indexOfProject(projectName);
         if (targetIndex >= 0)
             selectedProjectIndex = targetIndex;
         else
@@ -180,7 +180,7 @@ ApplicationWindow {
     }
 
     function openEditProjectDialog(projectName) {
-        if (!projectModel.ensureProjectExists(projectName))
+        if (!projectModel_.ensureProjectExists(projectName))
             return;
         projectDialogMode = "edit";
         projectDialogSourceName = projectName;
@@ -190,7 +190,7 @@ ApplicationWindow {
     }
 
     function openDuplicateProjectDialog(projectName) {
-        if (!projectModel.ensureProjectExists(projectName))
+        if (!projectModel_.ensureProjectExists(projectName))
             return;
         projectDialogMode = "duplicate";
         projectDialogSourceName = projectName;
@@ -204,7 +204,7 @@ ApplicationWindow {
             showStatus("Create a project first.", true);
             return;
         }
-        if (!projectModel.ensureProjectExists(selectedProject))
+        if (!projectModel_.ensureProjectExists(selectedProject))
             return;
         editorDlg.title = "New Context";
         editorDlg.originalProjectValue = "";
@@ -219,7 +219,7 @@ ApplicationWindow {
     }
 
     function openEditContextDialog(modelData) {
-        if (!contextModel.ensureContextExists(modelData.project, modelData.name))
+        if (!contextModel_.ensureContextExists(modelData.project, modelData.name))
             return;
         editorDlg.title = "Edit Context";
         editorDlg.originalProjectValue = modelData.project;
@@ -234,7 +234,7 @@ ApplicationWindow {
     }
 
     function openDuplicateContextDialog(modelData) {
-        if (!contextModel.ensureContextExists(modelData.project, modelData.name))
+        if (!contextModel_.ensureContextExists(modelData.project, modelData.name))
             return;
         duplicateSourceProjectName = modelData.project;
         duplicateSourceContextName = modelData.name;
@@ -244,7 +244,7 @@ ApplicationWindow {
     }
 
     function confirmDeleteProject(projectName) {
-        if (!projectModel.ensureProjectExists(projectName))
+        if (!projectModel_.ensureProjectExists(projectName))
             return;
         pendingDeleteKind = "project";
         pendingDeleteProjectName = projectName;
@@ -255,7 +255,7 @@ ApplicationWindow {
     }
 
     function confirmDeleteContext(projectName, contextName) {
-        if (!contextModel.ensureContextExists(projectName, contextName))
+        if (!contextModel_.ensureContextExists(projectName, contextName))
             return;
         pendingDeleteKind = "context";
         pendingDeleteProjectName = projectName;
@@ -266,7 +266,7 @@ ApplicationWindow {
     }
 
     Connections {
-        target: projectModel
+        target: projectModel_
         function onProjectNamesChanged() {
             root.clampSelectedProjectIndex();
         }
@@ -406,7 +406,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    model: projectModel
+                    model: projectModel_
                     spacing: 2
 
                     ScrollIndicator.vertical: ScrollIndicator {}
@@ -506,17 +506,20 @@ ApplicationWindow {
                         spacing: Style.md
 
                         ColumnLayout {
-                            spacing: 1
-                            Text {
-                                text: root.selectedProject.length > 0 ? root.selectedProject : "No project selected"
-                                color: Style.textPrimary
-                                font.pixelSize: Style.fontXl
-                                font.bold: true
-                            }
-                            Text {
-                                text: contextModel.contexts.length + " contexts"
-                                color: Style.textSecondary
-                                font.pixelSize: Style.fontSm
+                            RowLayout {
+                                spacing: Style.sm
+
+                                Text {
+                                    text: root.selectedProject.length > 0 ? root.selectedProject : "No project selected"
+                                    color: Style.textPrimary
+                                    font.pixelSize: Style.fontXl
+                                    font.bold: true
+                                }
+
+                                Badge {
+                                    text: contextModel_.contextCount + " contexts"
+                                    badgeColor: Style.accent
+                                }
                             }
                         }
 
@@ -566,7 +569,7 @@ ApplicationWindow {
                             spacing: Style.lg
 
                             Repeater {
-                                model: contextModel
+                                model: contextModel_
 
                                 delegate: Item {
                                     id: contextDelegate_
@@ -601,7 +604,7 @@ ApplicationWindow {
                                             });
                                         }
                                         onEditPackagesRequested: {
-                                            if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
+                                            if (!contextModel_.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
                                             if (!pkgManagerWin.loadContext(contextDelegate_.project, contextDelegate_.name))
                                                 return;
@@ -609,7 +612,7 @@ ApplicationWindow {
                                             pkgManagerWin.requestActivate();
                                         }
                                         onPreviewRequested: {
-                                            if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
+                                            if (!contextModel_.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
                                             if (!contextPreviewController_.loadContext(contextDelegate_.project, contextDelegate_.name))
                                                 return;
@@ -617,7 +620,7 @@ ApplicationWindow {
                                             previewWin.requestActivate();
                                         }
                                         onLaunchRequested: {
-                                            if (!contextModel.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
+                                            if (!contextModel_.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
                                                 return;
                                             if (!contextLauncherController_.launchContext(contextDelegate_.project, contextDelegate_.name))
                                                 return;
@@ -634,7 +637,7 @@ ApplicationWindow {
 
                             // Empty state
                             Rectangle {
-                                visible: contextModel.contexts.length === 0
+                                visible: contextModel_.contexts.length === 0
                                 width: 300
                                 height: 160
                                 radius: Style.radiusLg

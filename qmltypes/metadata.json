@@ -1,23 +1,53 @@
 {
     "modules": {
-        "os": {
+        "rez_manager.app": {
+            "modification_time": 1776743058.8347533,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\app.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "PySide6.QtGui",
+                "PySide6.QtQml",
+                "__future__",
+                "loguru",
+                "os",
+                "pathlib",
+                "rez_manager",
+                "rez_manager.adapter.utils",
+                "rez_manager.logging_config",
+                "rez_manager.ui.error_hub",
+                "sys"
+            ]
+        },
+        "pathlib": {
             "modification_time": 1748849781.5865788,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\os.py",
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\pathlib.py",
             "dependencies": []
         },
+        "rez_manager.adapter.utils": {
+            "modification_time": 1776743830.84448,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\utils.py",
+            "dependencies": [
+                "os",
+                "rez_manager.runtime"
+            ]
+        },
+        "rez_manager.runtime": {
+            "modification_time": 1776668132.9674695,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\runtime.py",
+            "dependencies": [
+                "__future__",
+                "sys"
+            ]
+        },
+        "sys": null,
         "__future__": {
             "modification_time": 1748849781.1516755,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\__future__.py",
             "dependencies": []
         },
-        "PySide6.QtCore": {
-            "modification_time": 1775272891.5937493,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\QtCore.pyd",
-            "dependencies": []
-        },
-        "PySide6.QtQml": {
-            "modification_time": 1775272892.89873,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\QtQml.pyd",
+        "os": {
+            "modification_time": 1748849781.5865788,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\os.py",
             "dependencies": []
         },
         "PySide6.QtGui": {
@@ -25,21 +55,123 @@
             "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\QtGui.pyd",
             "dependencies": []
         },
-        "rez_manager": {
-            "modification_time": 1775272745.8407578,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\__init__.py",
+        "PySide6.QtCore": {
+            "modification_time": 1775272891.5937493,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\QtCore.pyd",
             "dependencies": []
         },
-        "pathlib": {
-            "modification_time": 1748849781.5865788,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\pathlib.py",
+        "rez_manager.logging_config": {
+            "modification_time": 1776654862.8917181,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\logging_config.py",
+            "dependencies": [
+                "__future__",
+                "loguru",
+                "pathlib",
+                "rez_manager.persistence.app_paths",
+                "sys"
+            ]
+        },
+        "rez_manager.persistence.app_paths": {
+            "modification_time": 1776654720.537961,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\app_paths.py",
+            "dependencies": [
+                "__future__",
+                "os",
+                "pathlib",
+                "platformdirs"
+            ]
+        },
+        "platformdirs": {
+            "modification_time": 1776055623.9269726,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\__init__.py",
+            "dependencies": [
+                "__future__",
+                "os",
+                "platformdirs.api",
+                "platformdirs.version",
+                "platformdirs.windows",
+                "sys",
+                "typing"
+            ]
+        },
+        "platformdirs.windows": {
+            "modification_time": 1776055623.9359715,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\windows.py",
+            "dependencies": [
+                "__future__",
+                "ctypes",
+                "os",
+                "platformdirs.api",
+                "sys",
+                "typing"
+            ]
+        },
+        "typing": {
+            "modification_time": 1748849782.33062,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\typing.py",
+            "dependencies": [
+                "typing"
+            ]
+        },
+        "ctypes": {
+            "modification_time": 1748849781.2617457,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ctypes\\__init__.py",
+            "dependencies": [
+                "_ctypes",
+                "ctypes._endian",
+                "nt",
+                "os",
+                "struct",
+                "sys",
+                "types"
+            ]
+        },
+        "_ctypes": {
+            "modification_time": 1748849780.802482,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\DLLs\\_ctypes.pyd",
             "dependencies": []
         },
-        "sys": null,
-        "traceback": {
-            "modification_time": 1748849782.3143384,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\traceback.py",
+        "nt": null,
+        "struct": {
+            "modification_time": 1748849782.2884898,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\struct.py",
             "dependencies": []
+        },
+        "ctypes._endian": {
+            "modification_time": 1748849781.2647462,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ctypes\\_endian.py",
+            "dependencies": [
+                "ctypes",
+                "sys"
+            ]
+        },
+        "types": {
+            "modification_time": 1748849782.3301175,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\types.py",
+            "dependencies": []
+        },
+        "platformdirs.api": {
+            "modification_time": 1776055623.9279706,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\api.py",
+            "dependencies": [
+                "__future__",
+                "abc",
+                "os",
+                "pathlib",
+                "typing"
+            ]
+        },
+        "abc": {
+            "modification_time": 1748849781.222449,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\abc.py",
+            "dependencies": []
+        },
+        "platformdirs.version": {
+            "modification_time": 1776055623.9359715,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\version.py",
+            "dependencies": [
+                "__future__"
+            ]
         },
         "loguru": {
             "modification_time": 1776064463.8099701,
@@ -52,7 +184,6 @@
                 "sys"
             ]
         },
-        "atexit": null,
         "loguru._logger": {
             "modification_time": 1776064464.0026608,
             "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_logger.py",
@@ -89,26 +220,47 @@
                 "warnings"
             ]
         },
-        "loguru._filters": {
-            "modification_time": 1776064463.8531837,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_filters.py",
+        "ntpath": {
+            "modification_time": 1748849781.5832875,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ntpath.py",
             "dependencies": []
         },
-        "loguru._datetime": {
-            "modification_time": 1776064463.812969,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_datetime.py",
+        "warnings": {
+            "modification_time": 1748849782.3632777,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\warnings.py",
+            "dependencies": []
+        },
+        "loguru._better_exceptions": {
+            "modification_time": 1776064463.810969,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_better_exceptions.py",
             "dependencies": [
-                "calendar",
-                "datetime",
-                "functools",
+                "builtins",
+                "inspect",
+                "io",
+                "keyword",
+                "linecache",
+                "os",
                 "re",
-                "time"
+                "sys",
+                "sysconfig",
+                "tokenize",
+                "traceback"
             ]
         },
-        "time": null,
-        "calendar": {
-            "modification_time": 1748849781.2447422,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\calendar.py",
+        "keyword": {
+            "modification_time": 1748849781.5094836,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\keyword.py",
+            "dependencies": []
+        },
+        "tokenize": {
+            "modification_time": 1748849782.3073225,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\tokenize.py",
+            "dependencies": []
+        },
+        "builtins": null,
+        "sysconfig": {
+            "modification_time": 1748849782.2914908,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\sysconfig.py",
             "dependencies": []
         },
         "re": {
@@ -116,24 +268,44 @@
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\re\\__init__.py",
             "dependencies": []
         },
-        "functools": {
-            "modification_time": 1748849781.397995,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\functools.py",
+        "traceback": {
+            "modification_time": 1748849782.3143384,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\traceback.py",
             "dependencies": []
         },
-        "datetime": {
-            "modification_time": 1748849781.2747486,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\datetime.py",
+        "linecache": {
+            "modification_time": 1748849781.5492697,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\linecache.py",
             "dependencies": []
         },
-        "multiprocessing": {
-            "modification_time": 1748849781.563547,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\multiprocessing\\__init__.py",
+        "inspect": {
+            "modification_time": 1748849781.5009031,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\inspect.py",
+            "dependencies": []
+        },
+        "io": {
+            "modification_time": 1748849781.501931,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\io.py",
+            "dependencies": []
+        },
+        "loguru._locks_machinery": {
+            "modification_time": 1776064463.8541844,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_locks_machinery.py",
             "dependencies": [
-                "multiprocessing",
-                "multiprocessing.context",
-                "sys"
+                "os",
+                "threading",
+                "weakref"
             ]
+        },
+        "weakref": {
+            "modification_time": 1748849782.3642778,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\weakref.py",
+            "dependencies": []
+        },
+        "threading": {
+            "modification_time": 1748849782.2956114,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\threading.py",
+            "dependencies": []
         },
         "multiprocessing.context": {
             "modification_time": 1748849781.5648012,
@@ -146,34 +318,6 @@
                 "sys",
                 "threading"
             ]
-        },
-        "multiprocessing.process": {
-            "modification_time": 1748849781.5772862,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\multiprocessing\\process.py",
-            "dependencies": [
-                "_weakrefset",
-                "itertools",
-                "os",
-                "signal",
-                "sys",
-                "threading"
-            ]
-        },
-        "threading": {
-            "modification_time": 1748849782.2956114,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\threading.py",
-            "dependencies": []
-        },
-        "itertools": null,
-        "_weakrefset": {
-            "modification_time": 1748849781.2214491,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\_weakrefset.py",
-            "dependencies": []
-        },
-        "signal": {
-            "modification_time": 1748849781.6137838,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\signal.py",
-            "dependencies": []
         },
         "multiprocessing.reduction": {
             "modification_time": 1748849781.5782876,
@@ -191,11 +335,30 @@
                 "sys"
             ]
         },
-        "_winapi": null,
-        "io": {
-            "modification_time": 1748849781.501931,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\io.py",
+        "functools": {
+            "modification_time": 1748849781.397995,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\functools.py",
             "dependencies": []
+        },
+        "socket": {
+            "modification_time": 1748849782.2812984,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\socket.py",
+            "dependencies": []
+        },
+        "_winapi": null,
+        "copyreg": {
+            "modification_time": 1748849781.2597456,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\copyreg.py",
+            "dependencies": []
+        },
+        "multiprocessing": {
+            "modification_time": 1748849781.563547,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\multiprocessing\\__init__.py",
+            "dependencies": [
+                "multiprocessing",
+                "multiprocessing.context",
+                "sys"
+            ]
         },
         "pickle": {
             "modification_time": 1748849781.5885816,
@@ -214,40 +377,38 @@
                 "types"
             ]
         },
+        "codecs": {
+            "modification_time": 1748849781.2477427,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\codecs.py",
+            "dependencies": []
+        },
+        "itertools": null,
         "_compat_pickle": {
             "modification_time": 1748849781.2154305,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\_compat_pickle.py",
             "dependencies": []
         },
         "_pickle": null,
-        "struct": {
-            "modification_time": 1748849782.2884898,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\struct.py",
+        "multiprocessing.process": {
+            "modification_time": 1748849781.5772862,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\multiprocessing\\process.py",
+            "dependencies": [
+                "_weakrefset",
+                "itertools",
+                "os",
+                "signal",
+                "sys",
+                "threading"
+            ]
+        },
+        "signal": {
+            "modification_time": 1748849781.6137838,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\signal.py",
             "dependencies": []
         },
-        "copyreg": {
-            "modification_time": 1748849781.2597456,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\copyreg.py",
-            "dependencies": []
-        },
-        "codecs": {
-            "modification_time": 1748849781.2477427,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\codecs.py",
-            "dependencies": []
-        },
-        "types": {
-            "modification_time": 1748849782.3301175,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\types.py",
-            "dependencies": []
-        },
-        "socket": {
-            "modification_time": 1748849782.2812984,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\socket.py",
-            "dependencies": []
-        },
-        "abc": {
-            "modification_time": 1748849781.222449,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\abc.py",
+        "_weakrefset": {
+            "modification_time": 1748849781.2214491,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\_weakrefset.py",
             "dependencies": []
         },
         "loguru._error_interceptor": {
@@ -258,42 +419,31 @@
                 "traceback"
             ]
         },
-        "loguru._simple_sinks": {
-            "modification_time": 1776064464.4721797,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_simple_sinks.py",
+        "loguru._defaults": {
+            "modification_time": 1776064463.8521833,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_defaults.py",
             "dependencies": [
-                "inspect",
-                "logging",
-                "loguru._asyncio_loop",
-                "weakref"
+                "os"
             ]
         },
-        "inspect": {
-            "modification_time": 1748849781.5009031,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\inspect.py",
-            "dependencies": []
-        },
-        "weakref": {
-            "modification_time": 1748849782.3642778,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\weakref.py",
-            "dependencies": []
-        },
-        "logging": {
-            "modification_time": 1748849781.5512176,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\logging\\__init__.py",
-            "dependencies": []
-        },
-        "loguru._asyncio_loop": {
-            "modification_time": 1776064463.810969,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_asyncio_loop.py",
+        "loguru._get_frame": {
+            "modification_time": 1776064463.8531837,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_get_frame.py",
             "dependencies": [
-                "asyncio",
                 "sys"
             ]
         },
-        "asyncio": {
-            "modification_time": 1748849781.2254498,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\asyncio\\__init__.py",
+        "loguru._contextvars": {
+            "modification_time": 1776064463.812969,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_contextvars.py",
+            "dependencies": [
+                "contextvars",
+                "sys"
+            ]
+        },
+        "contextvars": {
+            "modification_time": 1748849781.2587452,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\contextvars.py",
             "dependencies": []
         },
         "loguru._file_sink": {
@@ -315,57 +465,28 @@
                 "string"
             ]
         },
-        "glob": {
-            "modification_time": 1748849781.3999953,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\glob.py",
+        "datetime": {
+            "modification_time": 1748849781.2747486,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\datetime.py",
+            "dependencies": []
+        },
+        "loguru._datetime": {
+            "modification_time": 1776064463.812969,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_datetime.py",
             "dependencies": [
-                "contextlib",
-                "fnmatch",
-                "itertools",
-                "os",
-                "re",
-                "stat",
-                "sys"
-            ]
-        },
-        "stat": {
-            "modification_time": 1748849782.286985,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\stat.py",
-            "dependencies": []
-        },
-        "fnmatch": {
-            "modification_time": 1748849781.395993,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\fnmatch.py",
-            "dependencies": []
-        },
-        "contextlib": {
-            "modification_time": 1748849781.2577448,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\contextlib.py",
-            "dependencies": []
-        },
-        "string": {
-            "modification_time": 1748849782.2884898,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\string.py",
-            "dependencies": []
-        },
-        "shutil": {
-            "modification_time": 1748849781.612784,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\shutil.py",
-            "dependencies": []
-        },
-        "loguru._string_parsers": {
-            "modification_time": 1776064464.473178,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_string_parsers.py",
-            "dependencies": [
+                "calendar",
                 "datetime",
-                "re"
+                "functools",
+                "re",
+                "time"
             ]
         },
-        "decimal": {
-            "modification_time": 1748849781.2777495,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\decimal.py",
+        "calendar": {
+            "modification_time": 1748849781.2447422,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\calendar.py",
             "dependencies": []
         },
+        "time": null,
         "loguru._ctime_functions": {
             "modification_time": 1776064463.812969,
             "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_ctime_functions.py",
@@ -392,38 +513,6 @@
                 "typing"
             ]
         },
-        "ctypes": {
-            "modification_time": 1748849781.2617457,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ctypes\\__init__.py",
-            "dependencies": [
-                "_ctypes",
-                "ctypes._endian",
-                "nt",
-                "os",
-                "struct",
-                "sys",
-                "types"
-            ]
-        },
-        "_ctypes": {
-            "modification_time": 1748849780.802482,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\DLLs\\_ctypes.pyd",
-            "dependencies": []
-        },
-        "ctypes._endian": {
-            "modification_time": 1748849781.2647462,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ctypes\\_endian.py",
-            "dependencies": [
-                "ctypes",
-                "sys"
-            ]
-        },
-        "nt": null,
-        "typing": {
-            "modification_time": 1748849782.33062,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\typing.py",
-            "dependencies": []
-        },
         "ctypes.wintypes": {
             "modification_time": 1748849781.2697475,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ctypes\\wintypes.py",
@@ -436,105 +525,69 @@
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\numbers.py",
             "dependencies": []
         },
-        "loguru._better_exceptions": {
+        "shutil": {
+            "modification_time": 1748849781.612784,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\shutil.py",
+            "dependencies": []
+        },
+        "loguru._string_parsers": {
+            "modification_time": 1776064464.473178,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_string_parsers.py",
+            "dependencies": [
+                "datetime",
+                "re"
+            ]
+        },
+        "string": {
+            "modification_time": 1748849782.2884898,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\string.py",
+            "dependencies": []
+        },
+        "stat": {
+            "modification_time": 1748849782.286985,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\stat.py",
+            "dependencies": []
+        },
+        "decimal": {
+            "modification_time": 1748849781.2777495,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\decimal.py",
+            "dependencies": []
+        },
+        "glob": {
+            "modification_time": 1748849781.3999953,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\glob.py",
+            "dependencies": [
+                "contextlib",
+                "fnmatch",
+                "itertools",
+                "os",
+                "re",
+                "stat",
+                "sys"
+            ]
+        },
+        "fnmatch": {
+            "modification_time": 1748849781.395993,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\fnmatch.py",
+            "dependencies": []
+        },
+        "contextlib": {
+            "modification_time": 1748849781.2577448,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\contextlib.py",
+            "dependencies": []
+        },
+        "loguru._asyncio_loop": {
             "modification_time": 1776064463.810969,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_better_exceptions.py",
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_asyncio_loop.py",
             "dependencies": [
-                "builtins",
-                "inspect",
-                "io",
-                "keyword",
-                "linecache",
-                "os",
-                "re",
-                "sys",
-                "sysconfig",
-                "tokenize",
-                "traceback"
-            ]
-        },
-        "linecache": {
-            "modification_time": 1748849781.5492697,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\linecache.py",
-            "dependencies": []
-        },
-        "tokenize": {
-            "modification_time": 1748849782.3073225,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\tokenize.py",
-            "dependencies": []
-        },
-        "keyword": {
-            "modification_time": 1748849781.5094836,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\keyword.py",
-            "dependencies": []
-        },
-        "builtins": null,
-        "sysconfig": {
-            "modification_time": 1748849782.2914908,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\sysconfig.py",
-            "dependencies": []
-        },
-        "collections": {
-            "modification_time": 1748849781.249743,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\collections\\__init__.py",
-            "dependencies": []
-        },
-        "loguru._recattrs": {
-            "modification_time": 1776064464.4721797,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_recattrs.py",
-            "dependencies": [
-                "collections",
-                "pickle"
-            ]
-        },
-        "loguru._locks_machinery": {
-            "modification_time": 1776064463.8541844,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_locks_machinery.py",
-            "dependencies": [
-                "os",
-                "threading",
-                "weakref"
-            ]
-        },
-        "loguru._colorizer": {
-            "modification_time": 1776064463.8119705,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_colorizer.py",
-            "dependencies": [
-                "re",
-                "string"
-            ]
-        },
-        "warnings": {
-            "modification_time": 1748849782.3632777,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\warnings.py",
-            "dependencies": []
-        },
-        "loguru._defaults": {
-            "modification_time": 1776064463.8521833,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_defaults.py",
-            "dependencies": [
-                "os"
-            ]
-        },
-        "loguru._contextvars": {
-            "modification_time": 1776064463.812969,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_contextvars.py",
-            "dependencies": [
-                "contextvars",
+                "asyncio",
                 "sys"
             ]
         },
-        "contextvars": {
-            "modification_time": 1748849781.2587452,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\contextvars.py",
+        "asyncio": {
+            "modification_time": 1748849781.2254498,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\asyncio\\__init__.py",
             "dependencies": []
-        },
-        "loguru._get_frame": {
-            "modification_time": 1776064463.8531837,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_get_frame.py",
-            "dependencies": [
-                "sys"
-            ]
         },
         "loguru._handler": {
             "modification_time": 1776064463.8531837,
@@ -550,6 +603,14 @@
                 "threading"
             ]
         },
+        "loguru._colorizer": {
+            "modification_time": 1776064463.8119705,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_colorizer.py",
+            "dependencies": [
+                "re",
+                "string"
+            ]
+        },
         "json": {
             "modification_time": 1748849781.504436,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\json\\__init__.py",
@@ -559,6 +620,15 @@
                 "json.encoder"
             ]
         },
+        "json.encoder": {
+            "modification_time": 1748849781.507481,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\json\\encoder.py",
+            "dependencies": [
+                "_json",
+                "re"
+            ]
+        },
+        "_json": null,
         "json.decoder": {
             "modification_time": 1748849781.5069785,
             "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\json\\decoder.py",
@@ -577,14 +647,30 @@
                 "re"
             ]
         },
-        "_json": null,
-        "json.encoder": {
-            "modification_time": 1748849781.507481,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\json\\encoder.py",
+        "collections": {
+            "modification_time": 1748849781.249743,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\collections\\__init__.py",
+            "dependencies": []
+        },
+        "loguru._simple_sinks": {
+            "modification_time": 1776064464.4721797,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_simple_sinks.py",
             "dependencies": [
-                "_json",
-                "re"
+                "inspect",
+                "logging",
+                "loguru._asyncio_loop",
+                "weakref"
             ]
+        },
+        "logging": {
+            "modification_time": 1748849781.5512176,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\logging\\__init__.py",
+            "dependencies": []
+        },
+        "loguru._filters": {
+            "modification_time": 1776064463.8531837,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_filters.py",
+            "dependencies": []
         },
         "loguru._colorama": {
             "modification_time": 1776064463.8119705,
@@ -606,14 +692,6 @@
                 "msvcrt"
             ]
         },
-        "colorama.win32": {
-            "modification_time": 1775272881.8824966,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\colorama\\win32.py",
-            "dependencies": [
-                "ctypes",
-                "ctypes.wintypes"
-            ]
-        },
         "colorama": {
             "modification_time": 1775272881.8801663,
             "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\colorama\\__init__.py",
@@ -621,16 +699,6 @@
                 "colorama.ansi",
                 "colorama.ansitowin32",
                 "colorama.initialise"
-            ]
-        },
-        "colorama.initialise": {
-            "modification_time": 1775272881.8814888,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\colorama\\initialise.py",
-            "dependencies": [
-                "atexit",
-                "colorama.ansitowin32",
-                "contextlib",
-                "sys"
             ]
         },
         "colorama.ansitowin32": {
@@ -645,138 +713,37 @@
                 "sys"
             ]
         },
+        "colorama.win32": {
+            "modification_time": 1775272881.8824966,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\colorama\\win32.py",
+            "dependencies": [
+                "ctypes",
+                "ctypes.wintypes"
+            ]
+        },
         "colorama.ansi": {
             "modification_time": 1775272881.8809826,
             "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\colorama\\ansi.py",
             "dependencies": []
         },
-        "msvcrt": null,
-        "ntpath": {
-            "modification_time": 1748849781.5832875,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\ntpath.py",
-            "dependencies": []
-        },
-        "rez_manager.rc_resources": {
-            "modification_time": 1776307698.270258,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\rc_resources.py",
+        "colorama.initialise": {
+            "modification_time": 1775272881.8814888,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\colorama\\initialise.py",
             "dependencies": [
-                "PySide6",
-                "PySide6.QtCore"
-            ]
-        },
-        "PySide6": {
-            "modification_time": 1775272893.4218955,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\__init__.py",
-            "dependencies": []
-        },
-        "subprocess": {
-            "modification_time": 1748849782.2894902,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\subprocess.py",
-            "dependencies": []
-        },
-        "dataclasses": {
-            "modification_time": 1748849781.2737484,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\dataclasses.py",
-            "dependencies": []
-        },
-        "rez_manager.adapter": {
-            "modification_time": 1775272745.8407578,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\__init__.py",
-            "dependencies": []
-        },
-        "rez_manager.models.project": {
-            "modification_time": 1776147662.3425746,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\project.py",
-            "dependencies": [
-                "__future__",
-                "dataclasses",
-                "os",
-                "pathlib",
-                "typing"
-            ]
-        },
-        "enum": {
-            "modification_time": 1748849781.3943064,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\enum.py",
-            "dependencies": []
-        },
-        "rez_manager.models.settings": {
-            "modification_time": 1776147662.343576,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\settings.py",
-            "dependencies": [
-                "__future__",
-                "dataclasses",
-                "os",
-                "pathlib"
-            ]
-        },
-        "platformdirs": {
-            "modification_time": 1776055623.9269726,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\__init__.py",
-            "dependencies": [
-                "__future__",
-                "os",
-                "platformdirs.api",
-                "platformdirs.version",
-                "platformdirs.windows",
-                "sys",
-                "typing"
-            ]
-        },
-        "platformdirs.version": {
-            "modification_time": 1776055623.9359715,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\version.py",
-            "dependencies": [
-                "__future__"
-            ]
-        },
-        "platformdirs.windows": {
-            "modification_time": 1776055623.9359715,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\windows.py",
-            "dependencies": [
-                "__future__",
-                "ctypes",
-                "os",
-                "platformdirs.api",
-                "sys",
-                "typing"
-            ]
-        },
-        "platformdirs.api": {
-            "modification_time": 1776055623.9279706,
-            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\platformdirs\\api.py",
-            "dependencies": [
-                "__future__",
-                "abc",
-                "os",
-                "pathlib",
-                "typing"
-            ]
-        },
-        "collections.abc": {
-            "modification_time": 1748849781.2517433,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\collections\\abc.py",
-            "dependencies": []
-        },
-        "rez_manager.logging_config": {
-            "modification_time": 1776654862.8917181,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\logging_config.py",
-            "dependencies": [
-                "__future__",
-                "loguru",
-                "pathlib",
-                "rez_manager.persistence.app_paths",
+                "atexit",
+                "colorama.ansitowin32",
+                "contextlib",
                 "sys"
             ]
         },
-        "rez_manager.persistence.app_paths": {
-            "modification_time": 1776654720.537961,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\app_paths.py",
+        "atexit": null,
+        "msvcrt": null,
+        "loguru._recattrs": {
+            "modification_time": 1776064464.4721797,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\loguru\\_recattrs.py",
             "dependencies": [
-                "__future__",
-                "os",
-                "pathlib",
-                "platformdirs"
+                "collections",
+                "pickle"
             ]
         },
         "rez_manager.ui.error_hub": {
@@ -787,6 +754,16 @@
                 "__future__",
                 "loguru"
             ]
+        },
+        "PySide6.QtQml": {
+            "modification_time": 1775272892.89873,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\QtQml.pyd",
+            "dependencies": []
+        },
+        "rez_manager": {
+            "modification_time": 1775272745.8407578,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\__init__.py",
+            "dependencies": []
         },
         "rez_manager.exception_hook": {
             "modification_time": 1776654810.6522534,
@@ -801,86 +778,18 @@
                 "types"
             ]
         },
-        "importlib.resources": {
-            "modification_time": 1748849781.4909005,
-            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\importlib\\resources\\__init__.py",
+        "rez_manager.rc_resources": {
+            "modification_time": 1776307698.270258,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\rc_resources.py",
+            "dependencies": [
+                "PySide6",
+                "PySide6.QtCore"
+            ]
+        },
+        "PySide6": {
+            "modification_time": 1775272893.4218955,
+            "path": "D:\\Code\\rez-manager\\.venv\\Lib\\site-packages\\PySide6\\__init__.py",
             "dependencies": []
-        },
-        "rez_manager.adapter.packages": {
-            "modification_time": 1776656398.190063,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\packages.py",
-            "dependencies": [
-                "__future__",
-                "dataclasses",
-                "os"
-            ]
-        },
-        "rez_manager.data": {
-            "modification_time": 1776658212.2960567,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\data\\__init__.py",
-            "dependencies": []
-        },
-        "rez_manager.persistence.settings_store": {
-            "modification_time": 1776225590.7769997,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\settings_store.py",
-            "dependencies": [
-                "__future__",
-                "json",
-                "os",
-                "pathlib",
-                "rez_manager.models.settings",
-                "rez_manager.persistence.app_paths",
-                "warnings"
-            ]
-        },
-        "rez_manager.ui.settings_controller": {
-            "modification_time": 1776306345.418906,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\settings_controller.py",
-            "dependencies": [
-                "PySide6.QtCore",
-                "PySide6.QtGui",
-                "PySide6.QtQml",
-                "__future__",
-                "ntpath",
-                "pathlib",
-                "rez_manager.models.settings",
-                "rez_manager.persistence.settings_store",
-                "rez_manager.ui.error_hub"
-            ]
-        },
-        "rez_manager.runtime": {
-            "modification_time": 1776668132.9674695,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\runtime.py",
-            "dependencies": [
-                "__future__",
-                "sys"
-            ]
-        },
-        "rez_manager.app": {
-            "modification_time": 1776743058.8347533,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\app.py",
-            "dependencies": [
-                "PySide6.QtCore",
-                "PySide6.QtGui",
-                "PySide6.QtQml",
-                "__future__",
-                "loguru",
-                "os",
-                "pathlib",
-                "rez_manager",
-                "rez_manager.adapter.utils",
-                "rez_manager.logging_config",
-                "rez_manager.ui.error_hub",
-                "sys"
-            ]
-        },
-        "rez_manager.adapter.utils": {
-            "modification_time": 1776743830.84448,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\utils.py",
-            "dependencies": [
-                "os",
-                "rez_manager.runtime"
-            ]
         },
         "rez_manager.__main__": {
             "modification_time": 1775358319.8750155,
@@ -908,6 +817,56 @@
                 "typing"
             ]
         },
+        "importlib.resources": {
+            "modification_time": 1748849781.4909005,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\importlib\\resources\\__init__.py",
+            "dependencies": []
+        },
+        "collections.abc": {
+            "modification_time": 1748849781.2517433,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\collections\\abc.py",
+            "dependencies": []
+        },
+        "dataclasses": {
+            "modification_time": 1748849781.2737484,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\dataclasses.py",
+            "dependencies": []
+        },
+        "subprocess": {
+            "modification_time": 1748849782.2894902,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\subprocess.py",
+            "dependencies": []
+        },
+        "rez_manager.adapter.packages": {
+            "modification_time": 1776756589.979067,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\packages.py",
+            "dependencies": [
+                "__future__",
+                "dataclasses",
+                "os"
+            ]
+        },
+        "rez_manager.adapter": {
+            "modification_time": 1775272745.8407578,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\adapter\\__init__.py",
+            "dependencies": []
+        },
+        "rez_manager.data": {
+            "modification_time": 1776658212.2960567,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\data\\__init__.py",
+            "dependencies": []
+        },
+        "rez_manager.models.project": {
+            "modification_time": 1776147662.3425746,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\project.py",
+            "dependencies": [
+                "__future__",
+                "dataclasses",
+                "os",
+                "pathlib",
+                "typing"
+            ]
+        },
         "rez_manager.models.rez_context": {
             "modification_time": 1776742335.1724465,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\rez_context.py",
@@ -918,6 +877,21 @@
                 "os",
                 "pathlib",
                 "typing"
+            ]
+        },
+        "enum": {
+            "modification_time": 1748849781.3943064,
+            "path": "C:\\Users\\tan\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\Lib\\enum.py",
+            "dependencies": []
+        },
+        "rez_manager.models.settings": {
+            "modification_time": 1776147662.343576,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\models\\settings.py",
+            "dependencies": [
+                "__future__",
+                "dataclasses",
+                "os",
+                "pathlib"
             ]
         },
         "rez_manager.models": {
@@ -969,6 +943,19 @@
                 "warnings"
             ]
         },
+        "rez_manager.persistence.settings_store": {
+            "modification_time": 1776225590.7769997,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\settings_store.py",
+            "dependencies": [
+                "__future__",
+                "json",
+                "os",
+                "pathlib",
+                "rez_manager.models.settings",
+                "rez_manager.persistence.app_paths",
+                "warnings"
+            ]
+        },
         "rez_manager.persistence": {
             "modification_time": 1776654858.2934923,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\persistence\\__init__.py",
@@ -977,20 +964,6 @@
                 "rez_manager.persistence.context_store",
                 "rez_manager.persistence.project_store",
                 "rez_manager.persistence.settings_store"
-            ]
-        },
-        "rez_manager.ui.main_window": {
-            "modification_time": 1776307698.2712576,
-            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\main_window.py",
-            "dependencies": [
-                "PySide6.QtCore",
-                "PySide6.QtGui",
-                "PySide6.QtQml",
-                "__future__",
-                "collections.abc",
-                "rez_manager.models.project",
-                "rez_manager.models.rez_context",
-                "rez_manager.ui.error_hub"
             ]
         },
         "rez_manager.ui.context_launcher": {
@@ -1026,8 +999,22 @@
                 "rez_manager.ui.error_hub"
             ]
         },
+        "rez_manager.ui.main_window": {
+            "modification_time": 1776756506.5973983,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\main_window.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "PySide6.QtGui",
+                "PySide6.QtQml",
+                "__future__",
+                "collections.abc",
+                "rez_manager.models.project",
+                "rez_manager.models.rez_context",
+                "rez_manager.ui.error_hub"
+            ]
+        },
         "rez_manager.ui.package_manager": {
-            "modification_time": 1776752370.4345677,
+            "modification_time": 1776756506.5973983,
             "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\package_manager.py",
             "dependencies": [
                 "PySide6.QtCore",
@@ -1039,6 +1026,21 @@
                 "rez_manager.adapter.packages",
                 "rez_manager.models.rez_context",
                 "rez_manager.models.settings",
+                "rez_manager.ui.error_hub"
+            ]
+        },
+        "rez_manager.ui.settings_controller": {
+            "modification_time": 1776306345.418906,
+            "path": "D:\\Code\\rez-manager\\src\\rez_manager\\ui\\settings_controller.py",
+            "dependencies": [
+                "PySide6.QtCore",
+                "PySide6.QtGui",
+                "PySide6.QtQml",
+                "__future__",
+                "ntpath",
+                "pathlib",
+                "rez_manager.models.settings",
+                "rez_manager.persistence.settings_store",
                 "rez_manager.ui.error_hub"
             ]
         },

@@ -51,6 +51,7 @@ def test_context_list_model_refresh_updates_revision_and_loaded_contexts(tmp_pat
     model = RezContextListModel()
     model.projectModel = project_model
     assert model.rowCount() == 0
+    assert model.contextCount == 0
 
     context_dir = contexts_root / "Pipeline" / "Context A"
     context_dir.mkdir(parents=True)
@@ -72,6 +73,7 @@ def test_context_list_model_refresh_updates_revision_and_loaded_contexts(tmp_pat
     model.loadProject("Pipeline")
 
     assert model.rowCount() == 1
+    assert model.contextCount == 1
     assert [item["name"] for item in model.contexts] == ["Context A"]
     assert len(model.filteredContexts("Pipeline")) == 1
     assert [context.name for context in project_model.get_project("Pipeline").contexts or []] == [

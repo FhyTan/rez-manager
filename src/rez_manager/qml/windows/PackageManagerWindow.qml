@@ -21,6 +21,7 @@ Window {
     property var packageManagerController: null
     property var contextPreviewController: null
     property var contextLauncherController: null
+    readonly property bool repositoriesLoading: root.packageManagerController ? root.packageManagerController.isLoadingRepositories : false
 
     signal saved(string projectName, string contextName)
     signal previewRequested
@@ -57,6 +58,8 @@ Window {
                 }
 
                 RowLayout {
+                    spacing: Style.sm
+
                     Text {
                         text: root.projectName_ + "  /  " + root.contextName_
                         color: Style.textPrimary
@@ -64,13 +67,23 @@ Window {
                         font.bold: true
                     }
 
+                    Badge {
+                        text: root.packageManagerController ? root.packageManagerController.packageCount + " packages" : "0 packages"
+                        badgeColor: Style.accent
+                    }
+
                     Item {
                         Layout.fillWidth: true
                     }
 
-                    Badge {
-                        text: root.packageManagerController ? root.packageManagerController.packageCount + " packages" : "0 packages"
-                        badgeColor: Style.accent
+                    CardButton {
+                        glyph: "↻"
+                        label: root.repositoriesLoading ? "Refreshing" : "Refresh"
+                        enabled: root.packageManagerController && !root.repositoriesLoading
+                        onClicked: {
+                            if (root.packageManagerController)
+                                root.packageManagerController.refresh();
+                        }
                     }
                 }
 
@@ -132,6 +145,7 @@ Window {
                 repositoryModel: root.packageManagerController ? root.packageManagerController.repositoryModel : null
                 selectedRepoIndex: root.packageManagerController ? root.packageManagerController.selectedRepositoryIndex : -1
                 selectedPkgIndex: root.packageManagerController ? root.packageManagerController.selectedRepositoryPackageIndex : -1
+                isLoading: root.repositoriesLoading
                 onPackageSelected: function (repoIndex, pkgIndex) {
                     if (root.packageManagerController)
                         root.packageManagerController.selectRepositoryPackage(repoIndex, pkgIndex);

@@ -13,7 +13,9 @@ from PySide6.QtCore import (
     QByteArray,
     QModelIndex,
     QObject,
+    QRunnable,
     Qt,
+    QThreadPool,
     Signal,
     Slot,
 )
@@ -22,6 +24,7 @@ from PySide6.QtQml import QmlElement
 from rez_manager.adapter.packages import (
     PackageInfo,
     RepositoryInfo,
+    clear_package_cache,
     get_package_info,
     get_package_versions,
     list_repositories,
@@ -127,6 +130,46 @@ def _detail_versions(versions: Sequence[str], preferred_version: str) -> list[st
     if normalized_preferred_version and normalized_preferred_version not in detail_versions:
         detail_versions.append(normalized_preferred_version)
     return detail_versions
+
+
+def _load_package_detail(
+    package_name: str,
+    preferred_version: str,
+    repo_paths: Sequence[str],
+) -> tuple[list[str], int, PackageInfo | None]:
+    """Load package detail data for the requested package/version selection."""
+    versions = get_package_versions(package_name, list(repo_paths))
+    detail_versions = _detail_versions(versions, preferred_version)
+    normalized_preferred_version = _normalize_version(preferred_version)
+    selected_version = normalized_preferred_version or _AUTO_VERSION
+    if selected_version not in detail_versions:
+        selected_version = _AUTO_VERSION
+    selected_version_index = detail_versions.index(selected_version)
+
+    info_version = normalized_preferred_version or (versions[0] if versions else "")
+    package_info = (
+        get_package_info(package_name, info_version, list(repo_paths)) if info_version else None
+    )
+    return detail_versions, selected_version_index, package_info
+
+
+@dataclass(frozen=True, slots=True)
+class _PackageSelectionSnapshot:
+    selection_type: str = "none"
+    package_name: str = ""
+    preferred_version: str = ""
+
+
+@dataclass(slots=True)
+class _RepositoryRefreshResult:
+    success: bool
+    repositories: list[RepositoryInfo] = field(default_factory=list)
+    selection_type: str = "none"
+    detail_package_name: str = ""
+    detail_versions: list[str] = field(default_factory=list)
+    detail_selected_version_index: int = -1
+    detail_package_info: PackageInfo | None = None
+    error: str | None = None
 
 
 class PackageRequestListModel(QAbstractListModel):
@@ -333,6 +376,13 @@ class RepositoryTreeModel(QAbstractItemModel):
             return None
         return packages[package_index]
 
+    def find_package(self, package_name: str) -> tuple[int, int] | None:
+        for repo_index, repository in enumerate(self._repositories):
+            for package_index, candidate in enumerate(repository.packages):
+                if candidate == package_name:
+                    return repo_index, package_index
+        return None
+
 
 class PackageDetailObject(QObject):
     stateChanged = Signal()
@@ -482,6 +532,7 @@ class PackageDetailObject(QObject):
 
 @QmlElement
 class PackageManagerController(QObject):
+    stateChanged = Signal()
     packageCountChanged = Signal()
     selectedRequestRowChanged = Signal()
     selectedRepositoryIndexChanged = Signal()
@@ -491,6 +542,10 @@ class PackageManagerController(QObject):
         super().__init__(parent)
         self._context: RezContext | None = None
         self._repo_paths: list[str] = []
+        self._is_loading_repositories = False
+        self._repository_refresh_request_id = 0
+        self._thread_pool = QThreadPool.globalInstance()
+        self._active_repository_refresh_workers: dict[int, _RepositoryRefreshWorker] = {}
         self._selected_request_row = -1
         self._selected_repository_index = -1
         self._selected_repository_package_index = -1
@@ -510,6 +565,10 @@ class PackageManagerController(QObject):
     @Property(QObject, constant=True)
     def packageDetail(self) -> QObject:  # noqa: N802
         return self._package_detail
+
+    @Property(bool, notify=stateChanged)
+    def isLoadingRepositories(self) -> bool:  # noqa: N802
+        return self._is_loading_repositories
 
     @Property(int, notify=packageCountChanged)
     def packageCount(self) -> int:  # noqa: N802
@@ -536,10 +595,10 @@ class PackageManagerController(QObject):
         try:
             context = RezContext.load(project_name, context_name)
             settings = AppSettings.load()
-            repositories = list_repositories(settings.package_repositories)
         except (KeyError, OSError, TypeError, ValueError) as exc:
             self._context = None
             self._repo_paths = []
+            self._set_loading_repositories(False)
             self._package_requests_model.reset_requests([])
             self._repository_model.reset_repositories([])
             self._clear_selection()
@@ -549,8 +608,22 @@ class PackageManagerController(QObject):
         self._context = context
         self._repo_paths = list(settings.package_repositories)
         self._package_requests_model.reset_requests(context.packages)
-        self._repository_model.reset_repositories(repositories)
+        self._repository_model.reset_repositories([])
         self._clear_selection()
+        clear_ui_error()
+        self._start_repository_refresh(clear_cache=False)
+        return True
+
+    @Slot(result=bool)
+    def refresh(self) -> bool:
+        if self._context is None:
+            report_ui_error("No context is loaded.")
+            return False
+
+        self._start_repository_refresh(
+            clear_cache=True,
+            selection_snapshot=self._current_selection_snapshot(),
+        )
         clear_ui_error()
         return True
 
@@ -658,18 +731,31 @@ class PackageManagerController(QObject):
         self._set_selected_repository_package_index(-1)
         self._package_detail.reset()
 
-    def _refresh_package_detail(self, package_name: str, preferred_version: str) -> None:
-        versions = get_package_versions(package_name, self._repo_paths)
-        detail_versions = _detail_versions(versions, preferred_version)
-        normalized_preferred_version = _normalize_version(preferred_version)
-        selected_version = normalized_preferred_version or _AUTO_VERSION
-        if selected_version not in detail_versions:
-            selected_version = _AUTO_VERSION
-        selected_version_index = detail_versions.index(selected_version)
+    def _current_selection_snapshot(self) -> _PackageSelectionSnapshot:
+        if not self._package_detail.hasSelection:
+            return _PackageSelectionSnapshot()
+        if self._selected_request_row >= 0:
+            return _PackageSelectionSnapshot(
+                selection_type="request",
+                package_name=self._package_detail.name,
+                preferred_version=self._package_detail.selectedVersion,
+            )
+        if (
+            self._selected_repository_index >= 0
+            and self._selected_repository_package_index >= 0
+        ):
+            return _PackageSelectionSnapshot(
+                selection_type="repository",
+                package_name=self._package_detail.name,
+                preferred_version=self._package_detail.selectedVersion,
+            )
+        return _PackageSelectionSnapshot()
 
-        info_version = normalized_preferred_version or (versions[0] if versions else "")
-        package_info = (
-            get_package_info(package_name, info_version, self._repo_paths) if info_version else None
+    def _refresh_package_detail(self, package_name: str, preferred_version: str) -> None:
+        detail_versions, selected_version_index, package_info = _load_package_detail(
+            package_name,
+            preferred_version,
+            self._repo_paths,
         )
         self._package_detail.setPackageWithSelectedVersion(
             package_name,
@@ -677,6 +763,76 @@ class PackageManagerController(QObject):
             selected_version_index,
             package_info,
         )
+
+    def _restore_refresh_selection(self, refresh_result: _RepositoryRefreshResult) -> None:
+        if refresh_result.selection_type == "request":
+            self._set_selected_repository_index(-1)
+            self._set_selected_repository_package_index(-1)
+        elif refresh_result.selection_type == "repository":
+            package_location = self._repository_model.find_package(
+                refresh_result.detail_package_name
+            )
+            if package_location is None:
+                self._set_selected_repository_index(-1)
+                self._set_selected_repository_package_index(-1)
+                self._package_detail.reset()
+                return
+            repo_index, package_index = package_location
+            self._set_selected_request_row(-1)
+            self._set_selected_repository_index(repo_index)
+            self._set_selected_repository_package_index(package_index)
+        else:
+            self._package_detail.reset()
+            return
+
+        self._package_detail.setPackageWithSelectedVersion(
+            refresh_result.detail_package_name,
+            refresh_result.detail_versions,
+            refresh_result.detail_selected_version_index,
+            refresh_result.detail_package_info,
+        )
+
+    def _set_loading_repositories(self, is_loading: bool) -> None:
+        if self._is_loading_repositories != is_loading:
+            self._is_loading_repositories = is_loading
+            self.stateChanged.emit()
+
+    def _start_repository_refresh(
+        self,
+        *,
+        clear_cache: bool,
+        selection_snapshot: _PackageSelectionSnapshot | None = None,
+    ) -> None:
+        self._repository_refresh_request_id += 1
+        request_id = self._repository_refresh_request_id
+        self._set_loading_repositories(True)
+        worker = _RepositoryRefreshWorker(
+            request_id=request_id,
+            repo_paths=list(self._repo_paths),
+            clear_cache_requested=clear_cache,
+            selection_snapshot=selection_snapshot or _PackageSelectionSnapshot(),
+        )
+        worker.signals.finished.connect(self._apply_repository_refresh_result)
+        self._active_repository_refresh_workers[request_id] = worker
+        self._thread_pool.start(worker)
+
+    @Slot(int, object)
+    def _apply_repository_refresh_result(self, request_id: int, refresh_result: object) -> None:
+        self._active_repository_refresh_workers.pop(request_id, None)
+        if request_id != self._repository_refresh_request_id:
+            return
+
+        self._set_loading_repositories(False)
+        if not isinstance(refresh_result, _RepositoryRefreshResult):
+            report_ui_error("Failed to load repositories.")
+            return
+        if not refresh_result.success:
+            report_ui_error(refresh_result.error or "Failed to load repositories.")
+            return
+
+        self._repository_model.reset_repositories(refresh_result.repositories)
+        self._restore_refresh_selection(refresh_result)
+        clear_ui_error()
 
     def _set_selected_request_row(self, row: int) -> None:
         if self._selected_request_row != row:
@@ -692,3 +848,57 @@ class PackageManagerController(QObject):
         if self._selected_repository_package_index != package_index:
             self._selected_repository_package_index = package_index
             self.selectedRepositoryPackageIndexChanged.emit()
+
+
+class _RepositoryRefreshWorkerSignals(QObject):
+    finished = Signal(int, object)
+
+
+class _RepositoryRefreshWorker(QRunnable):
+    def __init__(
+        self,
+        *,
+        request_id: int,
+        repo_paths: list[str],
+        clear_cache_requested: bool,
+        selection_snapshot: _PackageSelectionSnapshot,
+    ) -> None:
+        super().__init__()
+        self._request_id = request_id
+        self._repo_paths = repo_paths
+        self._clear_cache_requested = clear_cache_requested
+        self._selection_snapshot = selection_snapshot
+        self.signals = _RepositoryRefreshWorkerSignals()
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            if self._clear_cache_requested:
+                clear_package_cache()
+            repositories = list_repositories(self._repo_paths)
+            refresh_result = _RepositoryRefreshResult(
+                success=True,
+                repositories=repositories,
+                selection_type=self._selection_snapshot.selection_type,
+            )
+            if (
+                self._selection_snapshot.selection_type != "none"
+                and self._selection_snapshot.package_name
+            ):
+                detail_versions, selected_version_index, package_info = _load_package_detail(
+                    self._selection_snapshot.package_name,
+                    self._selection_snapshot.preferred_version,
+                    self._repo_paths,
+                )
+                refresh_result.detail_package_name = self._selection_snapshot.package_name
+                refresh_result.detail_versions = detail_versions
+                refresh_result.detail_selected_version_index = selected_version_index
+                refresh_result.detail_package_info = package_info
+        except Exception as exc:  # noqa: BLE001
+            self.signals.finished.emit(
+                self._request_id,
+                _RepositoryRefreshResult(success=False, error=str(exc)),
+            )
+            return
+
+        self.signals.finished.emit(self._request_id, refresh_result)

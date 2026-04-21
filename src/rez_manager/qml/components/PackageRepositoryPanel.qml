@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import ".."
 
@@ -10,6 +11,7 @@ Rectangle {
     property var repositoryModel: null
     property int selectedRepoIndex: -1
     property int selectedPkgIndex: -1
+    property bool isLoading: false
 
     signal packageSelected(int repoIndex, int pkgIndex)
 
@@ -63,6 +65,8 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            enabled: !root.isLoading
+            opacity: root.isLoading ? 0.45 : 1
             model: root.repositoryModel
             columnWidthProvider: function (column) {
                 return width;
@@ -154,10 +158,28 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                visible: repositoryTreeView_.rows === 0
+                visible: repositoryTreeView_.rows === 0 && !root.isLoading
                 text: qsTr("No repositories available.")
                 color: Style.textSecondary
                 font.pixelSize: Style.fontMd
+            }
+
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: Style.sm
+                visible: root.isLoading
+
+                BusyIndicator {
+                    Layout.alignment: Qt.AlignHCenter
+                    running: root.isLoading
+                }
+
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: qsTr("Loading repositories...")
+                    color: Style.textSecondary
+                    font.pixelSize: Style.fontMd
+                }
             }
         }
     }
