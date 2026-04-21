@@ -108,9 +108,18 @@ ApplicationWindow {
         id: pkgManagerWin
         visible: false
         packageManagerController: packageManagerController_
+        contextPreviewController: contextPreviewController_
+        contextLauncherController: contextLauncherController_
         onSaved: function (projectName, contextName) {
             contextModel.reload();
             root.showStatus("Saved packages: " + projectName + " / " + contextName, false);
+        }
+        onPreviewRequested: {
+            previewWin.show();
+            previewWin.requestActivate();
+        }
+        onLaunchConsoleRequested: function (projectName, contextName) {
+            root.showStatus("Launching console: " + projectName + " / " + contextName, false);
         }
     }
     ContextPreviewWindow {

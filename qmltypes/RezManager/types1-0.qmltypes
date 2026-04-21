@@ -81,7 +81,7 @@ Module {
     }
     Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/context_launcher.py"
-        lineNumber: 60
+        lineNumber: 61
         name: "ContextLauncherController"
         accessSemantics: "reference"
         prototype: "QObject"
@@ -93,7 +93,7 @@ Module {
             read: "projectName"
             notify: "stateChanged"
             index: 1
-            lineNumber: 77
+            lineNumber: 78
             isReadonly: true
         }
         Property {
@@ -102,7 +102,7 @@ Module {
             read: "contextName"
             notify: "stateChanged"
             index: 2
-            lineNumber: 81
+            lineNumber: 82
             isReadonly: true
         }
         Property {
@@ -111,27 +111,35 @@ Module {
             read: "isLaunching"
             notify: "stateChanged"
             index: 3
-            lineNumber: 85
+            lineNumber: 86
             isReadonly: true
         }
-        Signal { name: "stateChanged"; lineNumber: 64 }
+        Signal { name: "stateChanged"; lineNumber: 65 }
         Signal {
             name: "launchSucceeded"
-            lineNumber: 65
+            lineNumber: 66
             Parameter { type: "QString" }
             Parameter { type: "QString" }
         }
         Method {
             name: "launchContext"
             type: "bool"
-            lineNumber: 89
+            lineNumber: 90
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
-        Method { name: "clear"; lineNumber: 116 }
+        Method {
+            name: "launchPackageRequests"
+            type: "bool"
+            lineNumber: 113
+            Parameter { name: "project_name"; type: "QString" }
+            Parameter { name: "context_name"; type: "QString" }
+            Parameter { name: "package_requests"; type: "QVariantList" }
+        }
+        Method { name: "clear"; lineNumber: 139 }
         Method {
             name: "_apply_launch_result"
-            lineNumber: 145
+            lineNumber: 190
             Parameter { name: "request_id"; type: "int" }
             Parameter { name: "launch_result"; type: "PyObject" }
         }
@@ -224,10 +232,18 @@ Module {
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
-        Method { name: "clear"; lineNumber: 112 }
+        Method {
+            name: "loadPackageRequests"
+            type: "bool"
+            lineNumber: 111
+            Parameter { name: "project_name"; type: "QString" }
+            Parameter { name: "context_name"; type: "QString" }
+            Parameter { name: "package_requests"; type: "QVariantList" }
+        }
+        Method { name: "clear"; lineNumber: 136 }
         Method {
             name: "_apply_preview_result"
-            lineNumber: 137
+            lineNumber: 178
             Parameter { name: "request_id"; type: "int" }
             Parameter { name: "resolve_result"; type: "PyObject" }
         }
@@ -280,12 +296,21 @@ Module {
             isReadonly: true
         }
         Property {
+            name: "packageRequests"
+            type: "QVariantList"
+            read: "packageRequests"
+            notify: "packageCountChanged"
+            index: 5
+            lineNumber: 518
+            isReadonly: true
+        }
+        Property {
             name: "selectedRequestRow"
             type: "int"
             read: "selectedRequestRow"
             notify: "selectedRequestRowChanged"
-            index: 5
-            lineNumber: 518
+            index: 6
+            lineNumber: 522
             isReadonly: true
         }
         Property {
@@ -293,8 +318,8 @@ Module {
             type: "int"
             read: "selectedRepositoryIndex"
             notify: "selectedRepositoryIndexChanged"
-            index: 6
-            lineNumber: 522
+            index: 7
+            lineNumber: 526
             isReadonly: true
         }
         Property {
@@ -302,8 +327,8 @@ Module {
             type: "int"
             read: "selectedRepositoryPackageIndex"
             notify: "selectedRepositoryPackageIndexChanged"
-            index: 7
-            lineNumber: 526
+            index: 8
+            lineNumber: 530
             isReadonly: true
         }
         Signal { name: "packageCountChanged"; lineNumber: 485 }
@@ -313,44 +338,44 @@ Module {
         Method {
             name: "loadContext"
             type: "bool"
-            lineNumber: 530
+            lineNumber: 534
             Parameter { name: "project_name"; type: "QString" }
             Parameter { name: "context_name"; type: "QString" }
         }
-        Method { name: "clearSelection"; lineNumber: 553 }
+        Method { name: "clearSelection"; lineNumber: 557 }
         Method {
             name: "removePackageRequest"
             type: "bool"
-            lineNumber: 557
+            lineNumber: 561
             Parameter { name: "row"; type: "int" }
         }
         Method {
             name: "selectRequiredPackage"
             type: "bool"
-            lineNumber: 570
+            lineNumber: 574
             Parameter { name: "row"; type: "int" }
         }
         Method {
             name: "addPackageRequest"
             type: "bool"
-            lineNumber: 584
+            lineNumber: 588
             Parameter { name: "name"; type: "QString" }
             Parameter { name: "version"; type: "QString" }
         }
         Method {
             name: "selectRepositoryPackage"
             type: "bool"
-            lineNumber: 599
+            lineNumber: 603
             Parameter { name: "repo_index"; type: "int" }
             Parameter { name: "package_index"; type: "int" }
         }
         Method {
             name: "selectDetailVersion"
             type: "bool"
-            lineNumber: 613
+            lineNumber: 617
             Parameter { name: "index"; type: "int" }
         }
-        Method { name: "save"; type: "bool"; lineNumber: 629 }
+        Method { name: "save"; type: "bool"; lineNumber: 633 }
     }
     Component {
         file: "D:/Code/rez-manager/src/rez_manager/ui/main_window.py"

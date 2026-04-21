@@ -83,6 +83,50 @@ def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp
     assert captured["command"] == 'start "" houdini'
 
 
+def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
+    tmp_path, monkeypatch
+):
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.context_launcher import ContextLauncherController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya", "D:\\packages\\base"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+
+    captured: dict[str, object] = {}
+
+    def capture_start_launch_job(self, request_id, package_requests, package_paths, command):
+        captured["request_id"] = request_id
+        captured["package_requests"] = package_requests
+        captured["package_paths"] = package_paths
+        captured["command"] = command
+
+    monkeypatch.setattr(
+        ContextLauncherController,
+        "_start_launch_job",
+        capture_start_launch_job,
+    )
+    monkeypatch.setattr(
+        "rez_manager.ui.context_launcher.RezContext.load",
+        lambda project, context: (_ for _ in ()).throw(AssertionError("load should not be used")),
+    )
+
+    controller = ContextLauncherController()
+
+    assert controller.launchPackageRequests("Pipeline", "Draft", ["maya-2026.0", "python-3.11"])
+    assert controller.projectName == "Pipeline"
+    assert controller.contextName == "Draft"
+    assert controller.isLaunching
+    assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
+    assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
+    assert captured["command"] is None
+
+
 def test_context_launcher_controller_emits_success_after_completed_launch(tmp_path, monkeypatch):
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext

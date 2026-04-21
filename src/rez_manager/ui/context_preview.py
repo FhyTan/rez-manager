@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from os import environ, pathsep
 
 from PySide6.QtCore import (
@@ -100,14 +100,38 @@ class ContextPreviewController(QObject):
             report_ui_error(str(exc))
             return False
 
-        self._project_name = project_name
-        self._context_name = context_name
-        self._result = None
-        self._is_loading = True
-        self.stateChanged.emit()
-        clear_ui_error()
-        self._start_preview_job(request_id, context.packages, settings.package_repositories)
-        return True
+        return self._load_package_requests(
+            request_id,
+            project_name,
+            context_name,
+            context.packages,
+            settings.package_repositories,
+        )
+
+    @Slot(str, str, "QVariantList", result=bool)
+    def loadPackageRequests(  # noqa: N802
+        self,
+        project_name: str,
+        context_name: str,
+        package_requests: Sequence[str],
+    ) -> bool:
+        self._request_id += 1
+        request_id = self._request_id
+        try:
+            settings = AppSettings.load()
+        except (OSError, TypeError, ValueError) as exc:
+            self._clear_state()
+            report_ui_error(str(exc))
+            return False
+
+        normalized_requests = [str(request).strip() for request in package_requests]
+        return self._load_package_requests(
+            request_id,
+            project_name,
+            context_name,
+            normalized_requests,
+            settings.package_repositories,
+        )
 
     @Slot()
     def clear(self) -> None:
@@ -133,6 +157,23 @@ class ContextPreviewController(QObject):
         worker.signals.finished.connect(self._apply_preview_result)
         self._active_workers[request_id] = worker
         self._thread_pool.start(worker)
+
+    def _load_package_requests(
+        self,
+        request_id: int,
+        project_name: str,
+        context_name: str,
+        package_requests: Sequence[str],
+        package_paths: Sequence[str],
+    ) -> bool:
+        self._project_name = project_name
+        self._context_name = context_name
+        self._result = None
+        self._is_loading = True
+        self.stateChanged.emit()
+        clear_ui_error()
+        self._start_preview_job(request_id, list(package_requests), list(package_paths))
+        return True
 
     @Slot(int, object)
     def _apply_preview_result(self, request_id: int, resolve_result: object) -> None:

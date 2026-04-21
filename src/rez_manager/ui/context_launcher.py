@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Slot
@@ -100,18 +101,40 @@ class ContextLauncherController(QObject):
             report_ui_error(str(exc))
             return False
 
-        self._project_name = project_name
-        self._context_name = context_name
-        self._is_launching = True
-        self.stateChanged.emit()
-        clear_ui_error()
-        self._start_launch_job(
+        return self._launch_package_requests(
             request_id,
+            project_name,
+            context_name,
             context.packages,
             settings.package_repositories,
             command,
         )
-        return True
+
+    @Slot(str, str, "QVariantList", result=bool)
+    def launchPackageRequests(  # noqa: N802
+        self,
+        project_name: str,
+        context_name: str,
+        package_requests: Sequence[str],
+    ) -> bool:
+        self._request_id += 1
+        request_id = self._request_id
+        try:
+            settings = AppSettings.load()
+        except (OSError, TypeError, ValueError) as exc:
+            self._clear_state()
+            report_ui_error(str(exc))
+            return False
+
+        normalized_requests = [str(request).strip() for request in package_requests]
+        return self._launch_package_requests(
+            request_id,
+            project_name,
+            context_name,
+            normalized_requests,
+            settings.package_repositories,
+            None,
+        )
 
     @Slot()
     def clear(self) -> None:
@@ -141,6 +164,28 @@ class ContextLauncherController(QObject):
         worker.signals.finished.connect(self._apply_launch_result)
         self._active_workers[request_id] = worker
         self._thread_pool.start(worker)
+
+    def _launch_package_requests(
+        self,
+        request_id: int,
+        project_name: str,
+        context_name: str,
+        package_requests: Sequence[str],
+        package_paths: Sequence[str],
+        command: str | None,
+    ) -> bool:
+        self._project_name = project_name
+        self._context_name = context_name
+        self._is_launching = True
+        self.stateChanged.emit()
+        clear_ui_error()
+        self._start_launch_job(
+            request_id,
+            list(package_requests),
+            list(package_paths),
+            command,
+        )
+        return True
 
     @Slot(int, object)
     def _apply_launch_result(self, request_id: int, launch_result: object) -> None:

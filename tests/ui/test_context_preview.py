@@ -208,6 +208,46 @@ def test_context_preview_controller_passes_settings_package_paths(tmp_path, monk
     assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
 
 
+def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, monkeypatch):
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.context_preview import ContextPreviewController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya", "D:\\packages\\base"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+
+    captured: dict[str, object] = {}
+
+    def capture_start_preview_job(self, request_id, package_requests, package_paths):
+        captured["request_id"] = request_id
+        captured["package_requests"] = package_requests
+        captured["package_paths"] = package_paths
+
+    monkeypatch.setattr(
+        ContextPreviewController,
+        "_start_preview_job",
+        capture_start_preview_job,
+    )
+    monkeypatch.setattr(
+        "rez_manager.ui.context_preview.RezContext.load",
+        lambda project, context: (_ for _ in ()).throw(AssertionError("load should not be used")),
+    )
+
+    controller = ContextPreviewController()
+
+    assert controller.loadPackageRequests("Pipeline", "Draft", ["maya-2026.0", "python-3.11"])
+    assert controller.projectName == "Pipeline"
+    assert controller.contextName == "Draft"
+    assert controller.isLoading
+    assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
+    assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
+
+
 def test_context_preview_controller_splits_path_into_user_and_system_sections(
     tmp_path, monkeypatch
 ):

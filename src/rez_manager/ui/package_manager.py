@@ -515,6 +515,10 @@ class PackageManagerController(QObject):
     def packageCount(self) -> int:  # noqa: N802
         return len(self._package_requests_model.requests())
 
+    @Property("QVariantList", notify=packageCountChanged)
+    def packageRequests(self) -> list[str]:  # noqa: N802
+        return self._package_requests_model.requests()
+
     @Property(int, notify=selectedRequestRowChanged)
     def selectedRequestRow(self) -> int:  # noqa: N802
         return self._selected_request_row
@@ -533,7 +537,7 @@ class PackageManagerController(QObject):
             context = RezContext.load(project_name, context_name)
             settings = AppSettings.load()
             repositories = list_repositories(settings.package_repositories)
-        except (OSError, TypeError, ValueError) as exc:
+        except (KeyError, OSError, TypeError, ValueError) as exc:
             self._context = None
             self._repo_paths = []
             self._package_requests_model.reset_requests([])

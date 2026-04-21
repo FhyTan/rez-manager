@@ -19,8 +19,12 @@ Window {
     property string contextName_: ""
     property string projectName_: ""
     property var packageManagerController: null
+    property var contextPreviewController: null
+    property var contextLauncherController: null
 
     signal saved(string projectName, string contextName)
+    signal previewRequested
+    signal launchConsoleRequested(string projectName, string contextName)
 
     function loadContext(projectName, contextName) {
         if (!packageManagerController)
@@ -167,6 +171,13 @@ Window {
                 CardButton {
                     glyph: "◉"
                     label: "Preview Resolve"
+                    onClicked: {
+                        if (!root.packageManagerController || !root.contextPreviewController)
+                            return;
+                        if (!root.contextPreviewController.loadPackageRequests(root.projectName_, root.contextName_, root.packageManagerController.packageRequests))
+                            return;
+                        root.previewRequested();
+                    }
                 }
                 Item {
                     Layout.preferredWidth: Style.sm
@@ -174,6 +185,13 @@ Window {
                 CardButton {
                     glyph: "⌘"
                     label: "Launch Console"
+                    onClicked: {
+                        if (!root.packageManagerController || !root.contextLauncherController)
+                            return;
+                        if (!root.contextLauncherController.launchPackageRequests(root.projectName_, root.contextName_, root.packageManagerController.packageRequests))
+                            return;
+                        root.launchConsoleRequested(root.projectName_, root.contextName_);
+                    }
                 }
                 Item {
                     Layout.fillWidth: true

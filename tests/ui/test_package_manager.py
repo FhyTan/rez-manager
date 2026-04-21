@@ -145,6 +145,52 @@ def test_package_manager_controller_selects_package_and_saves_requests(tmp_path,
     assert app_error_hub.message == ""
 
 
+def test_package_manager_controller_keeps_unsaved_requests_in_memory_until_save(
+    tmp_path, monkeypatch
+):
+    import rez_manager.ui.package_manager as package_manager
+    from rez_manager.adapter.packages import RepositoryInfo
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.package_manager import PackageManagerController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2024.0", "python-3.11"]))
+
+    monkeypatch.setattr(
+        package_manager,
+        "list_repositories",
+        lambda repo_paths: [
+            RepositoryInfo(path=repo_paths[0], label=f"maya [{repo_paths[0]}]", packages=["maya"])
+        ],
+    )
+    monkeypatch.setattr(
+        package_manager,
+        "get_package_versions",
+        lambda name, repo_paths: ["2026.0", "2024.0"] if name == "maya" else [],
+    )
+    monkeypatch.setattr(
+        package_manager,
+        "get_package_info",
+        lambda name, version, repo_paths: None,
+    )
+
+    controller = PackageManagerController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    assert controller.addPackageRequest("maya", "2026.0")
+    assert controller.packageRequests == ["maya-2026.0", "python-3.11"]
+    assert RezContext.load("Pipeline", "Base").packages == ["maya-2024.0", "python-3.11"]
+
+
 def test_package_manager_controller_selects_required_package_with_auto_version(
     tmp_path, monkeypatch
 ):

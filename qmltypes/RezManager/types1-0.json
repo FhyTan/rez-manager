@@ -209,7 +209,7 @@
                 "className": "ContextLauncherController",
                 "qualifiedClassName": "ContextLauncherController",
                 "object": true,
-                "lineNumber": 60,
+                "lineNumber": 61,
                 "superClasses": [
                     {
                         "access": "public",
@@ -229,7 +229,7 @@
                         "designable": true,
                         "final": false,
                         "index": 1,
-                        "lineNumber": 77,
+                        "lineNumber": 78,
                         "name": "projectName",
                         "required": false,
                         "scriptable": true,
@@ -244,7 +244,7 @@
                         "designable": true,
                         "final": false,
                         "index": 2,
-                        "lineNumber": 81,
+                        "lineNumber": 82,
                         "name": "contextName",
                         "required": false,
                         "scriptable": true,
@@ -259,7 +259,7 @@
                         "designable": true,
                         "final": false,
                         "index": 3,
-                        "lineNumber": 85,
+                        "lineNumber": 86,
                         "name": "isLaunching",
                         "required": false,
                         "scriptable": true,
@@ -277,7 +277,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 4,
-                        "lineNumber": 64,
+                        "lineNumber": 65,
                         "isConst": false
                     },
                     {
@@ -295,7 +295,7 @@
                         ],
                         "returnType": "void",
                         "index": 5,
-                        "lineNumber": 65,
+                        "lineNumber": 66,
                         "isConst": false
                     }
                 ],
@@ -315,7 +315,29 @@
                         ],
                         "returnType": "bool",
                         "index": 6,
-                        "lineNumber": 89,
+                        "lineNumber": 90,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
+                        "name": "launchPackageRequests",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "package_requests",
+                                "type": "QVariantList"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 7,
+                        "lineNumber": 113,
                         "isConst": false
                     },
                     {
@@ -323,8 +345,8 @@
                         "name": "clear",
                         "arguments": [],
                         "returnType": "void",
-                        "index": 7,
-                        "lineNumber": 116,
+                        "index": 8,
+                        "lineNumber": 139,
                         "isConst": false
                     },
                     {
@@ -341,8 +363,8 @@
                             }
                         ],
                         "returnType": "void",
-                        "index": 8,
-                        "lineNumber": 145,
+                        "index": 9,
+                        "lineNumber": 190,
                         "isConst": false
                     }
                 ]
@@ -531,11 +553,33 @@
                     },
                     {
                         "access": "public",
+                        "name": "loadPackageRequests",
+                        "arguments": [
+                            {
+                                "name": "project_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "context_name",
+                                "type": "QString"
+                            },
+                            {
+                                "name": "package_requests",
+                                "type": "QVariantList"
+                            }
+                        ],
+                        "returnType": "bool",
+                        "index": 6,
+                        "lineNumber": 111,
+                        "isConst": false
+                    },
+                    {
+                        "access": "public",
                         "name": "clear",
                         "arguments": [],
                         "returnType": "void",
-                        "index": 6,
-                        "lineNumber": 112,
+                        "index": 7,
+                        "lineNumber": 136,
                         "isConst": false
                     },
                     {
@@ -552,8 +596,8 @@
                             }
                         ],
                         "returnType": "void",
-                        "index": 7,
-                        "lineNumber": 137,
+                        "index": 8,
+                        "lineNumber": 178,
                         "isConst": false
                     }
                 ]
@@ -653,6 +697,21 @@
                         "final": false,
                         "index": 5,
                         "lineNumber": 518,
+                        "name": "packageRequests",
+                        "required": false,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "QVariantList",
+                        "user": false,
+                        "notify": "packageCountChanged",
+                        "read": "packageRequests"
+                    },
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 6,
+                        "lineNumber": 522,
                         "name": "selectedRequestRow",
                         "required": false,
                         "scriptable": true,
@@ -666,8 +725,8 @@
                         "constant": false,
                         "designable": true,
                         "final": false,
-                        "index": 6,
-                        "lineNumber": 522,
+                        "index": 7,
+                        "lineNumber": 526,
                         "name": "selectedRepositoryIndex",
                         "required": false,
                         "scriptable": true,
@@ -681,8 +740,8 @@
                         "constant": false,
                         "designable": true,
                         "final": false,
-                        "index": 7,
-                        "lineNumber": 526,
+                        "index": 8,
+                        "lineNumber": 530,
                         "name": "selectedRepositoryPackageIndex",
                         "required": false,
                         "scriptable": true,
@@ -747,7 +806,7 @@
                         ],
                         "returnType": "bool",
                         "index": 8,
-                        "lineNumber": 530,
+                        "lineNumber": 534,
                         "isConst": false
                     },
                     {
@@ -756,7 +815,7 @@
                         "arguments": [],
                         "returnType": "void",
                         "index": 9,
-                        "lineNumber": 553,
+                        "lineNumber": 557,
                         "isConst": false
                     },
                     {
@@ -770,7 +829,7 @@
                         ],
                         "returnType": "bool",
                         "index": 10,
-                        "lineNumber": 557,
+                        "lineNumber": 561,
                         "isConst": false
                     },
                     {
@@ -784,7 +843,7 @@
                         ],
                         "returnType": "bool",
                         "index": 11,
-                        "lineNumber": 570,
+                        "lineNumber": 574,
                         "isConst": false
                     },
                     {
@@ -802,7 +861,7 @@
                         ],
                         "returnType": "bool",
                         "index": 12,
-                        "lineNumber": 584,
+                        "lineNumber": 588,
                         "isConst": false
                     },
                     {
@@ -820,7 +879,7 @@
                         ],
                         "returnType": "bool",
                         "index": 13,
-                        "lineNumber": 599,
+                        "lineNumber": 603,
                         "isConst": false
                     },
                     {
@@ -834,7 +893,7 @@
                         ],
                         "returnType": "bool",
                         "index": 14,
-                        "lineNumber": 613,
+                        "lineNumber": 617,
                         "isConst": false
                     },
                     {
@@ -843,7 +902,7 @@
                         "arguments": [],
                         "returnType": "bool",
                         "index": 15,
-                        "lineNumber": 629,
+                        "lineNumber": 633,
                         "isConst": false
                     }
                 ]
