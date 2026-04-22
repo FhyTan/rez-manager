@@ -112,6 +112,10 @@ pyside6-qmllint -I ./qmltypes <qml-files>
 pyside6-qmlformat -i <qml-files>
 ```
 
+`qmltypes/` is generated output and must not be committed. If the agent is working inside a git
+worktree, skip generating `/qmltypes` because the generated files record absolute paths from the
+temporary worktree directory.
+
 ## Development
 
 The project is still in the development phase, so there’s no need for backward compatibility. Feel free to make any structural changes if they improve the design.

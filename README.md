@@ -21,10 +21,18 @@ uv run rez-manager
 uvx ruff check src      # Lint
 uvx ruff format src     # Format
 uv run pytest           # Test
+pyside6-qml-stubgen.exe src --out-dir ./qmltypes
+pyside6-qmllint -I ./qmltypes <qml-files>
 ```
 
-For correct QML hints and completion in editors such as VS Code, add `./qmltypes` to
+`qmltypes/` is generated output and is intentionally not tracked in git.
+
+For correct QML hints and completion in editors such as VS Code, generate QML type stubs with
+`pyside6-qml-stubgen.exe src --out-dir ./qmltypes`, then add `./qmltypes` to
 `qt-qml.qmlls.additionalImportPaths`.
+
+To lint QML files against those generated types, use
+`pyside6-qmllint -I ./qmltypes <qml-files>`.
 
 ## Project Layout
 

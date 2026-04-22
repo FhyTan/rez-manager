@@ -1,5 +1,0 @@
-module RezManager
-depends QtCore
-depends QtGui
-depends QtQml
-typeinfo types1-0.qmltypes

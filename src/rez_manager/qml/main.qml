@@ -312,15 +312,15 @@ ApplicationWindow {
         Menu {
             title: qsTr("File")
 
-            Action {
-                text: qsTr("Import Project")
-                onTriggered: root.openImportProjectDialog()
-            }
-            Action {
-                text: qsTr("Import Context")
-                onTriggered: root.openImportContextDialog()
-            }
-            MenuSeparator {}
+            // Action {
+            //     text: qsTr("Import Project")
+            //     onTriggered: root.openImportProjectDialog()
+            // }
+            // Action {
+            //     text: qsTr("Import Context")
+            //     onTriggered: root.openImportContextDialog()
+            // }
+            // MenuSeparator {}
             Action {
                 text: qsTr("Settings...")
                 onTriggered: settingsDlg.open()
