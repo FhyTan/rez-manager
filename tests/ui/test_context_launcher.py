@@ -18,6 +18,33 @@ def test_command_resolver_wraps_windows_cmd_launches(monkeypatch):
     assert ContextLaunchCommandResolver().command_for(context) == 'start "" maya'
 
 
+def test_command_resolver_supports_new_dcc_targets(monkeypatch):
+    from rez_manager.models.project import Project
+    from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+    from rez_manager.ui.context_launcher import ContextLaunchCommandResolver
+
+    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", False)
+
+    resolver = ContextLaunchCommandResolver()
+
+    blender_context = RezContext(
+        project=Project(name="Pipeline"),
+        meta=ContextMeta(name="Blender Base", launch_target=LaunchTarget.BLENDER),
+    )
+    nuke_context = RezContext(
+        project=Project(name="Pipeline"),
+        meta=ContextMeta(name="Nuke Base", launch_target=LaunchTarget.NUKE),
+    )
+    nukex_context = RezContext(
+        project=Project(name="Pipeline"),
+        meta=ContextMeta(name="NukeX Base", launch_target=LaunchTarget.NUKE_X),
+    )
+
+    assert resolver.command_for(blender_context) == "blender"
+    assert resolver.command_for(nuke_context) == "nuke"
+    assert resolver.command_for(nukex_context) == "nukex"
+
+
 def test_command_resolver_uses_none_for_shell_launch(monkeypatch):
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext

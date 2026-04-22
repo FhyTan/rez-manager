@@ -24,6 +24,22 @@ def test_context_meta_roundtrip():
     assert restored.packages == ["maya-2024", "python-3.11"]
 
 
+def test_context_meta_accepts_new_launch_targets():
+    from rez_manager.models.rez_context import ContextMeta, LaunchTarget
+
+    restored = ContextMeta.from_dict(
+        {
+            "name": "comp-env",
+            "description": "NukeX comp environment",
+            "launch_target": "nukex",
+            "custom_command": None,
+            "packages": ["nukex-15.0"],
+        }
+    )
+
+    assert restored.launch_target == LaunchTarget.NUKE_X
+
+
 def test_project_display_name():
     from rez_manager.models.project import Project
 

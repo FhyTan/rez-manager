@@ -15,7 +15,7 @@ Rectangle {
     property string contextName: "Context Name"
     property string projectName: "Project"
     property string description: "No description."
-    property string launchTarget: "shell"   // maya | houdini | shell | custom
+    property string launchTarget: "shell"   // blender | maya | houdini | nuke | nukex | shell | custom
     property string packages: ""        // comma-separated list
 
     signal editInfoRequested

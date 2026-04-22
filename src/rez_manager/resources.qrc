@@ -2,4 +2,12 @@
     <qresource prefix="/">
         <file>qtquickcontrols2.conf</file>
     </qresource>
+    <qresource prefix="/icons/dcc">
+        <file alias="Blender">resources/icons/dcc/Blender.svg</file>
+        <file alias="Houdini">resources/icons/dcc/Houdini.svg</file>
+        <file alias="Maya">resources/icons/dcc/Maya.svg</file>
+        <file alias="Nuke">resources/icons/dcc/Nuke.svg</file>
+        <file alias="NukeX">resources/icons/dcc/NukeX.svg</file>
+        <file alias="Shell">resources/icons/dcc/Shell.svg</file>
+    </qresource>
 </RCC>

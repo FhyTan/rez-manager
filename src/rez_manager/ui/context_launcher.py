@@ -44,12 +44,18 @@ class ContextLaunchCommandResolver:
         custom_command: str | None,
     ) -> str | None:
         match launch_target:
+            case LaunchTarget.BLENDER:
+                return "blender"
             case LaunchTarget.SHELL:
                 return None
             case LaunchTarget.MAYA:
                 return "maya"
             case LaunchTarget.HOUDINI:
                 return "houdini"
+            case LaunchTarget.NUKE:
+                return "nuke"
+            case LaunchTarget.NUKE_X:
+                return "nukex"
             case LaunchTarget.CUSTOM:
                 command = (custom_command or "").strip()
                 if not command:

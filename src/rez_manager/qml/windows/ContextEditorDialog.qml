@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import ".."
 import "../components"
@@ -21,9 +22,60 @@ Dialog {
     property string descriptionValue: ""
     property string launchTargetValue: "shell"
     property string customCommandValue: ""
+    property url thumbnailSourceValue: ""
     property var packagesValue: []
     property var projectOptions: []
     signal saveRequested(string originalProjectName, string originalContextName, string projectName, string contextName, string description, string launchTarget, string customCommand, var packages)
+    readonly property var launchTargetOptions: [
+        {
+            label: "Shell",
+            val: "shell",
+            col: Style.colorShell,
+            iconName: "Shell"
+        },
+        {
+            label: "Maya",
+            val: "maya",
+            col: Style.colorMaya,
+            iconName: "Maya"
+        },
+        {
+            label: "Houdini",
+            val: "houdini",
+            col: Style.colorHoudini,
+            iconName: "Houdini"
+        },
+        {
+            label: "Blender",
+            val: "blender",
+            col: Style.colorBlender,
+            iconName: "Blender"
+        },
+        {
+            label: "Nuke",
+            val: "nuke",
+            col: Style.colorNuke,
+            iconName: "Nuke"
+        },
+        {
+            label: "NukeX",
+            val: "nukex",
+            col: Style.colorNukeX,
+            iconName: "NukeX"
+        },
+        {
+            label: "Custom",
+            val: "custom",
+            col: Style.colorCustom,
+            iconName: ""
+        }
+    ]
+    readonly property string selectedTargetIconSource: {
+        const targetOption = root.launchTargetOption(root.launchTargetValue);
+        if (targetOption === null || targetOption.iconName.length === 0)
+            return "";
+        return "qrc:/icons/dcc/" + targetOption.iconName;
+    }
 
     function comboProjectOptions() {
         if (root.projectValue.length === 0)
@@ -31,6 +83,15 @@ Dialog {
         if (root.projectOptions.indexOf(root.projectValue) >= 0)
             return root.projectOptions;
         return [root.projectValue].concat(root.projectOptions);
+    }
+
+    function launchTargetOption(targetValue) {
+        for (let index = 0; index < root.launchTargetOptions.length; index++) {
+            const targetOption = root.launchTargetOptions[index];
+            if (targetOption.val === targetValue)
+                return targetOption;
+        }
+        return null;
     }
 
     padding: Style.xl
@@ -41,6 +102,7 @@ Dialog {
         projectCombo_.currentIndex = projectIndex >= 0 ? projectIndex : 0;
         descriptionField_.text = root.descriptionValue;
         customCommandField_.text = root.customCommandValue;
+        root.thumbnailSourceValue = "";
     }
     onAccepted: {
         root.saveRequested(root.originalProjectValue, root.originalContextNameValue, projectCombo_.currentText, projectNameField_.text, descriptionField_.text, root.launchTargetValue, customCommandField_.text, root.packagesValue);
@@ -88,31 +150,12 @@ Dialog {
         FormField {
             label: "Launch Target"
             Layout.fillWidth: true
-            RowLayout {
+            Flow {
+                Layout.fillWidth: true
+                width: parent.width
                 spacing: Style.sm
                 Repeater {
-                    model: [
-                        {
-                            label: "Shell",
-                            val: "shell",
-                            col: Style.colorShell
-                        },
-                        {
-                            label: "Maya",
-                            val: "maya",
-                            col: Style.colorMaya
-                        },
-                        {
-                            label: "Houdini",
-                            val: "houdini",
-                            col: Style.colorHoudini
-                        },
-                        {
-                            label: "Custom",
-                            val: "custom",
-                            col: Style.colorCustom
-                        }
-                    ]
+                    model: root.launchTargetOptions
                     delegate: Rectangle {
                         id: launchOption_
                         required property var modelData
@@ -168,6 +211,7 @@ Dialog {
             label: "Thumbnail"
             Layout.fillWidth: true
             RowLayout {
+                Layout.fillWidth: true
                 Rectangle {
                     implicitWidth: 64
                     implicitHeight: 64
@@ -175,21 +219,45 @@ Dialog {
                     color: Style.surface
                     border.width: 1
                     border.color: Style.border
+                    Image {
+                        anchors.fill: parent
+                        anchors.margins: Style.sm
+                        fillMode: Image.PreserveAspectFit
+                        source: root.thumbnailSourceValue
+                        visible: root.thumbnailSourceValue.toString().length > 0
+                    }
                     Text {
                         anchors.centerIn: parent
                         text: "🖼"
                         font.pixelSize: 24
+                        visible: root.thumbnailSourceValue.toString().length === 0
                     }
                 }
                 CardButton {
                     label: "Choose Image…"
+                    onClicked: thumbnailDialog_.open()
+                }
+                CardButton {
+                    label: "Add Target Icon"
+                    enabled: root.selectedTargetIconSource.length > 0
+                    onClicked: root.thumbnailSourceValue = root.selectedTargetIconSource
                 }
                 CardButton {
                     label: "Clear"
                     danger: true
+                    enabled: root.thumbnailSourceValue.toString().length > 0
+                    onClicked: root.thumbnailSourceValue = ""
                 }
             }
         }
+    }
+
+    FileDialog {
+        id: thumbnailDialog_
+        title: "Choose Thumbnail"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.svg *.webp)", "All files (*)"]
+        onAccepted: root.thumbnailSourceValue = thumbnailDialog_.selectedFile
     }
 
     // Inline helper components ────────────────────────────────

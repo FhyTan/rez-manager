@@ -19,8 +19,11 @@ def _context_store():
 
 
 class LaunchTarget(StrEnum):
+    BLENDER = "blender"
     MAYA = "maya"
     HOUDINI = "houdini"
+    NUKE = "nuke"
+    NUKE_X = "nukex"
     SHELL = "shell"
     CUSTOM = "custom"
 

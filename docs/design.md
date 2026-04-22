@@ -36,7 +36,7 @@ Each context is rendered as a **card** containing:
 | Name | Context name |
 | Description | Short text description |
 | Thumbnail | Image for the context |
-| Launch target | App to launch: Maya, Houdini, Shell, Custom, … |
+| Launch target | App to launch: Blender, Maya, Houdini, Nuke, NukeX, Shell, Custom, … |
 | Packages (scrollable) | Single-line scrollable chip list of package requests |
 | Actions | Edit Context Info · Edit Packages · Preview Env · Launch |
 
@@ -117,7 +117,7 @@ Fields:
 | Project | Dropdown / selector |
 | Description | Text area |
 | Thumbnail | Image picker |
-| Launch target | Dropdown (Maya, Houdini, Shell, Custom) |
+| Launch target | Dropdown (Blender, Maya, Houdini, Nuke, NukeX, Shell, Custom) |
 | Custom command | Text input (visible only when Launch = Custom) |
 
 ---
@@ -141,7 +141,7 @@ All context data lives under the configured **contexts location** directory:
 {
   "name": "string",
   "description": "string",
-  "launch_target": "maya | houdini | shell | custom",
+  "launch_target": "blender | maya | houdini | nuke | nukex | shell | custom",
   "custom_command": "string | null",
   "packages": ["pkg_name>=version", "..."]
 }
