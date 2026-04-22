@@ -141,7 +141,7 @@ All context data lives under the configured **contexts location** directory:
 {
   "name": "string",
   "description": "string",
-  "launch_target": "blender | maya | houdini | nuke | nukex | shell | custom",
+  "launch_target": "Blender | Maya | Houdini | Nuke | NukeX | Shell | Custom",
   "custom_command": "string | null",
   "builtin_thumbnail_source": "qrc path string | null",
   "packages": ["pkg_name>=version", "..."]

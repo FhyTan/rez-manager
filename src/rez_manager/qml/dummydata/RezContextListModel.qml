@@ -58,21 +58,21 @@ Item {
             project:      "VFX Pipeline"
             name:         "Maya 2024 Base"
             description:  "Base Maya 2024 environment with Arnold renderer and USD support."
-            launchTarget: "maya"
+            launchTarget: "Maya"
             packages:     "maya-2024,python-3.11,mtoa-5.3,usd-23.11,openexr-3.1"
         }
         ListElement {
             project:      "VFX Pipeline"
             name:         "Nuke 14 Comp"
             description:  "Compositing environment with Nuke 14, NukeX and OCIO 2 support."
-            launchTarget: "custom"
+            launchTarget: "Custom"
             packages:     "nuke-14.0,python-3.10,nukex-14.0,ocio-2.2,ffmpeg-6.0"
         }
         ListElement {
             project:      "VFX Pipeline"
             name:         "Shell Dev"
             description:  "Development shell with Python tools and build utilities."
-            launchTarget: "shell"
+            launchTarget: "Shell"
             packages:     "python-3.11,cmake-3.27,git-2.42,ninja-1.11,ruff-0.1"
         }
 
@@ -81,14 +81,14 @@ Item {
             project:      "Maya Rigging"
             name:         "Rigging Tools"
             description:  "Full rigging environment with mGear, CGM tools and Pyblish."
-            launchTarget: "maya"
+            launchTarget: "Maya"
             packages:     "maya-2024,python-3.11,mgear-4.1,cgm-2.0,pyblish-2.0,pyqt5-5.15"
         }
         ListElement {
             project:      "Maya Rigging"
             name:         "QC Validation"
             description:  "Quality control and validation toolchain."
-            launchTarget: "shell"
+            launchTarget: "Shell"
             packages:     "python-3.11,pytest-7.4,mypy-1.5,ruff-0.1"
         }
 
@@ -97,14 +97,14 @@ Item {
             project:      "Houdini FX"
             name:         "Houdini 20.5"
             description:  "Standard Houdini FX environment with Karma renderer and MaterialX."
-            launchTarget: "houdini"
+            launchTarget: "Houdini"
             packages:     "houdini-20.5,python-3.11,karma-1.0,materialx-1.38"
         }
         ListElement {
             project:      "Houdini FX"
             name:         "Houdini + Redshift"
             description:  "Houdini environment with Redshift GPU renderer plugin."
-            launchTarget: "houdini"
+            launchTarget: "Houdini"
             packages:     "houdini-20.5,python-3.11,redshift-3.5,redshift-houdini-3.5"
         }
 
@@ -113,7 +113,7 @@ Item {
             project:      "USD Pipeline"
             name:         "USD Tools"
             description:  "Universal Scene Description toolset for pipeline integration."
-            launchTarget: "shell"
+            launchTarget: "Shell"
             packages:     "python-3.11,usd-23.11,hdstorm-23.11,materialx-1.38,openexr-3.1"
         }
     }

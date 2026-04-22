@@ -29,7 +29,8 @@ from rez_manager.adapter.packages import (
     get_package_versions,
     list_repositories,
 )
-from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+from rez_manager.models.launch_target import parse_launch_target
+from rez_manager.models.rez_context import ContextMeta, RezContext
 from rez_manager.models.settings import AppSettings
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
@@ -713,7 +714,7 @@ class PackageManagerController(QObject):
             updated_meta = ContextMeta(
                 name=self._context.name,
                 description=self._context.description,
-                launch_target=LaunchTarget(self._context.launch_target),
+                launch_target=parse_launch_target(self._context.launch_target),
                 custom_command=self._context.meta.custom_command,
                 packages=self._package_requests_model.requests(),
             )

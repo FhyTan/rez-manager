@@ -20,62 +20,19 @@ Dialog {
     property string projectValue: "VFX Pipeline"
     property string originalProjectValue: ""
     property string descriptionValue: ""
-    property string launchTargetValue: "shell"
+    property var launchTargetModel: null
+    property string launchTargetValue: launchTargetModel ? launchTargetModel.defaultValue : "Shell"
     property string customCommandValue: ""
     property string builtinThumbnailSourceValue: ""
     property url thumbnailSourceValue: ""
     property var packagesValue: []
     property var projectOptions: []
     signal saveRequested(string originalProjectName, string originalContextName, string projectName, string contextName, string description, string launchTarget, string customCommand, string builtinThumbnailSource, string thumbnailSource, var packages)
-    readonly property var launchTargetOptions: [
-        {
-            label: "Shell",
-            val: "shell",
-            col: Style.colorShell,
-            iconName: "Shell"
-        },
-        {
-            label: "Maya",
-            val: "maya",
-            col: Style.colorMaya,
-            iconName: "Maya"
-        },
-        {
-            label: "Houdini",
-            val: "houdini",
-            col: Style.colorHoudini,
-            iconName: "Houdini"
-        },
-        {
-            label: "Blender",
-            val: "blender",
-            col: Style.colorBlender,
-            iconName: "Blender"
-        },
-        {
-            label: "Nuke",
-            val: "nuke",
-            col: Style.colorNuke,
-            iconName: "Nuke"
-        },
-        {
-            label: "NukeX",
-            val: "nukex",
-            col: Style.colorNukeX,
-            iconName: "NukeX"
-        },
-        {
-            label: "Custom",
-            val: "custom",
-            col: Style.colorCustom,
-            iconName: ""
-        }
-    ]
     readonly property string selectedTargetIconSource: {
-        const targetOption = root.launchTargetOption(root.launchTargetValue);
-        if (targetOption === null || targetOption.iconName.length === 0)
+        const targetOption = root.launchTargetModel ? root.launchTargetModel.option(root.launchTargetValue) : null;
+        if (targetOption === null || targetOption.iconSource === undefined || targetOption.iconSource.length === 0)
             return "";
-        return "qrc:/icons/dcc/" + targetOption.iconName;
+        return targetOption.iconSource;
     }
     readonly property string previewThumbnailSource: root.builtinThumbnailSourceValue.length > 0 ? root.builtinThumbnailSourceValue : root.thumbnailSourceValue.toString()
 
@@ -85,15 +42,6 @@ Dialog {
         if (root.projectOptions.indexOf(root.projectValue) >= 0)
             return root.projectOptions;
         return [root.projectValue].concat(root.projectOptions);
-    }
-
-    function launchTargetOption(targetValue) {
-        for (let index = 0; index < root.launchTargetOptions.length; index++) {
-            const targetOption = root.launchTargetOptions[index];
-            if (targetOption.val === targetValue)
-                return targetOption;
-        }
-        return null;
     }
 
     padding: Style.xl
@@ -156,17 +104,19 @@ Dialog {
                 width: parent.width
                 spacing: Style.sm
                 Repeater {
-                    model: root.launchTargetOptions
+                    model: root.launchTargetModel
                     delegate: Rectangle {
                         id: launchOption_
-                        required property var modelData
+                        required property color accentColor
+                        required property string label
+                        required property string value
                         height: 32
                         width: selLbl_.implicitWidth + 24
                         radius: Style.radiusSm
-                        property bool isSelected: root.launchTargetValue === launchOption_.modelData.val
-                        color: launchOption_.isSelected ? Qt.rgba(launchOption_.modelData.col.r, launchOption_.modelData.col.g, launchOption_.modelData.col.b, 0.15) : (selHov_.hovered ? Qt.rgba(1, 1, 1, 0.04) : "transparent")
+                        property bool isSelected: root.launchTargetValue === launchOption_.value
+                        color: launchOption_.isSelected ? Qt.rgba(launchOption_.accentColor.r, launchOption_.accentColor.g, launchOption_.accentColor.b, 0.15) : (selHov_.hovered ? Qt.rgba(1, 1, 1, 0.04) : "transparent")
                         border.width: 1
-                        border.color: launchOption_.isSelected ? Qt.rgba(launchOption_.modelData.col.r, launchOption_.modelData.col.g, launchOption_.modelData.col.b, 0.5) : Style.border
+                        border.color: launchOption_.isSelected ? Qt.rgba(launchOption_.accentColor.r, launchOption_.accentColor.g, launchOption_.accentColor.b, 0.5) : Style.border
                         Behavior on color {
                             ColorAnimation {
                                 duration: 80
@@ -175,8 +125,8 @@ Dialog {
                         Text {
                             id: selLbl_
                             anchors.centerIn: parent
-                            text: launchOption_.modelData.label
-                            color: launchOption_.isSelected ? launchOption_.modelData.col : Style.textSecondary
+                            text: launchOption_.label
+                            color: launchOption_.isSelected ? launchOption_.accentColor : Style.textSecondary
                             font.pixelSize: Style.fontMd
                             font.bold: launchOption_.isSelected
                         }
@@ -187,7 +137,7 @@ Dialog {
                         TapHandler {
                             acceptedButtons: Qt.LeftButton
                             gesturePolicy: TapHandler.WithinBounds
-                            onTapped: root.launchTargetValue = launchOption_.modelData.val
+                            onTapped: root.launchTargetValue = launchOption_.value
                         }
                     }
                 }
@@ -198,7 +148,7 @@ Dialog {
         FormField {
             label: "Custom Command"
             Layout.fillWidth: true
-            visible: root.launchTargetValue === "custom"
+            visible: root.launchTargetValue === (root.launchTargetModel ? root.launchTargetModel.customValue : "Custom")
             FieldInput {
                 id: customCommandField_
                 Layout.fillWidth: true

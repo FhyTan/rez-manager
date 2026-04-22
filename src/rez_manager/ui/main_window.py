@@ -18,8 +18,9 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QColor
 from PySide6.QtQml import QmlElement
 
+from rez_manager.models.launch_target import parse_launch_target
 from rez_manager.models.project import Project
-from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+from rez_manager.models.rez_context import ContextMeta, RezContext
 from rez_manager.ui.context_thumbnail import (
     apply_context_thumbnail_selection,
     thumbnail_file_url,
@@ -233,11 +234,12 @@ class RezContextListModel(QAbstractListModel):
     NameRole = Qt.UserRole + 2
     DescriptionRole = Qt.UserRole + 3
     LaunchTargetRole = Qt.UserRole + 4
-    PackagesRole = Qt.UserRole + 5
-    PackageRequestsRole = Qt.UserRole + 6
-    CustomCommandRole = Qt.UserRole + 7
-    BuiltinThumbnailSourceRole = Qt.UserRole + 8
-    ThumbnailSourceRole = Qt.UserRole + 9
+    LaunchTargetColorRole = Qt.UserRole + 5
+    PackagesRole = Qt.UserRole + 6
+    PackageRequestsRole = Qt.UserRole + 7
+    CustomCommandRole = Qt.UserRole + 8
+    BuiltinThumbnailSourceRole = Qt.UserRole + 9
+    ThumbnailSourceRole = Qt.UserRole + 10
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -276,6 +278,7 @@ class RezContextListModel(QAbstractListModel):
             self.NameRole: QByteArray(b"name"),
             self.DescriptionRole: QByteArray(b"description"),
             self.LaunchTargetRole: QByteArray(b"launchTarget"),
+            self.LaunchTargetColorRole: QByteArray(b"launchTargetColor"),
             self.PackagesRole: QByteArray(b"packages"),
             self.PackageRequestsRole: QByteArray(b"packageRequests"),
             self.CustomCommandRole: QByteArray(b"customCommand"),
@@ -297,6 +300,8 @@ class RezContextListModel(QAbstractListModel):
             return payload["description"]
         if role == self.LaunchTargetRole:
             return payload["launchTarget"]
+        if role == self.LaunchTargetColorRole:
+            return QColor(str(payload["launchTargetColor"]))
         if role == self.PackagesRole:
             return payload["packages"]
         if role == self.PackageRequestsRole:
@@ -346,6 +351,7 @@ class RezContextListModel(QAbstractListModel):
             "name": context.name,
             "description": context.description,
             "launchTarget": context.launch_target,
+            "launchTargetColor": context.launch_target_definition.color,
             "packages": ",".join(context.packages),
             "packageRequests": list(context.packages),
             "customCommand": context.meta.custom_command or "",
@@ -359,6 +365,7 @@ class RezContextListModel(QAbstractListModel):
             self.NameRole,
             self.DescriptionRole,
             self.LaunchTargetRole,
+            self.LaunchTargetColorRole,
             self.PackagesRole,
             self.PackageRequestsRole,
             self.CustomCommandRole,
@@ -499,7 +506,7 @@ class RezContextListModel(QAbstractListModel):
             meta = ContextMeta(
                 name=name,
                 description=description.strip(),
-                launch_target=LaunchTarget(launch_target),
+                launch_target=parse_launch_target(launch_target),
                 custom_command=custom_command.strip() or None,
                 builtin_thumbnail_source=builtin_thumbnail_source.strip() or None,
                 packages=[str(package) for package in packages],

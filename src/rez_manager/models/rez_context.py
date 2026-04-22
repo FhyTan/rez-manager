@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import StrEnum
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from .launch_target import LAUNCH_TARGETS, LaunchTarget, LaunchTargetDefinition, parse_launch_target
 
 if TYPE_CHECKING:
     from .project import Project
@@ -16,17 +17,6 @@ def _context_store():
     from rez_manager.persistence import context_store
 
     return context_store
-
-
-class LaunchTarget(StrEnum):
-    BLENDER = "blender"
-    MAYA = "maya"
-    HOUDINI = "houdini"
-    NUKE = "nuke"
-    NUKE_X = "nukex"
-    SHELL = "shell"
-    CUSTOM = "custom"
-
 
 @dataclass
 class ContextMeta:
@@ -53,7 +43,7 @@ class ContextMeta:
     def from_dict(cls, data: dict[str, object]) -> ContextMeta:
         name = data["name"]
         description = data.get("description", "")
-        launch_target = data.get("launch_target", "shell")
+        launch_target = data.get("launch_target", LaunchTarget.SHELL.value)
         custom_command = data.get("custom_command")
         builtin_thumbnail_source = data.get("builtin_thumbnail_source")
         packages = data.get("packages", [])
@@ -74,7 +64,7 @@ class ContextMeta:
         return cls(
             name=name,
             description=description,
-            launch_target=LaunchTarget(launch_target),
+            launch_target=parse_launch_target(launch_target),
             custom_command=custom_command,
             builtin_thumbnail_source=builtin_thumbnail_source,
             packages=list(packages),
@@ -115,6 +105,10 @@ class RezContext:
     @property
     def launch_target(self) -> str:
         return self.meta.launch_target.value
+
+    @property
+    def launch_target_definition(self) -> LaunchTargetDefinition:
+        return LAUNCH_TARGETS.from_value(self.meta.launch_target)
 
     @property
     def packages(self) -> list[str]:

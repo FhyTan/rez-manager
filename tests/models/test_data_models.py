@@ -33,7 +33,7 @@ def test_context_meta_accepts_new_launch_targets():
         {
             "name": "comp-env",
             "description": "NukeX comp environment",
-            "launch_target": "nukex",
+            "launch_target": "NukeX",
             "custom_command": None,
             "packages": ["nukex-15.0"],
         }
@@ -85,7 +85,7 @@ def test_context_meta_rejects_invalid_package_types():
             {
                 "name": "Broken Context",
                 "description": "Invalid packages payload",
-                "launch_target": "shell",
+                "launch_target": "Shell",
                 "custom_command": None,
                 "packages": "python-3.11",
             }
@@ -100,7 +100,7 @@ def test_context_meta_rejects_invalid_builtin_thumbnail_source():
             {
                 "name": "Broken Context",
                 "description": "Invalid thumbnail metadata",
-                "launch_target": "shell",
+                "launch_target": "Shell",
                 "custom_command": None,
                 "builtin_thumbnail_source": ["qrc:/icons/dcc/Shell"],
                 "packages": [],

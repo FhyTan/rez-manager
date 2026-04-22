@@ -27,7 +27,7 @@ def test_project_list_model_project_names_refresh_on_reload(tmp_path, monkeypatc
             "{\n"
             '  "name": "Context A",\n'
             '  "description": "Created later",\n'
-            '  "launch_target": "shell",\n'
+            '  "launch_target": "Shell",\n'
             '  "custom_command": null,\n'
             '  "packages": ["python-3.11"]\n'
             "}\n"
@@ -63,7 +63,7 @@ def test_context_list_model_refresh_updates_revision_and_loaded_contexts(tmp_pat
             "{\n"
             '  "name": "Context A",\n'
             '  "description": "Created later",\n'
-            '  "launch_target": "shell",\n'
+            '  "launch_target": "Shell",\n'
             '  "custom_command": null,\n'
             '  "packages": ["python-3.11"]\n'
             "}\n"
@@ -149,7 +149,7 @@ def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
     model.projectModel = project_model
     model.loadProject("Pipeline")
 
-    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", "", "", [])
+    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "Shell", "", "", "", [])
     assert [context.name for context in project_model.get_project("Pipeline").contexts or []] == [
         "Base"
     ]
@@ -159,7 +159,7 @@ def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
         "Shots",
         "Shot Base",
         "Moved context",
-        "custom",
+        "Custom",
         "nuke -x %f",
         "",
         "",
@@ -207,7 +207,7 @@ def test_context_list_model_uses_incremental_updates_for_loaded_project(tmp_path
     )
     model.modelReset.connect(lambda: changed_rows.append((-1, -1)))
 
-    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", "", "", [])
+    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "Shell", "", "", "", [])
     assert inserted_rows == [(0, 0)]
 
     assert model.saveContext(
@@ -216,7 +216,7 @@ def test_context_list_model_uses_incremental_updates_for_loaded_project(tmp_path
         "Pipeline",
         "Base",
         "Updated context",
-        "custom",
+        "Custom",
         "nuke -x %f",
         "",
         "",
@@ -314,6 +314,31 @@ def test_context_list_model_payload_includes_thumbnail_fields(tmp_path, monkeypa
     assert payload["thumbnailSource"].startswith("file:///")
     query = parse_qs(urlparse(payload["thumbnailSource"]).query)
     assert "mtime" in query
+
+
+def test_context_list_model_payload_includes_launch_target_color(tmp_path, monkeypatch):
+    from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.main_window import ProjectListModel, RezContextListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+    Project.create("Pipeline")
+    RezContext.create(
+        "Pipeline",
+        ContextMeta(name="Base", launch_target=LaunchTarget.MAYA, packages=["maya-2025.0"]),
+    )
+
+    project_model = ProjectListModel()
+    context_model = RezContextListModel()
+    context_model.projectModel = project_model
+    context_model.loadProject("Pipeline")
+
+    payload = context_model.get(0)
+
+    assert payload["launchTarget"] == "Maya"
+    assert payload["launchTargetColor"] == "#4DB880"
 
 
 def test_project_list_model_reports_errors_to_app_error_hub(tmp_path, monkeypatch):

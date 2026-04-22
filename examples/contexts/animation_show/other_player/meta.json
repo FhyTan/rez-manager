@@ -2,7 +2,7 @@
   "builtin_thumbnail_source": null,
   "custom_command": "start \"\" mswindowsvideo:",
   "description": "A custom video player is used to display the animation.",
-  "launch_target": "custom",
+  "launch_target": "Custom",
   "name": "other_player",
   "packages": [
     "maya-2024",

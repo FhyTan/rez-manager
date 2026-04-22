@@ -2,7 +2,7 @@ import QtQuick 2.15
 import ".."
 
 // Small colored pill badge.
-// Usage: Badge { text: "Maya"; badgeColor: s.colorMaya }
+// Usage: Badge { text: "Maya"; badgeColor: "#4DB880" }
 Rectangle {
     id: root
     property string text: ""

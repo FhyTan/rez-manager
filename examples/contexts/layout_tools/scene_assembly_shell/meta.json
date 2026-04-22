@@ -2,7 +2,7 @@
   "builtin_thumbnail_source": "qrc:/icons/dcc/Shell",
   "custom_command": null,
   "description": "Shell context for Maya scene assembly and cache path troubleshooting.",
-  "launch_target": "shell",
+  "launch_target": "Shell",
   "name": "scene_assembly_shell",
   "packages": [
     "maya-2023",

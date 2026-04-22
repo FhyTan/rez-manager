@@ -21,7 +21,7 @@ def test_storage_discovers_projects_and_contexts(tmp_path, monkeypatch):
             "{\n"
             '  "name": "Maya Base",\n'
             '  "description": "Primary Maya context",\n'
-            '  "launch_target": "maya",\n'
+            '  "launch_target": "Maya",\n'
             '  "custom_command": null,\n'
             '  "packages": ["maya-2024", "python-3.11"]\n'
             "}\n"
@@ -113,7 +113,7 @@ def test_list_contexts_skips_invalid_metadata(tmp_path):
             "{\n"
             '  "name": "Valid Context",\n'
             '  "description": "Works",\n'
-            '  "launch_target": "shell",\n'
+            '  "launch_target": "Shell",\n'
             '  "custom_command": null,\n'
             '  "packages": ["python-3.11"]\n'
             "}\n"

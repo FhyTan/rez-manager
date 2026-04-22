@@ -2,7 +2,7 @@
   "builtin_thumbnail_source": "qrc:/icons/dcc/Shell",
   "custom_command": null,
   "description": "A test context",
-  "launch_target": "shell",
+  "launch_target": "Shell",
   "name": "TD Test",
   "packages": [
     "studio_core-1.1.0"

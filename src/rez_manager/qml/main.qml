@@ -24,6 +24,9 @@ ApplicationWindow {
         id: contextModel_
         projectModel: projectModel_
     }
+    LaunchTargetListModel {
+        id: launchTargetModel_
+    }
     PackageManagerController {
         id: packageManagerController_
     }
@@ -46,6 +49,7 @@ ApplicationWindow {
     ContextEditorDialog {
         id: editorDlg
         anchors.centerIn: root.contentItem
+        launchTargetModel: launchTargetModel_
         projectOptions: projectModel_.projectNames
         onSaveRequested: function (originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, builtinThumbnailSource, thumbnailSource, packages) {
             const saved = contextModel_.saveContext(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, builtinThumbnailSource, thumbnailSource, packages);
@@ -234,7 +238,7 @@ ApplicationWindow {
         editorDlg.projectValue = selectedProject;
         editorDlg.contextNameValue = "";
         editorDlg.descriptionValue = "";
-        editorDlg.launchTargetValue = "shell";
+        editorDlg.launchTargetValue = launchTargetModel_.defaultValue;
         editorDlg.customCommandValue = "";
         editorDlg.builtinThumbnailSourceValue = "";
         editorDlg.thumbnailSourceValue = "";
@@ -619,6 +623,7 @@ ApplicationWindow {
                                     required property string name
                                     required property string description
                                     required property string launchTarget
+                                    required property color launchTargetColor
                                     required property string packages
                                     required property var packageRequests
                                     required property string customCommand
@@ -634,6 +639,7 @@ ApplicationWindow {
                                         projectName: contextDelegate_.project
                                         description: contextDelegate_.description
                                         launchTarget: contextDelegate_.launchTarget
+                                        accentColor: contextDelegate_.launchTargetColor
                                         packages: contextDelegate_.packages
                                         builtinThumbnailSource: contextDelegate_.builtinThumbnailSource
                                         thumbnailSource: contextDelegate_.thumbnailSource

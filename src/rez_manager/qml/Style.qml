@@ -34,15 +34,6 @@ QtObject {
     readonly property color error: "#D94F68"
     readonly property color info: "#4A88D8"
 
-    // ── Launch target palette ─────────────────────────────────
-    readonly property color colorBlender: "#F08A28"
-    readonly property color colorMaya: "#4DB880"
-    readonly property color colorHoudini: "#D98A38"
-    readonly property color colorNuke: "#79C94B"
-    readonly property color colorNukeX: "#39B7A5"
-    readonly property color colorShell: "#4A88D8"
-    readonly property color colorCustom: "#8A58D8"
-
     // ── Shape ────────────────────────────────────────────────
     readonly property int radius: 8
     readonly property int radiusSm: 4
@@ -63,40 +54,4 @@ QtObject {
     readonly property int fontLg: 15
     readonly property int fontXl: 18
     readonly property int fontXxl: 22
-
-    function launchColor(target) {
-        if (target === "blender")
-            return colorBlender;
-        if (target === "maya")
-            return colorMaya;
-        if (target === "houdini")
-            return colorHoudini;
-        if (target === "nuke")
-            return colorNuke;
-        if (target === "nukex")
-            return colorNukeX;
-        if (target === "shell")
-            return colorShell;
-        if (target === "custom")
-            return colorCustom;
-        return textSecondary;
-    }
-
-    function launchLabel(target) {
-        if (target === "blender")
-            return "Blender";
-        if (target === "maya")
-            return "Maya";
-        if (target === "houdini")
-            return "Houdini";
-        if (target === "nuke")
-            return "Nuke";
-        if (target === "nukex")
-            return "NukeX";
-        if (target === "shell")
-            return "Shell";
-        if (target === "custom")
-            return "Custom";
-        return target;
-    }
 }

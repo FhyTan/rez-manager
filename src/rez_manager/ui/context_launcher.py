@@ -9,9 +9,9 @@ from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Sl
 from PySide6.QtQml import QmlElement
 
 from rez_manager.adapter.context import launch_context
-from rez_manager.models.rez_context import LaunchTarget, RezContext
+from rez_manager.models.launch_target import LAUNCH_TARGETS
+from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
-from rez_manager.runtime import IS_WINDOWS
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -24,44 +24,6 @@ class LaunchResult:
 
     success: bool
     error: str | None = None
-
-
-class ContextLaunchCommandResolver:
-    """Resolve the effective launch command for a stored context."""
-
-    def command_for(self, context: RezContext) -> str | None:
-        command = self._target_command(
-            context.meta.launch_target,
-            context.meta.custom_command,
-        )
-        if command and IS_WINDOWS:
-            return f'start "" {command}'
-        return command
-
-    def _target_command(
-        self,
-        launch_target: LaunchTarget,
-        custom_command: str | None,
-    ) -> str | None:
-        match launch_target:
-            case LaunchTarget.BLENDER:
-                return "blender"
-            case LaunchTarget.SHELL:
-                return None
-            case LaunchTarget.MAYA:
-                return "maya"
-            case LaunchTarget.HOUDINI:
-                return "houdini"
-            case LaunchTarget.NUKE:
-                return "nuke"
-            case LaunchTarget.NUKE_X:
-                return "nukex"
-            case LaunchTarget.CUSTOM:
-                command = (custom_command or "").strip()
-                if not command:
-                    raise ValueError("Custom launch target requires a custom command.")
-                return command
-        raise ValueError(f"Unsupported launch target: {launch_target}")
 
 
 @QmlElement
@@ -79,7 +41,6 @@ class ContextLauncherController(QObject):
         self._request_id = 0
         self._thread_pool = QThreadPool.globalInstance()
         self._active_workers: dict[int, _ContextLaunchWorker] = {}
-        self._command_resolver = ContextLaunchCommandResolver()
 
     @Property(str, notify=stateChanged)
     def projectName(self) -> str:  # noqa: N802
@@ -101,7 +62,10 @@ class ContextLauncherController(QObject):
         try:
             context = RezContext.load(project_name, context_name)
             settings = AppSettings.load()
-            command = self._command_resolver.command_for(context)
+            command = LAUNCH_TARGETS.launch_command_for(
+                context.meta.launch_target,
+                context.meta.custom_command,
+            )
         except (KeyError, OSError, TypeError, ValueError) as exc:
             self._clear_state()
             report_ui_error(str(exc))

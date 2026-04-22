@@ -4,60 +4,29 @@ from __future__ import annotations
 
 
 def test_command_resolver_wraps_windows_cmd_launches(monkeypatch):
-    from rez_manager.models.project import Project
-    from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
-    from rez_manager.ui.context_launcher import ContextLaunchCommandResolver
+    from rez_manager.models.launch_target import LAUNCH_TARGETS
 
-    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", True)
+    monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", True)
 
-    context = RezContext(
-        project=Project(name="Pipeline"),
-        meta=ContextMeta(name="Base", launch_target=LaunchTarget.MAYA),
-    )
-
-    assert ContextLaunchCommandResolver().command_for(context) == 'start "" maya'
+    assert LAUNCH_TARGETS.launch_command_for("Maya") == 'start "" maya'
 
 
 def test_command_resolver_supports_new_dcc_targets(monkeypatch):
-    from rez_manager.models.project import Project
-    from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
-    from rez_manager.ui.context_launcher import ContextLaunchCommandResolver
+    from rez_manager.models.launch_target import LAUNCH_TARGETS
 
-    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", False)
+    monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", False)
 
-    resolver = ContextLaunchCommandResolver()
-
-    blender_context = RezContext(
-        project=Project(name="Pipeline"),
-        meta=ContextMeta(name="Blender Base", launch_target=LaunchTarget.BLENDER),
-    )
-    nuke_context = RezContext(
-        project=Project(name="Pipeline"),
-        meta=ContextMeta(name="Nuke Base", launch_target=LaunchTarget.NUKE),
-    )
-    nukex_context = RezContext(
-        project=Project(name="Pipeline"),
-        meta=ContextMeta(name="NukeX Base", launch_target=LaunchTarget.NUKE_X),
-    )
-
-    assert resolver.command_for(blender_context) == "blender"
-    assert resolver.command_for(nuke_context) == "nuke"
-    assert resolver.command_for(nukex_context) == "nukex"
+    assert LAUNCH_TARGETS.launch_command_for("Blender") == "blender"
+    assert LAUNCH_TARGETS.launch_command_for("Nuke") == "nuke"
+    assert LAUNCH_TARGETS.launch_command_for("NukeX") == "nukex"
 
 
 def test_command_resolver_uses_none_for_shell_launch(monkeypatch):
-    from rez_manager.models.project import Project
-    from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
-    from rez_manager.ui.context_launcher import ContextLaunchCommandResolver
+    from rez_manager.models.launch_target import LAUNCH_TARGETS
 
-    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", True)
+    monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", True)
 
-    context = RezContext(
-        project=Project(name="Pipeline"),
-        meta=ContextMeta(name="Base", launch_target=LaunchTarget.SHELL),
-    )
-
-    assert ContextLaunchCommandResolver().command_for(context) is None
+    assert LAUNCH_TARGETS.launch_command_for("Shell") is None
 
 
 def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp_path, monkeypatch):
@@ -68,7 +37,7 @@ def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp
     from rez_manager.ui.context_launcher import ContextLauncherController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
-    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", True)
+    monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", True)
     save_settings(
         AppSettings(
             package_repositories=["D:\\packages\\maya", "D:\\packages\\base"],
@@ -163,7 +132,7 @@ def test_context_launcher_controller_emits_success_after_completed_launch(tmp_pa
     from rez_manager.ui.error_hub import app_error_hub
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
-    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", False)
+    monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", False)
     save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
     Project.create("Pipeline")
     RezContext.create(
@@ -253,7 +222,7 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     from rez_manager.ui.error_hub import app_error_hub
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
-    monkeypatch.setattr("rez_manager.ui.context_launcher.IS_WINDOWS", True)
+    monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", True)
     save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
     Project.create("Pipeline")
     RezContext.create(

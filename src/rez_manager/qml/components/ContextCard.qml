@@ -15,7 +15,8 @@ Rectangle {
     property string contextName: "Context Name"
     property string projectName: "Project"
     property string description: "No description."
-    property string launchTarget: "shell"   // blender | maya | houdini | nuke | nukex | shell | custom
+    property string launchTarget: "Shell"
+    property color accentColor: Style.textSecondary
     property string packages: ""        // comma-separated list
     property string builtinThumbnailSource: ""
     property string thumbnailSource: ""
@@ -47,7 +48,6 @@ Rectangle {
         });
     }
 
-    property color accentColor: Style.launchColor(launchTarget)
     readonly property string resolvedThumbnailSource: builtinThumbnailSource.length > 0 ? builtinThumbnailSource : thumbnailSource
 
     // ── Geometry ─────────────────────────────────────────────
@@ -212,7 +212,7 @@ Rectangle {
                 Text {
                     id: badgeText_
                     anchors.centerIn: parent
-                    text: Style.launchLabel(root.launchTarget)
+                    text: root.launchTarget
                     color: root.accentColor
                     font.pixelSize: Style.fontXs
                     font.bold: true
