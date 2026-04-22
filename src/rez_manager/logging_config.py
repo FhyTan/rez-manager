@@ -37,5 +37,4 @@ def configure_logging() -> Path:
             "{process.name}:{thread.name} | {name}:{function}:{line} - {message}"
         ),
     )
-    logger.debug("Logging configured at {}", target_path)
     return target_path

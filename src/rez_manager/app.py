@@ -13,6 +13,7 @@ from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
 
 import rez_manager.rc_resources  # noqa: F401
 import rez_manager.ui  # noqa: F401
+from rez_manager import __version__
 from rez_manager.adapter.utils import initialize_rez
 from rez_manager.logging_config import configure_logging
 from rez_manager.ui.error_hub import AppErrorHub, app_error_hub
@@ -29,7 +30,7 @@ def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]
 
     app = QGuiApplication(argv)
     app.setApplicationName("rez-manager")
-    app.setApplicationVersion("0.1.0")
+    app.setApplicationVersion(__version__)
 
     qmlRegisterSingletonInstance(AppErrorHub, "RezManager", 1, 0, "AppErrorHub", app_error_hub)
 

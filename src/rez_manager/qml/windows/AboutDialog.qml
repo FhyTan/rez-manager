@@ -32,6 +32,12 @@ Dialog {
         }
 
         Text {
+            text: qsTr("Version %1").arg(Qt.application.version)
+            color: Style.textSecondary
+            font.pixelSize: Style.fontMd
+        }
+
+        Text {
             Layout.fillWidth: true
             text: qsTr("A desktop GUI for managing Rez package environments.")
             color: Style.textSecondary
