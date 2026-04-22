@@ -96,6 +96,7 @@ def save_context(
         description=meta.description,
         launch_target=meta.launch_target,
         custom_command=meta.custom_command,
+        builtin_thumbnail_source=meta.builtin_thumbnail_source,
         packages=list(meta.packages),
     )
 

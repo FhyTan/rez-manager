@@ -241,6 +241,7 @@ def test_storage_context_crud_roundtrip(tmp_path, monkeypatch):
             name="Base",
             description="Base context",
             launch_target=LaunchTarget.SHELL,
+            builtin_thumbnail_source="qrc:/icons/dcc/Shell",
             packages=["python-3.11"],
         ),
     )
@@ -255,6 +256,7 @@ def test_storage_context_crud_roundtrip(tmp_path, monkeypatch):
             description="Moved context",
             launch_target=LaunchTarget.CUSTOM,
             custom_command="nuke -x %f",
+            builtin_thumbnail_source="qrc:/icons/dcc/Nuke",
             packages=["python-3.11"],
         ),
     )
@@ -264,8 +266,10 @@ def test_storage_context_crud_roundtrip(tmp_path, monkeypatch):
     assert created.project_name == "Pipeline"
     assert edited.project_name == "Shots"
     assert edited.name == "Shot Base"
+    assert edited.builtin_thumbnail_source == "qrc:/icons/dcc/Nuke"
     assert duplicated.project_name == "Pipeline"
     assert duplicated.name == "Shot Base Copy"
+    assert duplicated.builtin_thumbnail_source == "qrc:/icons/dcc/Nuke"
     assert (tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / CONTEXT_FILE_NAME).exists()
     assert (tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / THUMBNAIL_FILE_NAME).exists()
     assert (tmp_path / "contexts" / "Pipeline" / "Shot Base Copy" / META_FILE_NAME).read_text(

@@ -1,4 +1,5 @@
 {
+  "builtin_thumbnail_source": null,
   "custom_command": "start \"\" mswindowsvideo:",
   "description": "A custom video player is used to display the animation.",
   "launch_target": "custom",

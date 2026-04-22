@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from pathlib import Path
 
 from PySide6.QtCore import (
     Property,
@@ -19,6 +20,10 @@ from PySide6.QtQml import QmlElement
 
 from rez_manager.models.project import Project
 from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
+from rez_manager.ui.context_thumbnail import (
+    apply_context_thumbnail_selection,
+    thumbnail_file_url,
+)
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -231,6 +236,8 @@ class RezContextListModel(QAbstractListModel):
     PackagesRole = Qt.UserRole + 5
     PackageRequestsRole = Qt.UserRole + 6
     CustomCommandRole = Qt.UserRole + 7
+    BuiltinThumbnailSourceRole = Qt.UserRole + 8
+    ThumbnailSourceRole = Qt.UserRole + 9
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -272,6 +279,8 @@ class RezContextListModel(QAbstractListModel):
             self.PackagesRole: QByteArray(b"packages"),
             self.PackageRequestsRole: QByteArray(b"packageRequests"),
             self.CustomCommandRole: QByteArray(b"customCommand"),
+            self.BuiltinThumbnailSourceRole: QByteArray(b"builtinThumbnailSource"),
+            self.ThumbnailSourceRole: QByteArray(b"thumbnailSource"),
         }
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
@@ -294,6 +303,10 @@ class RezContextListModel(QAbstractListModel):
             return payload["packageRequests"]
         if role == self.CustomCommandRole:
             return payload["customCommand"]
+        if role == self.BuiltinThumbnailSourceRole:
+            return payload["builtinThumbnailSource"]
+        if role == self.ThumbnailSourceRole:
+            return payload["thumbnailSource"]
         return None
 
     @Slot()
@@ -325,6 +338,9 @@ class RezContextListModel(QAbstractListModel):
         return self.contexts
 
     def _context_payload(self, context: RezContext) -> dict[str, object]:
+        thumbnail_source = ""
+        if context.thumbnail_path:
+            thumbnail_source = thumbnail_file_url(Path(context.thumbnail_path))
         return {
             "project": context.project_name,
             "name": context.name,
@@ -333,6 +349,8 @@ class RezContextListModel(QAbstractListModel):
             "packages": ",".join(context.packages),
             "packageRequests": list(context.packages),
             "customCommand": context.meta.custom_command or "",
+            "builtinThumbnailSource": context.builtin_thumbnail_source,
+            "thumbnailSource": thumbnail_source,
         }
 
     def _context_roles(self) -> list[int]:
@@ -344,6 +362,8 @@ class RezContextListModel(QAbstractListModel):
             self.PackagesRole,
             self.PackageRequestsRole,
             self.CustomCommandRole,
+            self.BuiltinThumbnailSourceRole,
+            self.ThumbnailSourceRole,
         ]
 
     def _bind_context_project(self, context: RezContext) -> RezContext:
@@ -456,7 +476,7 @@ class RezContextListModel(QAbstractListModel):
         clear_ui_error()
         return True
 
-    @Slot(str, str, str, str, str, str, str, "QVariantList", result=bool)
+    @Slot(str, str, str, str, str, str, str, str, str, "QVariantList", result=bool)
     def saveContext(  # noqa: N802
         self,
         original_project_name: str,
@@ -466,6 +486,8 @@ class RezContextListModel(QAbstractListModel):
         description: str,
         launch_target: str,
         custom_command: str,
+        builtin_thumbnail_source: str,
+        thumbnail_source: str,
         packages: list[str],
     ) -> bool:
         try:
@@ -479,6 +501,7 @@ class RezContextListModel(QAbstractListModel):
                 description=description.strip(),
                 launch_target=LaunchTarget(launch_target),
                 custom_command=custom_command.strip() or None,
+                builtin_thumbnail_source=builtin_thumbnail_source.strip() or None,
                 packages=[str(package) for package in packages],
             )
             if original_project_name and original_context_name:
@@ -502,6 +525,14 @@ class RezContextListModel(QAbstractListModel):
                 ):
                     return False
                 updated_context = self._bind_context_project(RezContext.create(project_name, meta))
+            apply_context_thumbnail_selection(
+                Path(updated_context.path),
+                builtin_thumbnail_source=updated_context.builtin_thumbnail_source,
+                thumbnail_source=thumbnail_source,
+            )
+            updated_context = self._bind_context_project(
+                RezContext.load(updated_context.project_name, updated_context.name)
+            )
         except (OSError, TypeError, ValueError) as exc:
             report_ui_error(str(exc))
             return False

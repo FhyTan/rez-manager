@@ -1,8 +1,9 @@
 {
-  "name": "houdini_fx",
+  "builtin_thumbnail_source": "qrc:/icons/dcc/Houdini",
+  "custom_command": null,
   "description": "Houdini FX environment with Arnold, Solaris bridge, and shot publishing tools.",
   "launch_target": "houdini",
-  "custom_command": null,
+  "name": "houdini_fx",
   "packages": [
     "houdini-20.0",
     "htoa-6.2.5.1",

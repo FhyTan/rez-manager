@@ -1,8 +1,9 @@
 {
-  "name": "nuke_daily",
-  "description": "Daily review environment for NukeX, studio review tools, and farm submission.",
-  "launch_target": "custom",
+  "builtin_thumbnail_source": "qrc:/icons/dcc/NukeX",
   "custom_command": "nuke --nukex",
+  "description": "Daily review environment for NukeX, studio review tools, and farm submission.",
+  "launch_target": "nukex",
+  "name": "nuke_daily",
   "packages": [
     "nuke-15.0",
     "nukex-15.0",

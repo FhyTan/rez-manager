@@ -1,4 +1,5 @@
 {
+  "builtin_thumbnail_source": "qrc:/icons/dcc/Houdini",
   "custom_command": null,
   "description": "Houdini is used to generate the animation effects, offering flexible and high-quality VFX.",
   "launch_target": "houdini",

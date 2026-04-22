@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
+
 from rez_manager.models.project import Project
 
 
@@ -146,7 +149,7 @@ def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
     model.projectModel = project_model
     model.loadProject("Pipeline")
 
-    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", [])
+    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", "", "", [])
     assert [context.name for context in project_model.get_project("Pipeline").contexts or []] == [
         "Base"
     ]
@@ -158,6 +161,8 @@ def test_context_list_model_context_crud_slots(tmp_path, monkeypatch):
         "Moved context",
         "custom",
         "nuke -x %f",
+        "",
+        "",
         ["python-3.11"],
     )
     assert project_model.get_project("Pipeline").contexts == []
@@ -202,7 +207,7 @@ def test_context_list_model_uses_incremental_updates_for_loaded_project(tmp_path
     )
     model.modelReset.connect(lambda: changed_rows.append((-1, -1)))
 
-    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", [])
+    assert model.saveContext("", "", "Pipeline", "Base", "Base context", "shell", "", "", "", [])
     assert inserted_rows == [(0, 0)]
 
     assert model.saveContext(
@@ -213,6 +218,8 @@ def test_context_list_model_uses_incremental_updates_for_loaded_project(tmp_path
         "Updated context",
         "custom",
         "nuke -x %f",
+        "",
+        "",
         ["python-3.11"],
     )
     assert changed_rows == [(0, 0)]
@@ -224,6 +231,8 @@ def test_context_list_model_uses_incremental_updates_for_loaded_project(tmp_path
         "Shot Base",
         "Renamed context",
         LaunchTarget.SHELL.value,
+        "",
+        "",
         "",
         [],
     )
@@ -237,6 +246,8 @@ def test_context_list_model_uses_incremental_updates_for_loaded_project(tmp_path
         "Shot Base",
         "Moved context",
         LaunchTarget.SHELL.value,
+        "",
+        "",
         "",
         [],
     )
@@ -271,6 +282,38 @@ def test_models_report_stale_project_and_context_actions(tmp_path, monkeypatch):
     app_error_hub.clear()
     assert not context_model.ensureContextExists("Pipeline", "Base")
     assert "Refresh the list and try again" in app_error_hub.message
+
+
+def test_context_list_model_payload_includes_thumbnail_fields(tmp_path, monkeypatch):
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.main_window import ProjectListModel, RezContextListModel
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+    Project.create("Pipeline")
+    created = RezContext.create(
+        "Pipeline",
+        ContextMeta(
+            name="Base",
+            builtin_thumbnail_source="qrc:/icons/dcc/Maya",
+            packages=["maya-2025.0"],
+        ),
+    )
+    Path(created.path, "thumbnail.png").write_bytes(b"png")
+
+    project_model = ProjectListModel()
+    context_model = RezContextListModel()
+    context_model.projectModel = project_model
+    context_model.loadProject("Pipeline")
+
+    payload = context_model.get(0)
+
+    assert payload["builtinThumbnailSource"] == "qrc:/icons/dcc/Maya"
+    assert payload["thumbnailSource"].startswith("file:///")
+    query = parse_qs(urlparse(payload["thumbnailSource"]).query)
+    assert "mtime" in query
 
 
 def test_project_list_model_reports_errors_to_app_error_hub(tmp_path, monkeypatch):

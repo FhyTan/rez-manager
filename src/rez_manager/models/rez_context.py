@@ -36,6 +36,7 @@ class ContextMeta:
     description: str = ""
     launch_target: LaunchTarget = LaunchTarget.SHELL
     custom_command: str | None = None
+    builtin_thumbnail_source: str | None = None
     packages: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -44,6 +45,7 @@ class ContextMeta:
             "description": self.description,
             "launch_target": self.launch_target.value,
             "custom_command": self.custom_command,
+            "builtin_thumbnail_source": self.builtin_thumbnail_source,
             "packages": self.packages,
         }
 
@@ -53,6 +55,7 @@ class ContextMeta:
         description = data.get("description", "")
         launch_target = data.get("launch_target", "shell")
         custom_command = data.get("custom_command")
+        builtin_thumbnail_source = data.get("builtin_thumbnail_source")
         packages = data.get("packages", [])
 
         if not isinstance(name, str):
@@ -63,6 +66,8 @@ class ContextMeta:
             raise TypeError("launch_target must be a string")
         if custom_command is not None and not isinstance(custom_command, str):
             raise TypeError("custom_command must be a string or null")
+        if builtin_thumbnail_source is not None and not isinstance(builtin_thumbnail_source, str):
+            raise TypeError("builtin_thumbnail_source must be a string or null")
         if not isinstance(packages, list) or any(not isinstance(pkg, str) for pkg in packages):
             raise TypeError("packages must be a list of strings")
 
@@ -71,6 +76,7 @@ class ContextMeta:
             description=description,
             launch_target=LaunchTarget(launch_target),
             custom_command=custom_command,
+            builtin_thumbnail_source=builtin_thumbnail_source,
             packages=list(packages),
         )
 
@@ -117,6 +123,10 @@ class RezContext:
     @property
     def project_name(self) -> str:
         return self.project.name
+
+    @property
+    def builtin_thumbnail_source(self) -> str:
+        return self.meta.builtin_thumbnail_source or ""
 
     @property
     def thumbnail_path(self) -> str:

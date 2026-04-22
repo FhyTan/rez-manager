@@ -22,10 +22,11 @@ Dialog {
     property string descriptionValue: ""
     property string launchTargetValue: "shell"
     property string customCommandValue: ""
+    property string builtinThumbnailSourceValue: ""
     property url thumbnailSourceValue: ""
     property var packagesValue: []
     property var projectOptions: []
-    signal saveRequested(string originalProjectName, string originalContextName, string projectName, string contextName, string description, string launchTarget, string customCommand, var packages)
+    signal saveRequested(string originalProjectName, string originalContextName, string projectName, string contextName, string description, string launchTarget, string customCommand, string builtinThumbnailSource, string thumbnailSource, var packages)
     readonly property var launchTargetOptions: [
         {
             label: "Shell",
@@ -76,6 +77,7 @@ Dialog {
             return "";
         return "qrc:/icons/dcc/" + targetOption.iconName;
     }
+    readonly property string previewThumbnailSource: root.builtinThumbnailSourceValue.length > 0 ? root.builtinThumbnailSourceValue : root.thumbnailSourceValue.toString()
 
     function comboProjectOptions() {
         if (root.projectValue.length === 0)
@@ -102,10 +104,9 @@ Dialog {
         projectCombo_.currentIndex = projectIndex >= 0 ? projectIndex : 0;
         descriptionField_.text = root.descriptionValue;
         customCommandField_.text = root.customCommandValue;
-        root.thumbnailSourceValue = "";
     }
     onAccepted: {
-        root.saveRequested(root.originalProjectValue, root.originalContextNameValue, projectCombo_.currentText, projectNameField_.text, descriptionField_.text, root.launchTargetValue, customCommandField_.text, root.packagesValue);
+        root.saveRequested(root.originalProjectValue, root.originalContextNameValue, projectCombo_.currentText, projectNameField_.text, descriptionField_.text, root.launchTargetValue, customCommandField_.text, root.builtinThumbnailSourceValue, root.thumbnailSourceValue.toString(), root.packagesValue);
     }
     onRejected: root.close()
 
@@ -220,17 +221,19 @@ Dialog {
                     border.width: 1
                     border.color: Style.border
                     Image {
+                        id: thumbnailPreview_
                         anchors.fill: parent
                         anchors.margins: Style.sm
                         fillMode: Image.PreserveAspectFit
-                        source: root.thumbnailSourceValue
-                        visible: root.thumbnailSourceValue.toString().length > 0
+                        sourceSize.width: parent.width - (Style.sm * 2)
+                        source: root.previewThumbnailSource
+                        visible: thumbnailPreview_.status === Image.Ready
                     }
                     Text {
                         anchors.centerIn: parent
                         text: "🖼"
                         font.pixelSize: 24
-                        visible: root.thumbnailSourceValue.toString().length === 0
+                        visible: thumbnailPreview_.status !== Image.Ready
                     }
                 }
                 CardButton {
@@ -240,13 +243,19 @@ Dialog {
                 CardButton {
                     label: "Add Target Icon"
                     enabled: root.selectedTargetIconSource.length > 0
-                    onClicked: root.thumbnailSourceValue = root.selectedTargetIconSource
+                    onClicked: {
+                        root.builtinThumbnailSourceValue = root.selectedTargetIconSource;
+                        root.thumbnailSourceValue = "";
+                    }
                 }
                 CardButton {
                     label: "Clear"
                     danger: true
-                    enabled: root.thumbnailSourceValue.toString().length > 0
-                    onClicked: root.thumbnailSourceValue = ""
+                    enabled: root.previewThumbnailSource.length > 0
+                    onClicked: {
+                        root.builtinThumbnailSourceValue = "";
+                        root.thumbnailSourceValue = "";
+                    }
                 }
             }
         }
@@ -257,7 +266,10 @@ Dialog {
         title: "Choose Thumbnail"
         fileMode: FileDialog.OpenFile
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.svg *.webp)", "All files (*)"]
-        onAccepted: root.thumbnailSourceValue = thumbnailDialog_.selectedFile
+        onAccepted: {
+            root.builtinThumbnailSourceValue = "";
+            root.thumbnailSourceValue = thumbnailDialog_.selectedFile;
+        }
     }
 
     // Inline helper components ────────────────────────────────

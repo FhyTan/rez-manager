@@ -17,6 +17,8 @@ Rectangle {
     property string description: "No description."
     property string launchTarget: "shell"   // blender | maya | houdini | nuke | nukex | shell | custom
     property string packages: ""        // comma-separated list
+    property string builtinThumbnailSource: ""
+    property string thumbnailSource: ""
 
     signal editInfoRequested
     signal editPackagesRequested
@@ -46,6 +48,7 @@ Rectangle {
     }
 
     property color accentColor: Style.launchColor(launchTarget)
+    readonly property string resolvedThumbnailSource: builtinThumbnailSource.length > 0 ? builtinThumbnailSource : thumbnailSource
 
     // ── Geometry ─────────────────────────────────────────────
     width: 365
@@ -140,12 +143,23 @@ Rectangle {
                 border.width: 1
                 border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.35)
 
+                Image {
+                    id: thumbnailImage_
+                    anchors.fill: parent
+                    anchors.margins: Style.xs
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    sourceSize.width: parent.width - (Style.xs * 2)
+                    source: root.resolvedThumbnailSource
+                    visible: thumbnailImage_.status === Image.Ready
+                }
                 Text {
                     anchors.centerIn: parent
                     text: root.initials
                     color: root.accentColor
                     font.pixelSize: 20
                     font.bold: true
+                    visible: thumbnailImage_.status !== Image.Ready
                 }
             }
 

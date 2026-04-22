@@ -47,8 +47,8 @@ ApplicationWindow {
         id: editorDlg
         anchors.centerIn: root.contentItem
         projectOptions: projectModel_.projectNames
-        onSaveRequested: function (originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages) {
-            const saved = contextModel_.saveContext(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, packages);
+        onSaveRequested: function (originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, builtinThumbnailSource, thumbnailSource, packages) {
+            const saved = contextModel_.saveContext(originalProjectName, originalContextName, projectName, contextName, description, launchTarget, customCommand, builtinThumbnailSource, thumbnailSource, packages);
             if (saved) {
                 editorDlg.close();
                 root.selectProjectByName(projectName);
@@ -236,6 +236,8 @@ ApplicationWindow {
         editorDlg.descriptionValue = "";
         editorDlg.launchTargetValue = "shell";
         editorDlg.customCommandValue = "";
+        editorDlg.builtinThumbnailSourceValue = "";
+        editorDlg.thumbnailSourceValue = "";
         editorDlg.packagesValue = [];
         editorDlg.open();
     }
@@ -251,6 +253,8 @@ ApplicationWindow {
         editorDlg.descriptionValue = modelData.description;
         editorDlg.launchTargetValue = modelData.launchTarget;
         editorDlg.customCommandValue = modelData.customCommand;
+        editorDlg.builtinThumbnailSourceValue = modelData.builtinThumbnailSource;
+        editorDlg.thumbnailSourceValue = modelData.thumbnailSource;
         editorDlg.packagesValue = modelData.packageRequests;
         editorDlg.open();
     }
@@ -618,6 +622,8 @@ ApplicationWindow {
                                     required property string packages
                                     required property var packageRequests
                                     required property string customCommand
+                                    required property string builtinThumbnailSource
+                                    required property string thumbnailSource
 
                                     width: contextCard_.width
                                     height: contextCard_.height
@@ -629,6 +635,8 @@ ApplicationWindow {
                                         description: contextDelegate_.description
                                         launchTarget: contextDelegate_.launchTarget
                                         packages: contextDelegate_.packages
+                                        builtinThumbnailSource: contextDelegate_.builtinThumbnailSource
+                                        thumbnailSource: contextDelegate_.thumbnailSource
 
                                         onEditInfoRequested: {
                                             root.openEditContextDialog({
@@ -638,7 +646,9 @@ ApplicationWindow {
                                                 "launchTarget": contextDelegate_.launchTarget,
                                                 "packages": contextDelegate_.packages,
                                                 "packageRequests": contextDelegate_.packageRequests,
-                                                "customCommand": contextDelegate_.customCommand
+                                                "customCommand": contextDelegate_.customCommand,
+                                                "builtinThumbnailSource": contextDelegate_.builtinThumbnailSource,
+                                                "thumbnailSource": contextDelegate_.thumbnailSource
                                             });
                                         }
                                         onEditPackagesRequested: {

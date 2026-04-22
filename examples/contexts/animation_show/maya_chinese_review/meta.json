@@ -1,8 +1,9 @@
 {
-  "name": "maya_chinese_review",
+  "builtin_thumbnail_source": "qrc:/icons/dcc/Maya",
+  "custom_command": null,
   "description": "Localized Maya review setup with Chinese UI resources and scene assembly tools.",
   "launch_target": "maya",
-  "custom_command": null,
+  "name": "maya_chinese_review",
   "packages": [
     "maya-2024",
     "maya_language-chinese",

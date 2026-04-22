@@ -14,6 +14,7 @@ def test_context_meta_roundtrip():
         name="test-env",
         description="A test environment",
         launch_target=LaunchTarget.MAYA,
+        builtin_thumbnail_source="qrc:/icons/dcc/Maya",
         packages=["maya-2024", "python-3.11"],
     )
     data = meta.to_dict()
@@ -21,6 +22,7 @@ def test_context_meta_roundtrip():
 
     assert restored.name == meta.name
     assert restored.launch_target == LaunchTarget.MAYA
+    assert restored.builtin_thumbnail_source == "qrc:/icons/dcc/Maya"
     assert restored.packages == ["maya-2024", "python-3.11"]
 
 
@@ -86,5 +88,21 @@ def test_context_meta_rejects_invalid_package_types():
                 "launch_target": "shell",
                 "custom_command": None,
                 "packages": "python-3.11",
+            }
+        )
+
+
+def test_context_meta_rejects_invalid_builtin_thumbnail_source():
+    from rez_manager.models.rez_context import ContextMeta
+
+    with pytest.raises(TypeError, match="builtin_thumbnail_source must be a string or null"):
+        ContextMeta.from_dict(
+            {
+                "name": "Broken Context",
+                "description": "Invalid thumbnail metadata",
+                "launch_target": "shell",
+                "custom_command": None,
+                "builtin_thumbnail_source": ["qrc:/icons/dcc/Shell"],
+                "packages": [],
             }
         )
