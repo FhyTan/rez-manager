@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.impl
 import QtQuick.Templates as T
 import ".."
 
@@ -7,8 +8,8 @@ T.TextArea {
 
     readonly property color hoverBackgroundColor: Qt.lighter(Style.card, 1.08)
 
-    implicitWidth: 240
-    implicitHeight: 92
+    implicitWidth: Math.max(240, contentWidth + leftPadding + rightPadding, implicitBackgroundWidth + leftInset + rightInset, placeholder_.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(92, contentHeight + topPadding + bottomPadding, implicitBackgroundHeight + topInset + bottomInset, placeholder_.implicitHeight + topPadding + bottomPadding)
 
     hoverEnabled: true
     leftPadding: Style.md
@@ -40,6 +41,21 @@ T.TextArea {
                 duration: 100
             }
         }
+    }
+
+    PlaceholderText {
+        id: placeholder_
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
+        text: control.placeholderText
+        font: control.font
+        color: control.placeholderTextColor
+        verticalAlignment: control.verticalAlignment
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        elide: Text.ElideRight
+        renderType: control.renderType
     }
 
     // qmllint disable

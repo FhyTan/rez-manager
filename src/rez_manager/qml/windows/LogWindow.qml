@@ -23,8 +23,7 @@ Window {
     }
 
     function scrollToEnd() {
-        logFlickable_.contentY = Math.max(0, logFlickable_.contentHeight - logFlickable_.height);
-        logFlickable_.contentX = 0;
+        verticalScrollBar_.position = 1.0 - verticalScrollBar_.size;
     }
 
     onVisibleChanged: {
@@ -146,40 +145,28 @@ Window {
             color: Style.bg
 
             ScrollView {
+                id: logFlickable_
                 anchors.fill: parent
-                anchors.margins: Style.xl
-                clip: true
 
-                Flickable {
-                    id: logFlickable_
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    contentWidth: logPanel_.width
-                    contentHeight: logPanel_.height
+                TextArea {
+                    id: logText_
+                    readOnly: true
+                    selectByMouse: true
+                    hoverEnabled: false
+                    text: root.logViewerController ? (root.logViewerController.loadError.length > 0 ? root.logViewerController.loadError : root.logViewerController.logText) : ""
+                    color: root.logViewerController && root.logViewerController.loadError.length > 0 ? Style.error : Style.textPrimary
+                    wrapMode: TextEdit.NoWrap
+                    font.family: "Cascadia Mono"
+                    font.pixelSize: Style.fontSm
+                    persistentSelection: true
+                }
 
-                    Rectangle {
-                        id: logPanel_
-                        width: Math.max(logFlickable_.width, logText_.implicitWidth + Style.md * 2)
-                        height: Math.max(logFlickable_.height, logText_.implicitHeight + Style.md * 2)
-                        radius: Style.radius
-                        color: Style.surface
-                        border.width: 1
-                        border.color: Style.border
-
-                        TextEdit {
-                            id: logText_
-                            anchors.fill: parent
-                            anchors.margins: Style.md
-                            readOnly: true
-                            selectByMouse: true
-                            text: root.logViewerController ? (root.logViewerController.loadError.length > 0 ? root.logViewerController.loadError : root.logViewerController.logText) : ""
-                            color: root.logViewerController && root.logViewerController.loadError.length > 0 ? Style.error : Style.textPrimary
-                            wrapMode: TextEdit.NoWrap
-                            font.family: "Cascadia Mono"
-                            font.pixelSize: Style.fontSm
-                            persistentSelection: true
-                        }
-                    }
+                ScrollBar.vertical: ScrollBar {
+                    id: verticalScrollBar_
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    policy: ScrollBar.AlwaysOn
                 }
             }
         }

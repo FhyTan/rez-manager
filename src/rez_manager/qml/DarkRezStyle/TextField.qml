@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.impl
 import QtQuick.Templates as T
 import ".."
 
@@ -7,8 +8,8 @@ T.TextField {
 
     readonly property color hoverBackgroundColor: Qt.lighter(Style.card, 1.08)
 
-    implicitWidth: 160
-    implicitHeight: 38
+    implicitWidth: Math.max(160, implicitBackgroundWidth + leftInset + rightInset, Math.max(contentWidth, placeholder_.implicitWidth) + leftPadding + rightPadding)
+    implicitHeight: Math.max(38, implicitBackgroundHeight + topInset + bottomInset, contentHeight + topPadding + bottomPadding, placeholder_.implicitHeight + topPadding + bottomPadding)
 
     hoverEnabled: true
     leftPadding: Style.md
@@ -19,6 +20,7 @@ T.TextField {
     selectionColor: Style.accent
     selectedTextColor: Style.white
     placeholderTextColor: Style.textDisabled
+    verticalAlignment: TextInput.AlignVCenter
 
     background: Rectangle {
         id: background_
@@ -40,6 +42,21 @@ T.TextField {
                 duration: 100
             }
         }
+    }
+
+    PlaceholderText {
+        id: placeholder_
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
+        text: control.placeholderText
+        font: control.font
+        color: control.placeholderTextColor
+        verticalAlignment: control.verticalAlignment
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        elide: Text.ElideRight
+        renderType: control.renderType
     }
 
     // qmllint disable

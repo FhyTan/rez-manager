@@ -101,12 +101,13 @@ Dialog {
                 }
 
                 ScrollView {
+                    id: licenseScroll_
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
 
                     Text {
-                        width: parent.width
+                        width: licenseScroll_.availableWidth
                         text: root.licenseText
                         color: Style.textSecondary
                         font.pixelSize: Style.fontSm
