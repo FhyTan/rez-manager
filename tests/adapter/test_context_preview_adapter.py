@@ -1,10 +1,10 @@
-"""Tests for context preview data helpers."""
+"""Tests for Rez context adapter helpers."""
 
 from __future__ import annotations
 
-import sys
-import types
-from types import SimpleNamespace
+from pathlib import Path
+
+import pytest
 
 
 def test_system_environment_variable_names_include_supported_platforms():
@@ -20,111 +20,142 @@ def test_preserved_system_environment_uses_case_insensitive_matching_on_windows(
 
     preserved = preserved_system_environment(
         process_environ={
-            "Path": "C:\\Windows\\System32",
-            "SystemRoot": "C:\\Windows",
-            "TEMP": "C:\\Temp",
+            "Path": r"C:\Windows\System32",
+            "SystemRoot": r"C:\Windows",
+            "TEMP": r"C:\Temp",
             "UNRELATED": "ignored",
         },
         platform_name="windows",
     )
 
     assert preserved == {
-        "Path": "C:\\Windows\\System32",
-        "SystemRoot": "C:\\Windows",
-        "TEMP": "C:\\Temp",
+        "Path": r"C:\Windows\System32",
+        "SystemRoot": r"C:\Windows",
+        "TEMP": r"C:\Temp",
     }
 
 
-def test_resolve_context_passes_package_paths_to_rez(monkeypatch):
+def test_resolve_context_reads_real_rez_repository(
+    rez_host_environment,
+    temp_packages_dir: Path,
+    rez_package_matrix: dict[str, object],
+):
     from rez_manager.adapter.context import resolve_context
 
-    captured: dict[str, object] = {}
+    result = resolve_context(
+        [str(rez_package_matrix["app_request"])],
+        package_paths=[str(temp_packages_dir)],
+    )
 
-    class FakeResolvedContext:
-        def __init__(self, package_requests, *, package_paths=None):
-            captured["package_requests"] = list(package_requests)
-            captured["package_paths"] = package_paths
-            self.resolved_packages = [SimpleNamespace(qualified_package_name="maya-2025.0")]
-
-        def get_environ(self, *, parent_environ=None):
-            return {"PATH": "C:\\Windows\\System32", "REZ_USED_RESOLVE": "maya-2025.0"}
-
-        def get_tools(self):
-            return {"maya.exe": object()}
-
-    rez_module = types.ModuleType("rez")
-    resolved_context_module = types.ModuleType("rez.resolved_context")
-    resolved_context_module.ResolvedContext = FakeResolvedContext
-    monkeypatch.setitem(sys.modules, "rez", rez_module)
-    monkeypatch.setitem(sys.modules, "rez.resolved_context", resolved_context_module)
-
-    result = resolve_context(["maya-2025.0"], package_paths=["D:\\packages\\maya"])
-
-    assert result.success is True
-    assert captured["package_requests"] == ["maya-2025.0"]
-    assert captured["package_paths"] == ["D:\\packages\\maya"]
-    assert result.environ == {"PATH": "C:\\Windows\\System32", "REZ_USED_RESOLVE": "maya-2025.0"}
-    assert result.tools == ["maya.exe"]
-    assert result.packages == ["maya-2025.0"]
+    assert set(result.packages) == {"app-1.0.0", "python-3.11"}
+    assert set(result.tools) == {"app", "python"}
+    assert Path(result.environ["APP_HOME"]).samefile(Path(rez_package_matrix["app_dir"]))
+    normalized_path = result.environ["PATH"].lower()
+    assert r"c:\windows\system32" in normalized_path
+    assert "c:/python311" in normalized_path
 
 
-def test_save_context_passes_package_paths_to_rez(monkeypatch, tmp_path):
+def test_resolve_context_wraps_missing_package_family(temp_packages_dir: Path, initialized_rez):
+    from rez.exceptions import PackageFamilyNotFoundError
+
+    from rez_manager.adapter.context import resolve_context
+    from rez_manager.exceptions import RezResolveError
+
+    with pytest.raises(RezResolveError) as exc_info:
+        resolve_context(["missing-1"], package_paths=[str(temp_packages_dir)])
+
+    assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
+
+
+def test_resolve_context_wraps_missing_transitive_dependency(
+    temp_packages_dir: Path,
+    rez_package_matrix: dict[str, object],
+):
+    from rez.exceptions import PackageFamilyNotFoundError
+
+    from rez_manager.adapter.context import resolve_context
+    from rez_manager.exceptions import RezResolveError
+
+    with pytest.raises(RezResolveError) as exc_info:
+        resolve_context(
+            [str(rez_package_matrix["broken_dep_request"])],
+            package_paths=[str(temp_packages_dir)],
+        )
+
+    assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
+    assert "missing_lib" in str(exc_info.value)
+
+
+def test_save_context_serializes_real_rez_context(
+    temp_context_dir: Path,
+    temp_packages_dir: Path,
+    rez_package_matrix: dict[str, object],
+):
     from rez_manager.adapter.context import save_context
 
-    captured: dict[str, object] = {}
+    context_path = temp_context_dir / "app.rxt"
 
-    class FakeResolvedContext:
-        def __init__(self, package_requests, *, package_paths=None):
-            captured["package_requests"] = list(package_requests)
-            captured["package_paths"] = package_paths
-
-        def save(self, path):
-            captured["save_path"] = path
-
-    rez_module = types.ModuleType("rez")
-    resolved_context_module = types.ModuleType("rez.resolved_context")
-    resolved_context_module.ResolvedContext = FakeResolvedContext
-    monkeypatch.setitem(sys.modules, "rez", rez_module)
-    monkeypatch.setitem(sys.modules, "rez.resolved_context", resolved_context_module)
-
-    success, error = save_context(
-        ["maya-2025.0"],
-        str(tmp_path / "context.rxt"),
-        package_paths=["D:\\packages\\maya"],
+    save_context(
+        [str(rez_package_matrix["app_request"])],
+        str(context_path),
+        package_paths=[str(temp_packages_dir)],
     )
 
-    assert success is True
-    assert error == ""
-    assert captured["package_paths"] == ["D:\\packages\\maya"]
-    assert captured["save_path"] == str(tmp_path / "context.rxt")
+    assert context_path.exists()
 
 
-def test_launch_context_passes_package_paths_to_rez(monkeypatch):
-    from rez_manager.adapter.context import launch_context
+def test_save_context_wraps_missing_dependency(
+    temp_context_dir: Path,
+    temp_packages_dir: Path,
+    rez_package_matrix: dict[str, object],
+):
+    from rez.exceptions import PackageFamilyNotFoundError
 
-    captured: dict[str, object] = {}
+    from rez_manager.adapter.context import save_context
+    from rez_manager.exceptions import RezContextSaveError
 
-    class FakeResolvedContext:
-        def __init__(self, package_requests, *, package_paths=None):
-            captured["package_requests"] = list(package_requests)
-            captured["package_paths"] = package_paths
+    with pytest.raises(RezContextSaveError) as exc_info:
+        save_context(
+            [str(rez_package_matrix["broken_dep_request"])],
+            str(temp_context_dir / "broken.rxt"),
+            package_paths=[str(temp_packages_dir)],
+        )
 
-        def execute_shell(self, **kwargs):
-            captured["execute_shell"] = kwargs
-            return "process"
+    assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
 
-    rez_module = types.ModuleType("rez")
-    resolved_context_module = types.ModuleType("rez.resolved_context")
-    resolved_context_module.ResolvedContext = FakeResolvedContext
-    monkeypatch.setitem(sys.modules, "rez", rez_module)
-    monkeypatch.setitem(sys.modules, "rez.resolved_context", resolved_context_module)
 
-    process = launch_context(
-        ["maya-2025.0"],
-        ["maya.exe"],
-        package_paths=["D:\\packages\\maya"],
+def test_load_context_round_trips_saved_context(
+    rez_host_environment,
+    temp_context_dir: Path,
+    temp_packages_dir: Path,
+    rez_package_matrix: dict[str, object],
+):
+    from rez_manager.adapter.context import load_context, save_context
+
+    context_path = temp_context_dir / "app.rxt"
+    save_context(
+        [str(rez_package_matrix["app_request"])],
+        str(context_path),
+        package_paths=[str(temp_packages_dir)],
     )
 
-    assert process == "process"
-    assert captured["package_paths"] == ["D:\\packages\\maya"]
-    assert captured["execute_shell"]["command"] == ["maya.exe"]
+    result = load_context(str(context_path))
+
+    assert set(result.packages) == {"app-1.0.0", "python-3.11"}
+    assert set(result.tools) == {"app", "python"}
+    assert Path(result.environ["APP_HOME"]).samefile(Path(rez_package_matrix["app_dir"]))
+
+
+def test_load_context_wraps_invalid_serialized_context(temp_context_dir: Path, initialized_rez):
+    from rez.exceptions import ResolvedContextError
+
+    from rez_manager.adapter.context import load_context
+    from rez_manager.exceptions import RezContextLoadError
+
+    context_path = temp_context_dir / "invalid.rxt"
+    context_path.write_text("not a rez context", encoding="utf-8")
+
+    with pytest.raises(RezContextLoadError) as exc_info:
+        load_context(str(context_path))
+
+    assert isinstance(exc_info.value.__cause__, ResolvedContextError)

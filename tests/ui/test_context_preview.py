@@ -19,7 +19,6 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0", "python-3.11"]))
 
     preview_result = ResolveResult(
-        success=True,
         packages=["maya-2025.0", "python-3.11"],
         environ={
             "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
@@ -71,7 +70,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
 
 
 def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_path, monkeypatch):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.exceptions import RezResolveError
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -84,18 +83,12 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
-    preview_result = ResolveResult(
-        success=False,
-        packages=[],
-        environ={},
-        tools=[],
-        error="Resolve failed.",
-    )
+    preview_error = RezResolveError("Resolve failed.")
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
         lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
-            request_id, preview_result
+            request_id, preview_error
         ),
     )
 
@@ -156,7 +149,6 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
 
     assert controller.loadContext("Pipeline", "Base")
     stale_result = ResolveResult(
-        success=True,
         packages=["maya-2025.0"],
         environ={},
         tools=[],
@@ -265,7 +257,6 @@ def test_context_preview_controller_splits_path_into_user_and_system_sections(
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
     preview_result = ResolveResult(
-        success=True,
         packages=["maya-2025.0"],
         environ={
             "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
@@ -311,7 +302,6 @@ def test_context_preview_controller_classifies_windows_system_names_case_insensi
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
     preview_result = ResolveResult(
-        success=True,
         packages=["maya-2025.0"],
         environ={
             "SystemRoot": "C:\\Windows",
@@ -356,7 +346,6 @@ def test_context_preview_controller_adds_launch_system_variables_missing_from_re
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
     preview_result = ResolveResult(
-        success=True,
         packages=["maya-2025.0"],
         environ={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
         tools=[],

@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from rez_manager.exceptions import RezPackageQueryError, RezRepositoryError
+
 
 @dataclass
 class PackageInfo:
@@ -35,8 +37,8 @@ def list_repositories(repo_paths: list[str]) -> list[RepositoryInfo]:
         try:
             repo = package_repository_manager.get_repository(path)
             packages = sorted(str(fam.name) for fam in repo.iter_package_families())
-        except Exception:  # noqa: BLE001
-            packages = []
+        except _repository_exception_types() as exc:
+            raise RezRepositoryError(f"Failed to load Rez repository '{path}': {exc}") from exc
         repos.append(RepositoryInfo(path=path, label=label, packages=packages))
     return repos
 
@@ -53,15 +55,32 @@ def get_package_info(name: str, version: str, repo_paths: list[str]) -> PackageI
     from rez.packages import Package, get_package  # noqa: PLC0415
     from rez.version import Version  # noqa: PLC0415
 
-    pkg: Package | None = get_package(name, Version(version), paths=repo_paths)
+    try:
+        pkg: Package | None = get_package(name, Version(version), paths=repo_paths)
+    except _package_query_exception_types() as exc:
+        raise RezPackageQueryError(
+            f"Failed to query Rez package '{name}-{version}': {exc}"
+        ) from exc
+    except ValueError as exc:
+        raise RezPackageQueryError(
+            f"Failed to query Rez package '{name}-{version}': {exc}"
+        ) from exc
+
     if pkg is None:
         return None
 
-    variants = [list(map(lambda p: p.name, v)) for v in (pkg.variants or [[]])]
-    tools = list(pkg.tools or [])
-    requires = [str(r) for r in (pkg.requires or [])]
-    description = pkg.description or ""
-    python_statements = str(pkg.data.get("commands", ""))
+    try:
+        variants = [
+            [requirement.name for requirement in variant] for variant in (pkg.variants or [[]])
+        ]
+        tools = list(pkg.tools or [])
+        requires = [str(r) for r in (pkg.requires or [])]
+        description = pkg.description or ""
+        python_statements = str(pkg.data.get("commands", ""))
+    except _package_query_exception_types() as exc:
+        raise RezPackageQueryError(
+            f"Failed to query Rez package '{name}-{version}': {exc}"
+        ) from exc
 
     return PackageInfo(
         name=name,
@@ -78,6 +97,44 @@ def get_package_versions(name: str, repo_paths: list[str]) -> list[str]:
     """Return all available versions for a package name, newest first."""
     from rez.packages import iter_packages  # noqa: PLC0415
 
-    pkgs = list(iter_packages(name, paths=repo_paths))
+    try:
+        pkgs = list(iter_packages(name, paths=repo_paths))
+    except _package_query_exception_types() as exc:
+        raise RezPackageQueryError(
+            f"Failed to query Rez package versions for '{name}': {exc}"
+        ) from exc
+
     pkgs.sort(key=lambda p: p.version, reverse=True)
     return [str(p.version) for p in pkgs]
+
+
+def _repository_exception_types() -> tuple[type[Exception], ...]:
+    from rez.exceptions import (  # noqa: PLC0415
+        ConfigurationError,
+        PackageMetadataError,
+        ResourceError,
+        RezSystemError,
+    )
+
+    return (
+        ConfigurationError,
+        PackageMetadataError,
+        ResourceError,
+        RezSystemError,
+    )
+
+
+def _package_query_exception_types() -> tuple[type[Exception], ...]:
+    from rez.exceptions import (  # noqa: PLC0415
+        ConfigurationError,
+        PackageMetadataError,
+        ResourceError,
+        RezSystemError,
+    )
+
+    return (
+        ConfigurationError,
+        PackageMetadataError,
+        ResourceError,
+        RezSystemError,
+    )

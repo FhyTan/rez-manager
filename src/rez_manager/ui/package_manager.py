@@ -29,6 +29,7 @@ from rez_manager.adapter.packages import (
     get_package_versions,
     list_repositories,
 )
+from rez_manager.exceptions import RezAdapterError
 from rez_manager.models.launch_target import parse_launch_target
 from rez_manager.models.rez_context import ContextMeta, RezContext
 from rez_manager.models.settings import AppSettings
@@ -655,8 +656,8 @@ class PackageManagerController(QObject):
         self._set_selected_request_row(row)
         self._set_selected_repository_index(-1)
         self._set_selected_repository_package_index(-1)
-        self._refresh_package_detail(item.name, item.version)
-        clear_ui_error()
+        if self._refresh_package_detail(item.name, item.version):
+            clear_ui_error()
         return True
 
     @Slot(str, str, result=bool)
@@ -670,8 +671,8 @@ class PackageManagerController(QObject):
         self._set_selected_request_row(row)
         self._set_selected_repository_index(-1)
         self._set_selected_repository_package_index(-1)
-        self._refresh_package_detail(trimmed_name, _normalize_version(version))
-        clear_ui_error()
+        if self._refresh_package_detail(trimmed_name, _normalize_version(version)):
+            clear_ui_error()
         return True
 
     @Slot(int, int, result=bool)
@@ -684,8 +685,8 @@ class PackageManagerController(QObject):
         self._set_selected_request_row(-1)
         self._set_selected_repository_index(repo_index)
         self._set_selected_repository_package_index(package_index)
-        self._refresh_package_detail(package_name, "")
-        clear_ui_error()
+        if self._refresh_package_detail(package_name, ""):
+            clear_ui_error()
         return True
 
     @Slot(int, result=bool)
@@ -697,11 +698,11 @@ class PackageManagerController(QObject):
             return False
 
         selected_version = versions[index]
-        self._refresh_package_detail(
+        if self._refresh_package_detail(
             self._package_detail.name,
             _normalize_version(selected_version),
-        )
-        clear_ui_error()
+        ):
+            clear_ui_error()
         return True
 
     @Slot(result=bool)
@@ -752,18 +753,25 @@ class PackageManagerController(QObject):
             )
         return _PackageSelectionSnapshot()
 
-    def _refresh_package_detail(self, package_name: str, preferred_version: str) -> None:
-        detail_versions, selected_version_index, package_info = _load_package_detail(
-            package_name,
-            preferred_version,
-            self._repo_paths,
-        )
+    def _refresh_package_detail(self, package_name: str, preferred_version: str) -> bool:
+        try:
+            detail_versions, selected_version_index, package_info = _load_package_detail(
+                package_name,
+                preferred_version,
+                self._repo_paths,
+            )
+        except RezAdapterError as exc:
+            self._package_detail.reset()
+            report_ui_error(str(exc))
+            return False
+
         self._package_detail.setPackageWithSelectedVersion(
             package_name,
             detail_versions,
             selected_version_index,
             package_info,
         )
+        return True
 
     def _restore_refresh_selection(self, refresh_result: _RepositoryRefreshResult) -> None:
         if refresh_result.selection_type == "request":
@@ -895,7 +903,7 @@ class _RepositoryRefreshWorker(QRunnable):
                 refresh_result.detail_versions = detail_versions
                 refresh_result.detail_selected_version_index = selected_version_index
                 refresh_result.detail_package_info = package_info
-        except Exception as exc:  # noqa: BLE001
+        except RezAdapterError as exc:
             self.signals.finished.emit(
                 self._request_id,
                 _RepositoryRefreshResult(success=False, error=str(exc)),

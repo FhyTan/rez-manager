@@ -313,6 +313,41 @@ def test_package_manager_controller_clears_stale_context_after_failed_load(tmp_p
     assert not controller.save()
 
 
+def test_package_manager_controller_reports_repository_refresh_errors(tmp_path, monkeypatch):
+    import rez_manager.ui.package_manager as package_manager
+    from rez_manager.exceptions import RezRepositoryError
+    from rez_manager.models.rez_context import ContextMeta, RezContext
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.error_hub import app_error_hub
+    from rez_manager.ui.package_manager import PackageManagerController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(
+        AppSettings(
+            package_repositories=["D:\\packages\\maya"],
+            contexts_location=str(tmp_path / "contexts"),
+        )
+    )
+    Project.create("Pipeline")
+    RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2024.0"]))
+    monkeypatch.setattr(
+        package_manager,
+        "list_repositories",
+        lambda repo_paths: (_ for _ in ()).throw(
+            RezRepositoryError("Failed to load Rez repository.")
+        ),
+    )
+
+    app_error_hub.clear()
+    controller = PackageManagerController()
+
+    assert controller.loadContext("Pipeline", "Base")
+    _wait_for(lambda: not controller.isLoadingRepositories)
+    assert controller.repositoryModel.rowCount() == 0
+    assert app_error_hub.message == "Failed to load Rez repository."
+
+
 def test_package_manager_controller_refresh_clears_cache_and_reloads_detail(
     tmp_path, monkeypatch
 ):

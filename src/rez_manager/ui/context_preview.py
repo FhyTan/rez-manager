@@ -25,6 +25,7 @@ from rez_manager.adapter.context import (
     resolve_context,
     system_environment_variable_names,
 )
+from rez_manager.exceptions import RezResolveError
 from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
 from rez_manager.runtime import IS_WINDOWS
@@ -182,18 +183,18 @@ class ContextPreviewController(QObject):
             return
 
         self._is_loading = False
+        if isinstance(resolve_result, RezResolveError):
+            self._result = None
+            self._set_environment_sections(None)
+            self.stateChanged.emit()
+            report_ui_error(str(resolve_result))
+            return
+
         if not isinstance(resolve_result, ResolveResult):
             self._result = None
             self._set_environment_sections(None)
             self.stateChanged.emit()
             report_ui_error("Failed to resolve preview data.")
-            return
-
-        if not resolve_result.success:
-            self._result = None
-            self._set_environment_sections(None)
-            self.stateChanged.emit()
-            report_ui_error(resolve_result.error or "Failed to resolve preview data.")
             return
 
         self._result = resolve_result
@@ -316,10 +317,16 @@ class _ContextPreviewWorker(QRunnable):
 
     @Slot()
     def run(self) -> None:
-        self.signals.finished.emit(
-            self._request_id,
-            resolve_context(self._package_requests, package_paths=self._package_paths),
-        )
+        try:
+            preview_result = resolve_context(
+                self._package_requests,
+                package_paths=self._package_paths,
+            )
+        except RezResolveError as exc:
+            self.signals.finished.emit(self._request_id, exc)
+            return
+
+        self.signals.finished.emit(self._request_id, preview_result)
 
 
 def _package_entry(label: str) -> dict[str, str]:

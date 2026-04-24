@@ -12,6 +12,12 @@ from importlib.resources import files
 from os import environ
 from typing import Protocol
 
+from rez_manager.exceptions import (
+    RezContextLaunchError,
+    RezContextLoadError,
+    RezContextSaveError,
+    RezResolveError,
+)
 from rez_manager.runtime import IS_LINUX, IS_MACOS, IS_WINDOWS
 
 _SYSTEM_ENV_CATALOG_NAME = "system_env_vars.json"
@@ -20,11 +26,9 @@ _WINDOWS_PLATFORM = "windows"
 
 @dataclass
 class ResolveResult:
-    success: bool
     packages: list[str]
     environ: dict[str, str]
     tools: list[str]
-    error: str | None = None
 
 
 class _ResolvedContextLike(Protocol):
@@ -43,15 +47,10 @@ def resolve_context(
     """Resolve a list of package requests using the Rez Python API."""
     try:
         ctx = _create_resolved_context(package_requests, package_paths=package_paths)
-        return _resolve_result_from_context(ctx)
-    except Exception as exc:  # noqa: BLE001
-        return ResolveResult(
-            success=False,
-            packages=[],
-            environ={},
-            tools=[],
-            error=str(exc),
-        )
+    except _context_creation_exception_types() as exc:
+        raise RezResolveError(f"Failed to resolve Rez context: {exc}") from exc
+
+    return _resolve_result_from_context(ctx)
 
 
 def system_environment_variable_names(platform_name: str | None = None) -> list[str]:
@@ -106,14 +105,15 @@ def save_context(
     path: str,
     *,
     package_paths: Sequence[str] | None = None,
-) -> tuple[bool, str]:
+) -> None:
     """Serialize a resolved context to a .rxt file at the given path."""
     try:
         ctx = _create_resolved_context(package_requests, package_paths=package_paths)
         ctx.save(path)
-        return True, ""
-    except Exception as exc:  # noqa: BLE001
-        return False, str(exc)
+    except _context_creation_exception_types() as exc:
+        raise RezContextSaveError(f"Failed to save Rez context to '{path}': {exc}") from exc
+    except OSError as exc:
+        raise RezContextSaveError(f"Failed to save Rez context to '{path}': {exc}") from exc
 
 
 def load_context(path: str) -> ResolveResult:
@@ -122,15 +122,12 @@ def load_context(path: str) -> ResolveResult:
         from rez.resolved_context import ResolvedContext  # noqa: PLC0415
 
         ctx = ResolvedContext.load(path)
-        return _resolve_result_from_context(ctx)
-    except Exception as exc:  # noqa: BLE001
-        return ResolveResult(
-            success=False,
-            packages=[],
-            environ={},
-            tools=[],
-            error=str(exc),
-        )
+    except _context_load_exception_types() as exc:
+        raise RezContextLoadError(f"Failed to load Rez context from '{path}': {exc}") from exc
+    except OSError as exc:
+        raise RezContextLoadError(f"Failed to load Rez context from '{path}': {exc}") from exc
+
+    return _resolve_result_from_context(ctx)
 
 
 def launch_context(
@@ -140,14 +137,26 @@ def launch_context(
     package_paths: Sequence[str] | None = None,
 ) -> subprocess.Popen:
     """Launch a subprocess inside a resolved Rez context."""
-    ctx = _create_resolved_context(package_requests, package_paths=package_paths)
-    return ctx.execute_shell(
-        command=_normalized_launch_command(command),
-        detached=True,
-        block=False,
-        start_new_session=True,
-        parent_environ=preserved_system_environment(),
-    )
+    from rez.resolved_context import ResolvedContext
+
+    try:
+        ctx: ResolvedContext = _create_resolved_context(
+            package_requests,
+            package_paths=package_paths,
+        )
+        return ctx.execute_shell(
+            command=_normalized_launch_command(command),
+            detached=True,
+            block=False,
+            start_new_session=True,
+            parent_environ=preserved_system_environment(),
+        )
+    except _context_creation_exception_types() as exc:
+        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
+    except _context_launch_exception_types() as exc:
+        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
+    except OSError as exc:
+        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
 
 
 def _platform_key(platform_name: str | None) -> str:
@@ -187,7 +196,6 @@ def _resolve_result_from_context(
         for key, value in context.get_environ(parent_environ=preserved_environ).items()
     }
     return ResolveResult(
-        success=True,
         packages=[package.qualified_package_name for package in context.resolved_packages],
         environ=effective_environ,
         tools=[str(tool) for tool in context.get_tools().keys()],
@@ -207,10 +215,68 @@ def _create_resolved_context(
     return ResolvedContext(list(package_requests), package_paths=resolved_package_paths)
 
 
-def _normalized_launch_command(command: None | str | Sequence[str]) -> str | list[str]:
+def _normalized_launch_command(command: None | str | Sequence[str]) -> None | str | list[str]:
     if isinstance(command, str):
         return command
     if command is None:
         return None
 
     return [str(part) for part in command]
+
+
+def _context_creation_exception_types() -> tuple[type[Exception], ...]:
+    from rez.exceptions import (  # noqa: PLC0415
+        ConfigurationError,
+        PackageCommandError,
+        PackageFamilyNotFoundError,
+        PackageMetadataError,
+        PackageNotFoundError,
+        PackageRequestError,
+        ResolveError,
+        RezSystemError,
+    )
+
+    return (
+        ConfigurationError,
+        PackageCommandError,
+        PackageFamilyNotFoundError,
+        PackageMetadataError,
+        PackageNotFoundError,
+        PackageRequestError,
+        ResolveError,
+        RezSystemError,
+    )
+
+
+def _context_load_exception_types() -> tuple[type[Exception], ...]:
+    from rez.exceptions import (  # noqa: PLC0415
+        ConfigurationError,
+        PackageMetadataError,
+        ResolvedContextError,
+        ResourceContentError,
+        ResourceNotFoundError,
+        RezSystemError,
+    )
+
+    return (
+        ConfigurationError,
+        PackageMetadataError,
+        ResolvedContextError,
+        ResourceContentError,
+        ResourceNotFoundError,
+        RezSystemError,
+    )
+
+
+def _context_launch_exception_types() -> tuple[type[Exception], ...]:
+    from rez.exceptions import (  # noqa: PLC0415
+        ConfigurationError,
+        PackageCommandError,
+        RezSystemError,
+    )
+
+    return (
+        ConfigurationError,
+        PackageCommandError,
+        RezSystemError,
+    )

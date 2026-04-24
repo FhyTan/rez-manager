@@ -247,3 +247,25 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     assert controller.contextName == ""
     assert not controller.isLaunching
     assert "not exist" in app_error_hub.message
+
+
+def test_context_launch_worker_reports_custom_launch_errors(monkeypatch):
+    from rez_manager.exceptions import RezContextLaunchError
+    from rez_manager.ui.context_launcher import LaunchResult, _ContextLaunchWorker
+
+    monkeypatch.setattr(
+        "rez_manager.ui.context_launcher.launch_context",
+        lambda package_requests, command, package_paths: (_ for _ in ()).throw(
+            RezContextLaunchError("Launch failed.")
+        ),
+    )
+
+    emitted: list[tuple[int, LaunchResult]] = []
+    worker = _ContextLaunchWorker(7, ["python-3.11"], ["D:\\packages\\python"], None)
+    worker.signals.finished.connect(lambda request_id, result: emitted.append((request_id, result)))
+
+    worker.run()
+
+    assert len(emitted) == 1
+    assert emitted[0][0] == 7
+    assert emitted[0][1] == LaunchResult(success=False, error="Launch failed.")

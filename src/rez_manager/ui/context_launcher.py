@@ -9,6 +9,7 @@ from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Sl
 from PySide6.QtQml import QmlElement
 
 from rez_manager.adapter.context import launch_context
+from rez_manager.exceptions import RezContextLaunchError
 from rez_manager.models.launch_target import LAUNCH_TARGETS
 from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
@@ -204,7 +205,7 @@ class _ContextLaunchWorker(QRunnable):
                 self._command,
                 package_paths=self._package_paths,
             )
-        except Exception as exc:  # noqa: BLE001
+        except RezContextLaunchError as exc:
             self.signals.finished.emit(
                 self._request_id,
                 LaunchResult(success=False, error=str(exc)),
