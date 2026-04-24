@@ -37,6 +37,8 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
 
     app_error_hub.clear()
     controller = ContextPreviewController()
+    resolved_events: list[bool] = []
+    controller.previewResolved.connect(lambda: resolved_events.append(True))
 
     assert controller.loadContext("Pipeline", "Base")
     assert controller.projectName == "Pipeline"
@@ -61,12 +63,11 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     }
     assert system_rows["PATH"] == "C:\\Windows\\System32"
     assert sections[1]["rowCount"] >= 1
-    assert sections[2]["rows"] == [
-        {"name": "REZ_USED_RESOLVE", "value": "maya-2025.0 python-3.11"}
-    ]
+    assert sections[2]["rows"] == [{"name": "REZ_USED_RESOLVE", "value": "maya-2025.0 python-3.11"}]
     assert sections[2]["rowCount"] == 1
     assert controller.tools == ["maya.exe"]
     assert app_error_hub.message == ""
+    assert resolved_events == [True]
 
 
 def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_path, monkeypatch):
@@ -101,6 +102,7 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
     assert controller.resolvedPackages == []
     assert controller.environmentSections == []
     assert app_error_hub.message == "Resolve failed."
+    assert app_error_hub.messageTarget == "main"
 
 
 def test_context_preview_controller_reports_invalid_context_metadata(tmp_path, monkeypatch):
@@ -120,6 +122,7 @@ def test_context_preview_controller_reports_invalid_context_metadata(tmp_path, m
     assert controller.projectName == ""
     assert controller.contextName == ""
     assert app_error_hub.message == "'name'"
+    assert app_error_hub.messageTarget == "main"
 
 
 def test_context_preview_controller_ignores_stale_worker_results_after_failed_reload(
@@ -161,6 +164,7 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
     assert controller.contextName == ""
     assert controller.resolvedPackages == []
     assert "not exist" in app_error_hub.message
+    assert app_error_hub.messageTarget == "main"
 
 
 def test_context_preview_controller_passes_settings_package_paths(tmp_path, monkeypatch):
@@ -238,6 +242,32 @@ def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, mon
     assert controller.isLoading
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
     assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
+
+
+def test_context_preview_controller_emits_preview_resolution_signal(tmp_path, monkeypatch):
+    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import save_settings
+    from rez_manager.ui.context_preview import ContextPreviewController
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
+
+    preview_result = ResolveResult(packages=["python-3.11"], environ={}, tools=[])
+    monkeypatch.setattr(
+        ContextPreviewController,
+        "_start_preview_job",
+        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+            request_id, preview_result
+        ),
+    )
+
+    controller = ContextPreviewController()
+    resolved_events: list[bool] = []
+    controller.previewResolved.connect(lambda: resolved_events.append(True))
+
+    assert controller.loadPackageRequests("Pipeline", "Draft", ["python-3.11"])
+    assert resolved_events == [True]
 
 
 def test_context_preview_controller_splits_path_into_user_and_system_sections(
@@ -362,9 +392,7 @@ def test_context_preview_controller_adds_launch_system_variables_missing_from_re
 
     assert controller.loadContext("Pipeline", "Base")
     sections = {section["title"]: section["rows"] for section in controller.environmentSections}
-    system_rows = {
-        row["name"].upper(): row["value"] for row in sections["System Environment"]
-    }
+    system_rows = {row["name"].upper(): row["value"] for row in sections["System Environment"]}
     assert sections["User Environment"] == [
         {"name": "MAYA_LOCATION", "value": "D:\\packages\\maya\\2025.0"}
     ]

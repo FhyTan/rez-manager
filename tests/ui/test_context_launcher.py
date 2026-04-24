@@ -211,6 +211,30 @@ def test_context_launcher_controller_reports_invalid_context_metadata(tmp_path, 
     assert app_error_hub.message == "'name'"
 
 
+def test_context_launcher_controller_uses_attached_error_target_for_launch_errors(
+    tmp_path, monkeypatch
+):
+    from rez_manager.ui.context_launcher import ContextLauncherController
+    from rez_manager.ui.error_hub import app_error_hub
+
+    monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    monkeypatch.setattr(
+        "rez_manager.ui.context_launcher.RezContext.load",
+        lambda project, context: (_ for _ in ()).throw(KeyError("name")),
+    )
+    monkeypatch.setattr(
+        "rez_manager.ui.context_launcher.report_object_ui_error",
+        lambda owner, message: app_error_hub.publish_for_target(message, "package-manager"),
+    )
+
+    app_error_hub.clear()
+    controller = ContextLauncherController()
+
+    assert not controller.launchContext("Pipeline", "Broken")
+    assert app_error_hub.message == "'name'"
+    assert app_error_hub.messageTarget == "package-manager"
+
+
 def test_context_launcher_controller_ignores_stale_worker_results_after_failed_reload(
     tmp_path, monkeypatch
 ):

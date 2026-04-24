@@ -20,6 +20,7 @@ Rectangle {
     property string packages: ""        // comma-separated list
     property string builtinThumbnailSource: ""
     property string thumbnailSource: ""
+    property bool previewBusy: false
 
     signal editInfoRequested
     signal editPackagesRequested
@@ -317,8 +318,9 @@ Rectangle {
                 }
                 CardButton {
                     glyph: "◎"
-                    label: "Preview"
+                    label: root.previewBusy ? "Resolving..." : "Preview"
                     minimumWidth: 0
+                    enabled: !root.previewBusy
                     onClicked: root.previewRequested()
                 }
             }

@@ -15,3 +15,4 @@ def test_uncaught_hook_reports_unexpected_exceptions_to_app_error_hub():
         qt_exception_hook.exception_hook(type(exc), exc, exc.__traceback__)
 
     assert app_error_hub.message == "Unexpected application error: RuntimeError: boom"
+    assert app_error_hub.messageTarget == "global"

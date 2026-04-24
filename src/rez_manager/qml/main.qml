@@ -16,6 +16,8 @@ ApplicationWindow {
     minimumHeight: 600
     visible: true
     color: Style.bg
+    readonly property string errorTarget_: "main"
+    AppErrorTarget.errorTarget: root.errorTarget_
 
     ProjectListModel {
         id: projectModel_
@@ -27,14 +29,14 @@ ApplicationWindow {
     LaunchTargetListModel {
         id: launchTargetModel_
     }
-    PackageManagerController {
-        id: packageManagerController_
-    }
     ContextLauncherController {
         id: contextLauncherController_
     }
     ContextPreviewController {
         id: contextPreviewController_
+    }
+    LogViewerController {
+        id: logViewerController_
     }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
@@ -116,25 +118,21 @@ ApplicationWindow {
     PackageManagerWindow {
         id: pkgManagerWin
         visible: false
-        packageManagerController: packageManagerController_
-        contextPreviewController: contextPreviewController_
-        contextLauncherController: contextLauncherController_
         onSaved: function (projectName, contextName) {
             contextModel_.reload();
             root.showStatus("Saved packages: " + projectName + " / " + contextName, false);
         }
-        onPreviewRequested: {
-            previewWin.show();
-            previewWin.requestActivate();
-        }
-        onLaunchConsoleRequested: function (projectName, contextName) {
-            root.showStatus("Launching console: " + projectName + " / " + contextName, false);
-        }
+        onOpenLogsRequested: root.openLogWindow()
     }
     ContextPreviewWindow {
         id: previewWin
         visible: false
         contextPreviewController: contextPreviewController_
+    }
+    LogWindow {
+        id: logWin
+        visible: false
+        logViewerController: logViewerController_
     }
 
     // ── State ─────────────────────────────────────────────────
@@ -178,6 +176,12 @@ ApplicationWindow {
 
     function showStatus(message, isError) {
         statusToast_.show(message, isError ? Style.error : Style.success);
+    }
+
+    function openLogWindow() {
+        logViewerController_.refresh();
+        logWin.show();
+        logWin.requestActivate();
     }
 
     function openImportProjectDialog() {
@@ -304,14 +308,22 @@ ApplicationWindow {
 
     Connections {
         target: AppErrorHub // qmllint disable unqualified
-        function onErrorOccurred(message) {
-            root.showStatus(message, true);
+        function onErrorOccurred(message, target) {
+            if (target === root.errorTarget_ || target === "global")
+                statusToast_.show(message, Style.error);
         }
     }
     Connections {
         target: contextLauncherController_
         function onLaunchSucceeded(projectName, contextName) {
             root.showStatus("Launched context: " + projectName + " / " + contextName, false);
+        }
+    }
+    Connections {
+        target: contextPreviewController_
+        function onPreviewResolved() {
+            previewWin.show();
+            previewWin.requestActivate();
         }
     }
 
@@ -343,6 +355,11 @@ ApplicationWindow {
         Menu {
             title: qsTr("Help")
 
+            Action {
+                text: qsTr("Open Logs")
+                onTriggered: root.openLogWindow()
+            }
+            MenuSeparator {}
             Action {
                 text: qsTr("Github")
                 onTriggered: root.openGithubPage()
@@ -643,6 +660,7 @@ ApplicationWindow {
                                         packages: contextDelegate_.packages
                                         builtinThumbnailSource: contextDelegate_.builtinThumbnailSource
                                         thumbnailSource: contextDelegate_.thumbnailSource
+                                        previewBusy: contextPreviewController_.isLoading
 
                                         onEditInfoRequested: {
                                             root.openEditContextDialog({
@@ -670,8 +688,7 @@ ApplicationWindow {
                                                 return;
                                             if (!contextPreviewController_.loadContext(contextDelegate_.project, contextDelegate_.name))
                                                 return;
-                                            previewWin.show();
-                                            previewWin.requestActivate();
+                                            statusToast_.show(qsTr("Resolving preview..."), Style.accent);
                                         }
                                         onLaunchRequested: {
                                             if (!contextModel_.ensureContextExists(contextDelegate_.project, contextDelegate_.name))
@@ -737,60 +754,8 @@ ApplicationWindow {
     }
 
     // ── Status toast notification ──────────────────────────────
-    Rectangle {
+    StatusToast {
         id: statusToast_
-        property string messageText: ""
-        property color accentColor: Style.success
-
-        function show(messageText, accentColor) {
-            statusToast_.messageText = messageText;
-            statusToast_.accentColor = accentColor;
-            visible = true;
-            hideTimer_.restart();
-        }
-
-        anchors {
-            bottom: parent.bottom
-            horizontalCenter: parent.horizontalCenter
-            bottomMargin: Style.xl
-        }
-        width: toastRow_.implicitWidth + Style.xl
-        height: 44
-        radius: Style.radius
-        color: Style.elevated
-        border.width: 1
-        border.color: Style.borderBright
-        visible: false
-        opacity: visible ? 1.0 : 0.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-            }
-        }
-
-        Timer {
-            id: hideTimer_
-            interval: 3000
-            onTriggered: statusToast_.visible = false
-        }
-
-        Row {
-            id: toastRow_
-            anchors.centerIn: parent
-            spacing: Style.sm
-            Rectangle {
-                width: 8
-                height: 8
-                radius: 4
-                color: statusToast_.accentColor
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: statusToast_.messageText
-                color: Style.textPrimary
-                font.pixelSize: Style.fontMd
-            }
-        }
+        onActivated: root.openLogWindow()
     }
 }

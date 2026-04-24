@@ -6,3 +6,4 @@ PackageDetailPanel 1.0 PackageDetailPanel.qml
 PackageRepositoryPanel 1.0 PackageRepositoryPanel.qml
 ProjectListItem 1.0 ProjectListItem.qml
 RequiredPackagesPanel 1.0 RequiredPackagesPanel.qml
+StatusToast 1.0 StatusToast.qml

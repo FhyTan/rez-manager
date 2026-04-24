@@ -29,7 +29,7 @@ from rez_manager.exceptions import RezResolveError
 from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
 from rez_manager.runtime import IS_WINDOWS
-from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
+from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -38,6 +38,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 @QmlElement
 class ContextPreviewController(QObject):
     stateChanged = Signal()
+    previewResolved = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -98,7 +99,7 @@ class ContextPreviewController(QObject):
             settings = AppSettings.load()
         except (KeyError, OSError, TypeError, ValueError) as exc:
             self._clear_state()
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         return self._load_package_requests(
@@ -122,7 +123,7 @@ class ContextPreviewController(QObject):
             settings = AppSettings.load()
         except (OSError, TypeError, ValueError) as exc:
             self._clear_state()
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         normalized_requests = [str(request).strip() for request in package_requests]
@@ -187,20 +188,21 @@ class ContextPreviewController(QObject):
             self._result = None
             self._set_environment_sections(None)
             self.stateChanged.emit()
-            report_ui_error(str(resolve_result))
+            report_object_ui_error(self, str(resolve_result))
             return
 
         if not isinstance(resolve_result, ResolveResult):
             self._result = None
             self._set_environment_sections(None)
             self.stateChanged.emit()
-            report_ui_error("Failed to resolve preview data.")
+            report_object_ui_error(self, "Failed to resolve preview data.")
             return
 
         self._result = resolve_result
         self._set_environment_sections(resolve_result.environ)
         self.stateChanged.emit()
         clear_ui_error()
+        self.previewResolved.emit()
 
     def _set_environment_sections(self, resolved_environ: Mapping[str, str] | None) -> None:
         if resolved_environ is None:

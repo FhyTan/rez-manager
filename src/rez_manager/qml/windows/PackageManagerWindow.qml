@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import RezManager
 import ".."
 import "../components"
 
@@ -15,26 +16,63 @@ Window {
     height: 720
     color: Style.bg
     flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
+    readonly property string errorTarget_: "package-manager"
+    AppErrorTarget.errorTarget: root.errorTarget_
 
     property string contextName_: ""
     property string projectName_: ""
-    property var packageManagerController: null
-    property var contextPreviewController: null
-    property var contextLauncherController: null
-    readonly property bool repositoriesLoading: root.packageManagerController ? root.packageManagerController.isLoadingRepositories : false
+    readonly property bool repositoriesLoading: packageManagerController_.isLoadingRepositories
+    readonly property bool previewLoading: contextPreviewController_.isLoading
 
     signal saved(string projectName, string contextName)
-    signal previewRequested
-    signal launchConsoleRequested(string projectName, string contextName)
+    signal openLogsRequested
+
+    PackageManagerController {
+        id: packageManagerController_
+    }
+    ContextPreviewController {
+        id: contextPreviewController_
+    }
+    ContextLauncherController {
+        id: contextLauncherController_
+    }
+    ContextPreviewWindow {
+        id: previewWin_
+        visible: false
+        contextPreviewController: contextPreviewController_
+    }
 
     function loadContext(projectName, contextName) {
-        if (!packageManagerController)
-            return false;
-        if (!packageManagerController.loadContext(projectName, contextName))
+        if (!packageManagerController_.loadContext(projectName, contextName))
             return false;
         projectName_ = projectName;
         contextName_ = contextName;
         return true;
+    }
+
+    function showStatus(message, isError) {
+        statusToast_.show(message, isError ? Style.error : Style.success);
+    }
+
+    Connections {
+        target: AppErrorHub // qmllint disable unqualified
+        function onErrorOccurred(message, target) {
+            if (target === root.errorTarget_ && root.visible)
+                statusToast_.show(message, Style.error);
+        }
+    }
+    Connections {
+        target: contextPreviewController_
+        function onPreviewResolved() {
+            previewWin_.show();
+            previewWin_.requestActivate();
+        }
+    }
+    Connections {
+        target: contextLauncherController_
+        function onLaunchSucceeded(projectName, contextName) {
+            root.showStatus("Launching console: " + projectName + " / " + contextName, false);
+        }
     }
 
     ColumnLayout {
@@ -68,7 +106,7 @@ Window {
                     }
 
                     Badge {
-                        text: root.packageManagerController ? root.packageManagerController.packageCount + " packages" : "0 packages"
+                        text: packageManagerController_.packageCount + " packages"
                         badgeColor: Style.accent
                     }
 
@@ -79,11 +117,8 @@ Window {
                     CardButton {
                         glyph: "↻"
                         label: root.repositoriesLoading ? "Refreshing" : "Refresh"
-                        enabled: root.packageManagerController && !root.repositoriesLoading
-                        onClicked: {
-                            if (root.packageManagerController)
-                                root.packageManagerController.refresh();
-                        }
+                        enabled: !root.repositoriesLoading
+                        onClicked: packageManagerController_.refresh()
                     }
                 }
 
@@ -127,42 +162,37 @@ Window {
             RequiredPackagesPanel {
                 SplitView.preferredWidth: 240
                 SplitView.minimumWidth: 160
-                packagesModel: root.packageManagerController ? root.packageManagerController.packageRequestsModel : null
-                selectedRow: root.packageManagerController ? root.packageManagerController.selectedRequestRow : -1
+                packagesModel: packageManagerController_.packageRequestsModel
+                selectedRow: packageManagerController_.selectedRequestRow
                 onPackageSelected: function (index) {
-                    if (root.packageManagerController)
-                        root.packageManagerController.selectRequiredPackage(index);
+                    packageManagerController_.selectRequiredPackage(index);
                 }
                 onRemoveRequested: function (index) {
-                    if (root.packageManagerController)
-                        root.packageManagerController.removePackageRequest(index);
+                    packageManagerController_.removePackageRequest(index);
                 }
             }
 
             PackageRepositoryPanel {
                 SplitView.preferredWidth: 260
                 SplitView.minimumWidth: 180
-                repositoryModel: root.packageManagerController ? root.packageManagerController.repositoryModel : null
-                selectedRepoIndex: root.packageManagerController ? root.packageManagerController.selectedRepositoryIndex : -1
-                selectedPkgIndex: root.packageManagerController ? root.packageManagerController.selectedRepositoryPackageIndex : -1
+                repositoryModel: packageManagerController_.repositoryModel
+                selectedRepoIndex: packageManagerController_.selectedRepositoryIndex
+                selectedPkgIndex: packageManagerController_.selectedRepositoryPackageIndex
                 isLoading: root.repositoriesLoading
                 onPackageSelected: function (repoIndex, pkgIndex) {
-                    if (root.packageManagerController)
-                        root.packageManagerController.selectRepositoryPackage(repoIndex, pkgIndex);
+                    packageManagerController_.selectRepositoryPackage(repoIndex, pkgIndex);
                 }
             }
 
             PackageDetailPanel {
                 SplitView.fillWidth: true
                 SplitView.minimumWidth: 320
-                packageDetail: root.packageManagerController ? root.packageManagerController.packageDetail : null
+                packageDetail: packageManagerController_.packageDetail
                 onDetailVersionSelected: function (index) {
-                    if (root.packageManagerController)
-                        root.packageManagerController.selectDetailVersion(index);
+                    packageManagerController_.selectDetailVersion(index);
                 }
                 onAddPackageRequested: function (pkgName, version) {
-                    if (root.packageManagerController)
-                        root.packageManagerController.addPackageRequest(pkgName, version);
+                    packageManagerController_.addPackageRequest(pkgName, version);
                 }
             }
         }
@@ -187,13 +217,12 @@ Window {
 
                 CardButton {
                     glyph: "◉"
-                    label: "Preview Resolve"
+                    label: root.previewLoading ? qsTr("Resolving...") : qsTr("Preview Resolve")
+                    enabled: !root.previewLoading
                     onClicked: {
-                        if (!root.packageManagerController || !root.contextPreviewController)
+                        if (!contextPreviewController_.loadPackageRequests(root.projectName_, root.contextName_, packageManagerController_.packageRequests))
                             return;
-                        if (!root.contextPreviewController.loadPackageRequests(root.projectName_, root.contextName_, root.packageManagerController.packageRequests))
-                            return;
-                        root.previewRequested();
+                        statusToast_.show(qsTr("Resolving preview..."), Style.accent);
                     }
                 }
                 Item {
@@ -202,13 +231,7 @@ Window {
                 CardButton {
                     glyph: "⌘"
                     label: "Launch Console"
-                    onClicked: {
-                        if (!root.packageManagerController || !root.contextLauncherController)
-                            return;
-                        if (!root.contextLauncherController.launchPackageRequests(root.projectName_, root.contextName_, root.packageManagerController.packageRequests))
-                            return;
-                        root.launchConsoleRequested(root.projectName_, root.contextName_);
-                    }
+                    onClicked: contextLauncherController_.launchPackageRequests(root.projectName_, root.contextName_, packageManagerController_.packageRequests)
                 }
                 Item {
                     Layout.fillWidth: true
@@ -224,7 +247,7 @@ Window {
                     label: "Save"
                     accent: true
                     onClicked: {
-                        if (!root.packageManagerController || !root.packageManagerController.save())
+                        if (!packageManagerController_.save())
                             return;
 
                         root.saved(root.projectName_, root.contextName_);
@@ -233,5 +256,10 @@ Window {
                 }
             }
         }
+    }
+
+    StatusToast {
+        id: statusToast_
+        onActivated: root.openLogsRequested()
     }
 }

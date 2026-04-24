@@ -33,15 +33,13 @@ from rez_manager.exceptions import RezAdapterError
 from rez_manager.models.launch_target import parse_launch_target
 from rez_manager.models.rez_context import ContextMeta, RezContext
 from rez_manager.models.settings import AppSettings
-from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
+from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
 
 _AUTO_VERSION = "auto"
 _PACKAGE_REQUEST_WITH_VERSION = re.compile(r"^(?P<name>.+?)(?:-(?P<version>.*))?$")
-
-
 @dataclass(frozen=True)
 class _PackageRequestItem:
     request: str
@@ -604,7 +602,7 @@ class PackageManagerController(QObject):
             self._package_requests_model.reset_requests([])
             self._repository_model.reset_repositories([])
             self._clear_selection()
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         self._context = context
@@ -619,7 +617,7 @@ class PackageManagerController(QObject):
     @Slot(result=bool)
     def refresh(self) -> bool:
         if self._context is None:
-            report_ui_error("No context is loaded.")
+            report_object_ui_error(self, "No context is loaded.")
             return False
 
         self._start_repository_refresh(
@@ -664,7 +662,7 @@ class PackageManagerController(QObject):
     def addPackageRequest(self, name: str, version: str) -> bool:  # noqa: N802
         trimmed_name = str(name).strip()
         if not trimmed_name:
-            report_ui_error("Package name is required.")
+            report_object_ui_error(self, "Package name is required.")
             return False
 
         row = self._package_requests_model.upsert_request(trimmed_name, version)
@@ -708,7 +706,7 @@ class PackageManagerController(QObject):
     @Slot(result=bool)
     def save(self) -> bool:
         if self._context is None:
-            report_ui_error("No context is loaded.")
+            report_object_ui_error(self, "No context is loaded.")
             return False
 
         try:
@@ -721,7 +719,7 @@ class PackageManagerController(QObject):
             )
             self._context.update(self._context.project_name, updated_meta)
         except (OSError, TypeError, ValueError) as exc:
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         clear_ui_error()
@@ -742,10 +740,7 @@ class PackageManagerController(QObject):
                 package_name=self._package_detail.name,
                 preferred_version=self._package_detail.selectedVersion,
             )
-        if (
-            self._selected_repository_index >= 0
-            and self._selected_repository_package_index >= 0
-        ):
+        if self._selected_repository_index >= 0 and self._selected_repository_package_index >= 0:
             return _PackageSelectionSnapshot(
                 selection_type="repository",
                 package_name=self._package_detail.name,
@@ -762,7 +757,7 @@ class PackageManagerController(QObject):
             )
         except RezAdapterError as exc:
             self._package_detail.reset()
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         self._package_detail.setPackageWithSelectedVersion(
@@ -833,10 +828,10 @@ class PackageManagerController(QObject):
 
         self._set_loading_repositories(False)
         if not isinstance(refresh_result, _RepositoryRefreshResult):
-            report_ui_error("Failed to load repositories.")
+            report_object_ui_error(self, "Failed to load repositories.")
             return
         if not refresh_result.success:
-            report_ui_error(refresh_result.error or "Failed to load repositories.")
+            report_object_ui_error(self, refresh_result.error or "Failed to load repositories.")
             return
 
         self._repository_model.reset_repositories(refresh_result.repositories)

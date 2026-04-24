@@ -7,3 +7,4 @@ SettingsDialog 1.0 SettingsDialog.qml
 ProjectNameDialog 1.0 ProjectNameDialog.qml
 ContextDuplicateDialog 1.0 ContextDuplicateDialog.qml
 ConfirmDeleteDialog 1.0 ConfirmDeleteDialog.qml
+LogWindow 1.0 LogWindow.qml

@@ -13,7 +13,7 @@ from rez_manager.exceptions import RezContextLaunchError
 from rez_manager.models.launch_target import LAUNCH_TARGETS
 from rez_manager.models.rez_context import RezContext
 from rez_manager.models.settings import AppSettings
-from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
+from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -69,7 +69,7 @@ class ContextLauncherController(QObject):
             )
         except (KeyError, OSError, TypeError, ValueError) as exc:
             self._clear_state()
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         return self._launch_package_requests(
@@ -94,7 +94,7 @@ class ContextLauncherController(QObject):
             settings = AppSettings.load()
         except (OSError, TypeError, ValueError) as exc:
             self._clear_state()
-            report_ui_error(str(exc))
+            report_object_ui_error(self, str(exc))
             return False
 
         normalized_requests = [str(request).strip() for request in package_requests]
@@ -167,11 +167,11 @@ class ContextLauncherController(QObject):
         self._is_launching = False
         self.stateChanged.emit()
         if not isinstance(launch_result, LaunchResult):
-            report_ui_error("Failed to launch context.")
+            report_object_ui_error(self, "Failed to launch context.")
             return
 
         if not launch_result.success:
-            report_ui_error(launch_result.error or "Failed to launch context.")
+            report_object_ui_error(self, launch_result.error or "Failed to launch context.")
             return
 
         clear_ui_error()
