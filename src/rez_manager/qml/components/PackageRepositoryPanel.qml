@@ -155,32 +155,32 @@ Rectangle {
                     color: Style.border
                 }
             }
+        }
+    }
 
-            Text {
-                anchors.centerIn: parent
-                visible: repositoryTreeView_.rows === 0 && !root.isLoading
-                text: qsTr("No repositories available.")
-                color: Style.textSecondary
-                font.pixelSize: Style.fontMd
-            }
+    Text {
+        anchors.centerIn: parent
+        visible: repositoryTreeView_.rows === 0 && !root.isLoading
+        text: qsTr("No repositories available.")
+        color: Style.textSecondary
+        font.pixelSize: Style.fontMd
+    }
 
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: Style.sm
-                visible: root.isLoading
+    ColumnLayout {
+        anchors.centerIn: parent
+        spacing: Style.sm
+        visible: root.isLoading
 
-                BusyIndicator {
-                    Layout.alignment: Qt.AlignHCenter
-                    running: root.isLoading
-                }
+        BusyIndicator {
+            Layout.alignment: Qt.AlignHCenter
+            running: root.isLoading
+        }
 
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("Loading repositories...")
-                    color: Style.textSecondary
-                    font.pixelSize: Style.fontMd
-                }
-            }
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: qsTr("Loading repositories...")
+            color: Style.textSecondary
+            font.pixelSize: Style.fontMd
         }
     }
 }

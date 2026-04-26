@@ -146,7 +146,6 @@ def launch_context(
         )
         return ctx.execute_shell(
             command=_normalized_launch_command(command),
-            detached=True,
             block=False,
             start_new_session=True,
             parent_environ=preserved_system_environment(),
