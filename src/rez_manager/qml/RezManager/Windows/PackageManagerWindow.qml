@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import RezManager
 import ".."
-import "../components"
+import "../Components"
 
 // Package manager window — edit the dependencies of a context.
 // Three-panel layout: required packages | repository browser | package detail

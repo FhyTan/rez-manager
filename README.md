@@ -1,7 +1,5 @@
 # rez-manager
 
-***This app is in early development and not yet ready for production use.!***
-
 A GUI tool for managing [Rez](https://rez.readthedocs.io/en/stable/) package environments.
 
 ![MainWindow](./images/MainWindow.png)
@@ -13,6 +11,12 @@ Requires [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync
 uv run rez-manager
+```
+
+## Build
+
+```bash
+uv run pyinstaller --name rez-manager --windowed -y --clean ./src/rez_manager/__main__.py
 ```
 
 ## Development

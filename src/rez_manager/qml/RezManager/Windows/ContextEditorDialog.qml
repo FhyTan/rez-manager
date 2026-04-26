@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
 import ".."
-import "../components"
+import "../Components"
 
 // Context editor dialog — create or edit a context's metadata.
 Dialog {

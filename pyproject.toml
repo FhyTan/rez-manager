@@ -23,6 +23,7 @@ packages = ["src/rez_manager"]
 
 [dependency-groups]
 dev = [
+    "pyinstaller>=6.20.0",
     "pyside6-qml-stubgen>=0.1.0a10",
     "pytest>=8.0",
     "ruff>=0.6",
@@ -37,3 +38,6 @@ select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[project.entry-points."pyinstaller40"]
+hook-dirs = "rez_manager.hooks:get_hook_dirs"

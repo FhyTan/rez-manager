@@ -6,7 +6,7 @@ import QtQuick.Dialogs
 import QtQuick.Layouts
 import RezManager
 import ".."
-import "../components"
+import "../Components"
 
 // Settings dialog — configure repositories and contexts location.
 Dialog {

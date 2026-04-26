@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import RezManager
 import ".."
-import "../components"
+import "../Components"
 
 // Context preview window — read-only inspection of a resolved context.
 Window {

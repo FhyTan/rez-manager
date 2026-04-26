@@ -8,7 +8,6 @@ from PySide6.QtQml import (
     QmlAnonymous,
     QmlAttached,
     QmlElement,
-    QmlSingleton,
     qmlAttachedPropertiesObject,
 )
 
@@ -51,7 +50,6 @@ class AppErrorTarget(QObject):
 
 
 @QmlElement
-@QmlSingleton
 class AppErrorHub(QObject):
     """Shared front-end error state for expected and unexpected failures."""
 

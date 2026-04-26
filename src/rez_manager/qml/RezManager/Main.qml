@@ -4,8 +4,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import RezManager
-import "components"
-import "windows"
+import RezManager.Components
+import RezManager.Windows
 
 ApplicationWindow {
     id: root

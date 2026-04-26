@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import RezManager
 import ".."
-import "../components"
+import "../Components"
 
 Window {
     id: root

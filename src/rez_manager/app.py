@@ -26,7 +26,8 @@ def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]
     import rez_manager.exception_hook  # noqa: F401
 
     qml_dir = Path(__file__).parent / "qml"
-    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE_PATH", str(qml_dir))
+    # os.environ.setdefault("QT_QUICK_CONTROLS_STYLE_PATH", str(qml_dir))
+    logger.info("qml_dir set to {}", qml_dir)
 
     app = QGuiApplication(argv)
     app.setApplicationName("rez-manager")
@@ -36,10 +37,10 @@ def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]
 
     engine = QQmlApplicationEngine()
     engine.addImportPath(str(qml_dir))
-    engine.load(QUrl.fromLocalFile(str(qml_dir / "main.qml")))
+    engine.loadFromModule("RezManager", "Main")
 
     if not engine.rootObjects():
-        logger.critical("Failed to load QML from {}", qml_dir / "main.qml")
+        logger.critical("Failed to load QML from RezManager.Main")
         sys.exit(1)
 
     return app, engine
