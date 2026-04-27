@@ -48,8 +48,9 @@ rez-manager 提供桌面 UI，用于创建、编辑、预览和启动面向 DCC 
 
 ### 环境要求
 
-- Python 3.11+
 - [uv](https://docs.astral.sh/uv/)
+
+如有需要，`uv` 会根据项目元数据自动准备所需的 Python 版本。
 
 ### 从源码运行
 

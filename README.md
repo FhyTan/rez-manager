@@ -53,8 +53,9 @@ features without preparing your own package repository first.
 
 ### Requirements
 
-- Python 3.11+
 - [uv](https://docs.astral.sh/uv/)
+
+`uv` will provision the required Python version from the project metadata when needed.
 
 ### Run from source
 
