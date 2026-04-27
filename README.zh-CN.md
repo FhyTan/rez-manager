@@ -50,7 +50,6 @@ rez-manager 提供桌面 UI，用于创建、编辑、预览和启动面向 DCC 
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/)
-- 项目环境中可用的 [Rez](https://rez.readthedocs.io/en/stable/)
 
 ### 从源码运行
 

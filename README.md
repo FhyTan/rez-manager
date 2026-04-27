@@ -55,7 +55,6 @@ features without preparing your own package repository first.
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/)
-- [Rez](https://rez.readthedocs.io/en/stable/) available to the project environment
 
 ### Run from source
 
