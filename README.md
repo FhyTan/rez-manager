@@ -1,6 +1,7 @@
 # rez-manager
 
 [中文说明](./README.zh-CN.md)
+[Changelog](./CHANGELOG.md)
 
 A modernized GUI tool for managing [Rez](https://rez.readthedocs.io/en/stable/) package environments.
 
@@ -71,7 +72,7 @@ Pre-built executables can be downloaded from the [Releases](https://github.com/F
 ### Build a desktop executable
 
 ```bash
-uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/logo/rez_manager.ico ./src/rez_manager/__main__.py
+uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/icons/logo/rez_manager.ico ./src/rez_manager/__main__.py
 ```
 
 ## Development

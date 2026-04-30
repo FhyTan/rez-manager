@@ -1,5 +1,7 @@
 # rez-manager
 
+[变更日志](./CHANGELOG.md)
+
 一个用于管理 [Rez](https://rez.readthedocs.io/en/stable/) 包环境的现代化图形界面工具。
 
 rez-manager 提供桌面 UI，用于创建、编辑、预览和启动面向 DCC 工作流的 Rez context。
@@ -66,7 +68,7 @@ uv run rez-manager
 ### 构建桌面可执行文件
 
 ```bash
-uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/logo/rez_manager.ico ./src/rez_manager/__main__.py
+uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/icons/logo/rez_manager.ico ./src/rez_manager/__main__.py
 ```
 
 ## 开发
