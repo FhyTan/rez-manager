@@ -52,7 +52,8 @@ jobs:
         run: uv sync --dev
 
       - name: Build executable
-        run: uv run pyinstaller --name rez-manager --windowed -y --clean
+        run: uv run pyinstaller --name rez-manager --windowed -y --clean --icon
+          ./src/rez_manager/resources/logo/rez_manager.ico
           ./src/rez_manager/__main__.py
 
       - name: Archive release bundle

@@ -10,4 +10,8 @@
         <file alias="NukeX">resources/icons/dcc/NukeX.svg</file>
         <file alias="Shell">resources/icons/dcc/Shell.svg</file>
     </qresource>
+    <qresource prefix="/icons/logo">
+        <file alias="rez_manager.ico">resources/icons/logo/rez_manager.ico</file>
+        <file alias="rez_manager.svg">resources/icons/logo/rez_manager.svg</file>
+    </qresource>
 </RCC>

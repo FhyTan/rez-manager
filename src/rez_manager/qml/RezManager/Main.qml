@@ -403,28 +403,16 @@ ApplicationWindow {
                         }
                         spacing: Style.sm
 
-                        Rectangle {
-                            implicitWidth: 30
-                            implicitHeight: 30
-                            radius: Style.radiusSm
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop {
-                                    position: 0.0
-                                    color: Style.accent
-                                }
-                                GradientStop {
-                                    position: 1.0
-                                    color: Style.accentSecondary
-                                }
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: "R"
-                                color: Style.white
-                                font.pixelSize: Style.fontLg
-                                font.bold: true
-                            }
+                        Image {
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: 30
+                            Layout.preferredHeight: 30
+                            source: "qrc:/icons/logo/rez_manager.svg"
+                            sourceSize.width: 30
+                            sourceSize.height: 30
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
                         }
 
                         Text {

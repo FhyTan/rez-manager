@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
 from loguru import logger
-from PySide6.QtCore import QUrl
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
 
 import rez_manager.rc_resources  # noqa: F401
@@ -32,6 +30,7 @@ def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]
     app = QGuiApplication(argv)
     app.setApplicationName("rez-manager")
     app.setApplicationVersion(__version__)
+    app.setWindowIcon(QIcon(":/icons/logo/rez_manager.ico"))
 
     qmlRegisterSingletonInstance(AppErrorHub, "RezManager", 1, 0, "AppErrorHub", app_error_hub)
 

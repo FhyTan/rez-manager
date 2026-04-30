@@ -66,7 +66,7 @@ uv run rez-manager
 ### 构建桌面可执行文件
 
 ```bash
-uv run pyinstaller --name rez-manager --windowed -y --clean ./src/rez_manager/__main__.py
+uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/logo/rez_manager.ico ./src/rez_manager/__main__.py
 ```
 
 ## 开发

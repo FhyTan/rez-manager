@@ -71,7 +71,7 @@ Pre-built executables can be downloaded from the [Releases](https://github.com/F
 ### Build a desktop executable
 
 ```bash
-uv run pyinstaller --name rez-manager --windowed -y --clean ./src/rez_manager/__main__.py
+uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/logo/rez_manager.ico ./src/rez_manager/__main__.py
 ```
 
 ## Development
