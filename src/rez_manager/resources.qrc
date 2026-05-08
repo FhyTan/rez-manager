@@ -3,15 +3,15 @@
         <file>qtquickcontrols2.conf</file>
     </qresource>
     <qresource prefix="/icons/dcc">
-        <file alias="Blender">resources/icons/dcc/Blender.svg</file>
-        <file alias="Houdini">resources/icons/dcc/Houdini.svg</file>
-        <file alias="Maya">resources/icons/dcc/Maya.svg</file>
-        <file alias="Nuke">resources/icons/dcc/Nuke.svg</file>
-        <file alias="NukeX">resources/icons/dcc/NukeX.svg</file>
-        <file alias="Shell">resources/icons/dcc/Shell.svg</file>
+        <file alias="Blender">../../resources/icons/dcc/Blender.svg</file>
+        <file alias="Houdini">../../resources/icons/dcc/Houdini.svg</file>
+        <file alias="Maya">../../resources/icons/dcc/Maya.svg</file>
+        <file alias="Nuke">../../resources/icons/dcc/Nuke.svg</file>
+        <file alias="NukeX">../../resources/icons/dcc/NukeX.svg</file>
+        <file alias="Shell">../../resources/icons/dcc/Shell.svg</file>
     </qresource>
     <qresource prefix="/icons/logo">
-        <file alias="rez_manager.ico">resources/icons/logo/rez_manager.ico</file>
-        <file alias="rez_manager.svg">resources/icons/logo/rez_manager.svg</file>
+        <file alias="rez_manager.ico">../../resources/icons/logo/rez_manager.ico</file>
+        <file alias="rez_manager.svg">../../resources/icons/logo/rez_manager.svg</file>
     </qresource>
 </RCC>

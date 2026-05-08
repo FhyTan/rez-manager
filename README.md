@@ -72,7 +72,7 @@ Pre-built executables can be downloaded from the [Releases](https://github.com/F
 ### Build a desktop executable
 
 ```bash
-uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/icons/logo/rez_manager.ico ./src/rez_manager/__main__.py
+uv run nuitka --output-dir=build\nuitka .\build_nuitka.py
 ```
 
 ## Development
@@ -99,14 +99,14 @@ To lint QML files against those generated types, use
 ### Project layout
 
 ``` txt
+resources/
+└── icons/                # Source artwork compiled into Qt resources
 src/rez_manager/
 ├── adapter/              # Rez API wrapper (only layer that imports rez.*)
 ├── data/                 # Static application data bundled with the app
-├── hooks/                # PyInstaller hooks for bundled runtime behavior
 ├── models/               # Data models (pure Python)
 ├── persistence/          # Filesystem storage and project/context persistence
 ├── qml/                  # QML UI files
-├── resources/            # Images and other packaged application assets
 ├── ui/                   # PySide6 controllers exposed to QML
 └── app.py                # Application bootstrap and top-level startup wiring
 docs/

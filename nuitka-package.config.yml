@@ -1,0 +1,15 @@
+- module-name: "rezplugins"
+  data-files:
+    - patterns:
+        - "**/rezconfig.py"
+
+- module-name: "rez"
+  data-files:
+    - patterns:
+        - "rezconfig.py"
+
+- module-name: "rez_manager"
+  data-files:
+    - dirs:
+        - "data"
+        - "qml"

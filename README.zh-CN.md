@@ -68,7 +68,7 @@ uv run rez-manager
 ### 构建桌面可执行文件
 
 ```bash
-uv run pyinstaller --name rez-manager --windowed -y --clean --icon ./src/rez_manager/resources/icons/logo/rez_manager.ico ./src/rez_manager/__main__.py
+uv run nuitka --output-dir=build\nuitka .\build_nuitka.py
 ```
 
 ## 开发
@@ -95,14 +95,14 @@ pyside6-qmllint -I ./qmltypes <qml-files>
 ### 项目结构
 
 ```txt
+resources/
+└── icons/                # 编译进 Qt 资源系统的原始图片
 src/rez_manager/
 ├── adapter/              # Rez API 封装层（唯一允许导入 rez.* 的层）
 ├── data/                 # 随应用打包的静态数据
-├── hooks/                # PyInstaller 运行时 hook
 ├── models/               # 数据模型（纯 Python）
 ├── persistence/          # 文件系统存储与 project/context 持久化
 ├── qml/                  # QML UI 文件
-├── resources/            # 图片和其他应用资源
 ├── ui/                   # 暴露给 QML 的 PySide6 控制器
 └── app.py                # 应用启动入口与顶层初始化逻辑
 docs/
