@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0]
+
+- Use nuitka to compile the application for better performance and a smaller executable size.
+
 ## [0.1.1]
 
 - Added the application icon.
