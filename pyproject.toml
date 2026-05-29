@@ -26,7 +26,6 @@ dev = [
     "nuitka>=4.0.8",
     "pyside6-qml-stubgen>=0.1.0a10",
     "pytest>=8.0",
-    "python-dotenv>=1.2.2",
     "ruff>=0.6",
 ]
 

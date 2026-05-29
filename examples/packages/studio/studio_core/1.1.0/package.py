@@ -10,6 +10,8 @@ tools = [
     "publish-review",
 ]
 
+cachable = True
+
 
 def commands():
     env.PATH.append("{root}/bin")

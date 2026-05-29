@@ -41,7 +41,9 @@ def app_cache_dir() -> Path:
 
 
 def app_rez_package_caches_dir() -> Path:
-    return app_cache_dir() / "rez-packages"
+    path = app_cache_dir() / "rez-packages"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def app_log_dir() -> Path:

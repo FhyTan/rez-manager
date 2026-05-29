@@ -32,6 +32,14 @@ class PackageCacheSettings:
     def path(self, value: str) -> None:
         self._path = value
 
+    def ensure_cache_dir_exists(self) -> None:
+        """
+        If the cache directory does not exist, package caching will be disabled.
+        We need to ensure the directory exists to avoid this.
+        """
+
+        Path(self.path).mkdir(parents=True, exist_ok=True)
+
     def to_dict(self) -> dict[str, object]:
         return {
             "enabled": self.enabled,
@@ -111,6 +119,7 @@ class AppSettings:
         return _settings_store().load_settings()
 
     def save(self) -> Path:
+        self.package_cache.ensure_cache_dir_exists()
         return _settings_store().save_settings(self)
 
     def to_dict(self) -> dict[str, object]:

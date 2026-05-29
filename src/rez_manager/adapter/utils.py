@@ -6,21 +6,29 @@ import os
 import sys
 from pathlib import Path
 
-from rez_manager.runtime import IS_WINDOWS
+from loguru import logger
+
+from rez_manager.runtime import IS_COMPILED, IS_WINDOWS
 
 
 def initialize_rez():
     # Ignore the user's home Rez config so the app resolves contexts from its own explicit settings.
     os.environ["REZ_DISABLE_HOME_CONFIG"] = "1"
 
-    # If running as a frozen Nuitka executable, prepend the dist directory to PATH
-    # so that subprocess calls to ``rez-pkg-cache`` (spawned by Rez's package
-    # caching machinery) resolve to our bundled executable.
-    if getattr(sys, "frozen", False):
-        dist_dir = os.path.dirname(sys.executable)
-        path = os.environ.get("PATH", "")
-        if dist_dir not in path:
-            os.environ["PATH"] = dist_dir + os.pathsep + path
+    from rez.system import system  # noqa: PLC0415
+
+    # Point rez to its own executables so it can spawn ``rez-pkg-cache`` as a subprocess.
+    # In a frozen (Nuitka) build both exes live in the same dist directory;
+    # In development, you have to set REZ_BIN_PATH in your environment to point to
+    # your Rez install's bin directory. Otherwise the package caching will be disabled.
+    if IS_COMPILED:
+        rez_bin_path = os.path.dirname(sys.executable)
+        system.rez_bin_path = rez_bin_path
+        logger.info(f"Running in productive state, setting Rez bin path to: {rez_bin_path}")
+    else:
+        if rez_bin_path := os.environ.get("REZ_BIN_PATH"):
+            system.rez_bin_path = rez_bin_path
+            logger.info(f"Running in development state, setting Rez bin path to: {rez_bin_path}")
 
     # This app must launch Windows commands through cmd because ResolvedContext.execute_shell does
     # not work reliably with Rez's default PowerShell path here. The launch controller therefore

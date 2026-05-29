@@ -3,10 +3,5 @@
   "instructions": [
     ".github/instructions/python.instructions.md",
     ".github/instructions/qml-python.instructions.md"
-  ],
-  "lsp": {
-    "python": {
-      "enabled": true
-    }
-  }
+  ]
 }

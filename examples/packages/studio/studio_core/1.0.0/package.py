@@ -9,6 +9,8 @@ tools = [
     "asset-sync",
 ]
 
+cachable = True
+
 
 def commands():
     env.PATH.append("{root}/bin")

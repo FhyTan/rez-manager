@@ -7,3 +7,6 @@ import sys
 IS_WINDOWS = sys.platform.startswith("win")
 IS_LINUX = sys.platform.startswith("linux")
 IS_MACOS = sys.platform.startswith("darwin")
+
+
+IS_COMPILED = "__compiled__" in globals()
