@@ -58,8 +58,8 @@ def test_load_settings_falls_back_to_default_on_invalid_json(tmp_path, monkeypat
     with pytest.warns(RuntimeWarning, match="Failed to load settings"):
         settings = load_settings()
 
-    assert settings.package_repositories == []
-    assert settings.contexts_location == str(tmp_path / "contexts")
+    assert settings.general.package_repositories == []
+    assert settings.general.contexts_location == str(tmp_path / "contexts")
 
 
 def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
@@ -81,7 +81,7 @@ def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
     assert app_paths.app_log_dir() == log_root
     assert app_paths.log_file_path() == log_root / "rez-manager.log"
     assert app_paths.settings_file_path() == config_root / "settings.json"
-    assert settings_store.default_settings().contexts_location == str(data_root / "contexts")
+    assert settings_store.default_settings().general.contexts_location == str(data_root / "contexts")
 
 
 def test_app_home_override_provides_cache_and_log_directories(tmp_path, monkeypatch):

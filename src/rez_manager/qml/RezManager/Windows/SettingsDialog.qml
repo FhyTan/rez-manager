@@ -8,13 +8,13 @@ import RezManager
 import ".."
 import "../Components"
 
-// Settings dialog — configure repositories and contexts location.
+// Settings dialog — configure repositories, contexts location, and package cache.
 Dialog {
     id: root
     title: "Settings"
     modal: true
     width: 620
-    height: parent ? Math.max(520, Math.min(620, parent.height - Style.xl * 2)) : 560
+    height: parent ? Math.max(620, Math.min(720, parent.height - Style.xl * 2)) : 660
     padding: Style.xl
     property var packageRepositoriesValue: []
     property string contextMenuRepositoryPath: ""
@@ -22,7 +22,33 @@ Dialog {
     onAboutToShow: {
         settingsController_.reload();
         root.packageRepositoriesValue = settingsController_.packageRepositories;
-        contextsLocationField_.text = settingsController_.contextsLocation;
+    }
+
+    // ── Two-way bindings: controller ↔ QML controls ──────────
+    Binding {
+        target: contextsLocationField_
+        property: "text"
+        value: settingsController_.contextsLocation
+    }
+    Binding {
+        target: packageCacheEnabledCheck_
+        property: "checked"
+        value: settingsController_.packageCacheEnabled
+    }
+    Binding {
+        target: packageCachePathField_
+        property: "text"
+        value: settingsController_.packageCachePath
+    }
+    Binding {
+        target: packageCacheMaxSize_
+        property: "value"
+        value: settingsController_.packageCacheMaxSizeGb
+    }
+    Binding {
+        target: packageCacheTtlDays_
+        property: "value"
+        value: settingsController_.packageCacheTtlDays
     }
 
     function addRepository(path) {
@@ -54,11 +80,12 @@ Dialog {
         if (!settingsController_.importFromFile(path))
             return;
 
-        root.syncFromController();
+        root.packageRepositoriesValue = settingsController_.packageRepositories;
     }
 
     function saveSettings() {
-        if (!settingsController_.save(root.packageRepositoriesValue, contextsLocationField_.text))
+        settingsController_.setPackageRepositories(root.packageRepositoriesValue);
+        if (!settingsController_.save())
             return;
 
         root.saved();
@@ -69,12 +96,7 @@ Dialog {
         if (!settingsController_.exportToFile(root.packageRepositoriesValue, contextsLocationField_.text, path))
             return;
 
-        root.syncFromController();
-    }
-
-    function syncFromController() {
         root.packageRepositoriesValue = settingsController_.packageRepositories;
-        contextsLocationField_.text = settingsController_.contextsLocation;
     }
 
     function copyText(text) {
@@ -135,6 +157,39 @@ Dialog {
         ColumnLayout {
             width: contentScroll_.availableWidth - contentScroll_.effectiveScrollBarWidth
             spacing: Style.xl
+
+            // ── Contexts Location ──────────────────────────────
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Style.sm
+
+                Text {
+                    text: "Contexts Location"
+                    color: Style.textPrimary
+                    font.pixelSize: Style.fontLg
+                    font.bold: true
+                }
+                Text {
+                    text: "Root directory where project/context data is stored on disk."
+                    color: Style.textSecondary
+                    font.pixelSize: Style.fontMd
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.sm
+                    TextField {
+                        id: contextsLocationField_
+                        Layout.fillWidth: true
+                        onTextChanged: settingsController_.contextsLocation = text
+                    }
+                    CardButton {
+                        label: "Browse…"
+                        onClicked: contextsFolderDialog_.open()
+                    }
+                }
+            }
 
             // ── Package Repositories ───────────────────────────
             ColumnLayout {
@@ -261,38 +316,109 @@ Dialog {
                 }
             }
 
-            // ── Contexts Location ──────────────────────────────
+            // ── Package Cache ──────────────────────────────────
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Style.sm
 
                 Text {
-                    text: "Contexts Location"
+                    text: "Package Cache"
                     color: Style.textPrimary
                     font.pixelSize: Style.fontLg
                     font.bold: true
                 }
                 Text {
-                    text: "Root directory where project/context data is stored on disk."
+                    text: "Cache resolved package payloads locally to reduce network I/O on repeated resolves."
                     color: Style.textSecondary
                     font.pixelSize: Style.fontMd
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
+
+                // Enable toggle
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.sm
+                    CheckBox {
+                        id: packageCacheEnabledCheck_
+                        text: "Enable package caching"
+                        onCheckedChanged: {
+                            settingsController_.packageCacheEnabled = checked;
+                            packageCachePathField_.enabled = checked;
+                            packageCacheBrowseBtn_.enabled = checked;
+                            packageCacheMaxSize_.enabled = checked;
+                            packageCacheTtlDays_.enabled = checked;
+                        }
+                    }
+                }
+
+                // Cache path
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Style.sm
                     TextField {
-                        id: contextsLocationField_
+                        id: packageCachePathField_
                         Layout.fillWidth: true
+                        onTextChanged: settingsController_.packageCachePath = text
                     }
                     CardButton {
+                        id: packageCacheBrowseBtn_
                         label: "Browse…"
-                        onClicked: contextsFolderDialog_.open()
+                        onClicked: packageCacheFolderDialog_.open()
+                    }
+                }
+
+                // Max size + TTL
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.lg
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Style.sm
+
+                        Text {
+                            text: "Max Cache Size (GB)"
+                            color: Style.textSecondary
+                            font.pixelSize: Style.fontSm
+                        }
+                        SpinBox {
+                            id: packageCacheMaxSize_
+                            from: 1
+                            to: 1024
+                            stepSize: 1
+                            Layout.fillWidth: true
+                            onValueChanged: settingsController_.packageCacheMaxSizeGb = value
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Style.sm
+
+                        Text {
+                            text: "TTL (days, 0 = never expire)"
+                            color: Style.textSecondary
+                            font.pixelSize: Style.fontSm
+                        }
+                        SpinBox {
+                            id: packageCacheTtlDays_
+                            from: 0
+                            to: 365
+                            stepSize: 1
+                            Layout.fillWidth: true
+                            onValueChanged: settingsController_.packageCacheTtlDays = value
+                        }
                     }
                 }
             }
         }
+    }
+
+    FolderDialog {
+        id: packageCacheFolderDialog_
+        currentFolder: selectedFolder
+        onAccepted: packageCachePathField_.text = settingsController_.pathFromUrl(packageCacheFolderDialog_.selectedFolder.toString())
     }
 
     footer: Rectangle {

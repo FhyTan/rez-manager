@@ -8,15 +8,18 @@ from json import JSONDecodeError
 from os import PathLike
 from pathlib import Path
 
-from rez_manager.models.settings import AppSettings
+from rez_manager.models.settings import AppSettings, GeneralSettings, PackageCacheSettings
 
 from .app_paths import app_data_dir, settings_file_path
 
 
 def default_settings() -> AppSettings:
     return AppSettings(
-        package_repositories=[],
-        contexts_location=str(app_data_dir() / "contexts"),
+        general=GeneralSettings(
+            package_repositories=[],
+            contexts_location=str(app_data_dir() / "contexts"),
+        ),
+        package_cache=PackageCacheSettings(),
     )
 
 
@@ -29,7 +32,17 @@ def read_settings_file(path: str | PathLike[str]) -> AppSettings:
     if not isinstance(data, dict):
         raise TypeError(f"{settings_path} must contain a JSON object")
 
-    return AppSettings.from_dict(data)
+    has_general = "general" in data
+    settings = AppSettings.from_dict(data)
+
+    if not has_general:
+        _migrate_settings_file(settings, path)
+
+    return settings
+
+
+def _migrate_settings_file(settings: AppSettings, path: str | PathLike[str]) -> None:
+    write_settings_file(settings, path)
 
 
 def write_settings_file(settings: AppSettings, path: str | PathLike[str]) -> Path:
@@ -37,7 +50,7 @@ def write_settings_file(settings: AppSettings, path: str | PathLike[str]) -> Pat
     settings_path.parent.mkdir(parents=True, exist_ok=True)
 
     with settings_path.open("w", encoding="utf-8") as handle:
-        json.dump(settings.to_dict(), handle, indent=2, sort_keys=True)
+        json.dump(settings.to_dict(), handle, indent=2, sort_keys=False)
         handle.write("\n")
 
     return settings_path

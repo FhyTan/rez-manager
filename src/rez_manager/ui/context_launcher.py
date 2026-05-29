@@ -77,7 +77,7 @@ class ContextLauncherController(QObject):
             project_name,
             context_name,
             context.packages,
-            settings.package_repositories,
+            settings.general.package_repositories,
             command,
         )
 
@@ -103,7 +103,7 @@ class ContextLauncherController(QObject):
             project_name,
             context_name,
             normalized_requests,
-            settings.package_repositories,
+            settings.general.package_repositories,
             None,
         )
 

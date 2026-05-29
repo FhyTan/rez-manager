@@ -107,7 +107,7 @@ class ContextPreviewController(QObject):
             project_name,
             context_name,
             context.packages,
-            settings.package_repositories,
+            settings.general.package_repositories,
         )
 
     @Slot(str, str, "QVariantList", result=bool)
@@ -132,7 +132,7 @@ class ContextPreviewController(QObject):
             project_name,
             context_name,
             normalized_requests,
-            settings.package_repositories,
+            settings.general.package_repositories,
         )
 
     @Slot()

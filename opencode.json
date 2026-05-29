@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".github/instructions/python.instructions.md",
+    ".github/instructions/qml-python.instructions.md"
+  ],
+  "lsp": {
+    "python": {
+      "enabled": true
+    }
+  }
+}

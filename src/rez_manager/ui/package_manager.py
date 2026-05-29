@@ -606,7 +606,7 @@ class PackageManagerController(QObject):
             return False
 
         self._context = context
-        self._repo_paths = list(settings.package_repositories)
+        self._repo_paths = list(settings.general.package_repositories)
         self._package_requests_model.reset_requests(context.packages)
         self._repository_model.reset_repositories([])
         self._clear_selection()

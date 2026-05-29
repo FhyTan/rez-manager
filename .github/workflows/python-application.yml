@@ -51,8 +51,10 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
 
-      - name: Build executable
-        run: uv run nuitka --output-dir=build/nuitka ./build_nuitka.py
+      - name: Build executables
+        run: |
+          uv run nuitka --output-dir=build/nuitka ./build_nuitka.py
+          uv run nuitka --output-dir=build/nuitka ./build_rez_pkg_cache.py
 
       - name: Archive release bundle
         shell: pwsh

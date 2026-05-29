@@ -50,17 +50,19 @@ def test_project_display_name():
 
 
 def test_app_settings_roundtrip():
-    from rez_manager.models.settings import AppSettings
+    from rez_manager.models.settings import AppSettings, GeneralSettings
 
     settings = AppSettings(
-        package_repositories=["D:\\packages\\maya", "D:\\packages\\base"],
-        contexts_location="D:\\contexts",
+        general=GeneralSettings(
+            package_repositories=["D:\\packages\\maya", "D:\\packages\\base"],
+            contexts_location="D:\\contexts",
+        ),
     )
 
     restored = AppSettings.from_dict(settings.to_dict())
 
-    assert restored.package_repositories == settings.package_repositories
-    assert restored.contexts_location == settings.contexts_location
+    assert restored.general.package_repositories == settings.general.package_repositories
+    assert restored.general.contexts_location == settings.general.contexts_location
 
 
 def test_app_settings_normalize_pathlike_inputs():
@@ -72,8 +74,16 @@ def test_app_settings_normalize_pathlike_inputs():
     )
 
     assert settings.to_dict() == {
-        "package_repositories": ["D:\\packages\\maya", "D:\\packages\\base"],
-        "contexts_location": "D:\\contexts",
+        "general": {
+            "package_repositories": ["D:\\packages\\maya", "D:\\packages\\base"],
+            "contexts_location": "D:\\contexts",
+        },
+        "package_cache": {
+            "enabled": True,
+            "path": "",
+            "max_size_gb": 2,
+            "ttl_days": 30,
+        },
     }
 
 

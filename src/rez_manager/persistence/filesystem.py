@@ -25,10 +25,10 @@ def resolve_settings(settings: AppSettings | None = None) -> AppSettings:
 
 def contexts_root_path(settings: AppSettings | None = None) -> Path:
     resolved_settings = resolve_settings(settings)
-    if not resolved_settings.contexts_location:
+    if not resolved_settings.general.contexts_location:
         raise ValueError("Contexts location is not configured")
 
-    contexts_root = Path(resolved_settings.contexts_location)
+    contexts_root = Path(resolved_settings.general.contexts_location)
     if contexts_root.exists() and not contexts_root.is_dir():
         raise ValueError(f"Contexts location '{contexts_root}' is not a directory")
     return contexts_root

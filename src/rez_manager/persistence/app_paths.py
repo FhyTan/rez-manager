@@ -40,6 +40,10 @@ def app_cache_dir() -> Path:
     return user_cache_path(APP_NAME, appauthor=False)
 
 
+def app_rez_package_caches_dir() -> Path:
+    return app_cache_dir() / "rez-packages"
+
+
 def app_log_dir() -> Path:
     override = _app_home_override()
     if override is not None:
