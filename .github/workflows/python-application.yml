@@ -52,15 +52,13 @@ jobs:
         run: uv sync --dev
 
       - name: Build executables
-        run: |
-          uv run nuitka --output-dir=build/nuitka ./build_nuitka.py
-          uv run nuitka --output-dir=build/nuitka ./build_rez_pkg_cache.py
+        run: .\build_scripts\build.bat
 
       - name: Archive release bundle
         shell: pwsh
         run: |
           $archiveName = "rez-manager-${{ github.ref_name }}-windows.zip"
-          Compress-Archive -Path "build/nuitka/build_nuitka.dist/*" -DestinationPath $archiveName -Force
+          Compress-Archive -Path "build/rez-manager.dist/*" -DestinationPath $archiveName -Force
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3

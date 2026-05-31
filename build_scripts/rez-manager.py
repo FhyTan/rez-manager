@@ -1,5 +1,7 @@
 """Nuitka build entry point for rez-manager."""
 
+# nuitka-project: --product-name=rez-manager
+# nuitka-project: --product-version=1.0.0
 # nuitka-project: --mode=standalone
 # nuitka-project: --assume-yes-for-downloads
 # nuitka-project: --enable-plugins=pyside6

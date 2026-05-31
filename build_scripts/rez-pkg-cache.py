@@ -2,9 +2,9 @@
 
 # nuitka-project: --mode=standalone
 # nuitka-project: --assume-yes-for-downloads
-# nuitka-project: --include-package=rezplugins,rez
-# nuitka-project: --user-package-configuration-file=./build_scripts/nuitka-package.config.yml
 # nuitka-project: --output-filename=rez-pkg-cache.exe
+# nuitka-project: --include-package=rezplugins,rez
+# nuitka-project: --windows-console-mode=hide
 # nuitka-project: --nofollow-import-to=doctest,unittest,pytest
 
 import os

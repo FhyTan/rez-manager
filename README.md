@@ -71,9 +71,13 @@ Pre-built executables can be downloaded from the [Releases](https://github.com/F
 
 ### Build a desktop executable
 
-```bash
-uv run nuitka --output-dir=build\nuitka .\build_nuitka.py
+```batch
+.\build_scripts\build.bat
 ```
+
+This compiles `rez-manager` and `rez-pkg-cache` (if not already built) into `build/`,
+then copies `rez-pkg-cache.exe` into the `build/rez-manager.dist/` directory so that
+the main executable can spawn the cache subprocess at runtime.
 
 ## Development
 
