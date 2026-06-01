@@ -9,6 +9,8 @@ from pathlib import Path
 from rez_manager.models.rez_context import ContextMeta
 from rez_manager.models.settings import AppSettings
 
+from .app_paths import default_rez_contexts_dir
+
 META_FILE_NAME = "meta.json"
 CONTEXT_FILE_NAME = "context.rxt"
 THUMBNAIL_FILE_NAME = "thumbnail.png"
@@ -25,10 +27,11 @@ def resolve_settings(settings: AppSettings | None = None) -> AppSettings:
 
 def contexts_root_path(settings: AppSettings | None = None) -> Path:
     resolved_settings = resolve_settings(settings)
-    if not resolved_settings.general.contexts_location:
-        raise ValueError("Contexts location is not configured")
+    location = resolved_settings.general.contexts_location
+    if not location:
+        location = default_rez_contexts_dir()
 
-    contexts_root = Path(resolved_settings.general.contexts_location)
+    contexts_root = Path(location)
     if contexts_root.exists() and not contexts_root.is_dir():
         raise ValueError(f"Contexts location '{contexts_root}' is not a directory")
     return contexts_root

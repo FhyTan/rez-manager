@@ -104,6 +104,9 @@ def rez_package_matrix(
     temp_packages_dir: Path,
 ) -> dict[str, object]:
     """Populate the temporary repository with healthy and failing Rez package scenarios."""
+    from rez.config import config  # noqa: PLC0415
+
+    config.override("packages_path", [str(temp_packages_dir)])
     python_310_dir = rez_package_writer(
         "python",
         "3.10",

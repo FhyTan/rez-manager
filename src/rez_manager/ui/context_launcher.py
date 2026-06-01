@@ -12,7 +12,6 @@ from rez_manager.adapter.context import launch_context
 from rez_manager.exceptions import RezContextLaunchError
 from rez_manager.models.launch_target import LAUNCH_TARGETS
 from rez_manager.models.rez_context import RezContext
-from rez_manager.models.settings import AppSettings
 from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -62,7 +61,6 @@ class ContextLauncherController(QObject):
 
         try:
             context = RezContext.load(project_name, context_name)
-            settings = AppSettings.load()
             command = LAUNCH_TARGETS.launch_command_for(
                 context.meta.launch_target,
                 context.meta.custom_command,
@@ -77,7 +75,6 @@ class ContextLauncherController(QObject):
             project_name,
             context_name,
             context.packages,
-            settings.general.package_repositories,
             command,
         )
 
@@ -90,12 +87,6 @@ class ContextLauncherController(QObject):
     ) -> bool:
         self._request_id += 1
         request_id = self._request_id
-        try:
-            settings = AppSettings.load()
-        except (OSError, TypeError, ValueError) as exc:
-            self._clear_state()
-            report_object_ui_error(self, str(exc))
-            return False
 
         normalized_requests = [str(request).strip() for request in package_requests]
         return self._launch_package_requests(
@@ -103,7 +94,6 @@ class ContextLauncherController(QObject):
             project_name,
             context_name,
             normalized_requests,
-            settings.general.package_repositories,
             None,
         )
 
@@ -123,13 +113,11 @@ class ContextLauncherController(QObject):
         self,
         request_id: int,
         package_requests: list[str],
-        package_paths: list[str],
         command: str | None,
     ) -> None:
         worker = _ContextLaunchWorker(
             request_id,
             list(package_requests),
-            list(package_paths),
             command,
         )
         worker.signals.finished.connect(self._apply_launch_result)
@@ -142,7 +130,6 @@ class ContextLauncherController(QObject):
         project_name: str,
         context_name: str,
         package_requests: Sequence[str],
-        package_paths: Sequence[str],
         command: str | None,
     ) -> bool:
         self._project_name = project_name
@@ -153,7 +140,6 @@ class ContextLauncherController(QObject):
         self._start_launch_job(
             request_id,
             list(package_requests),
-            list(package_paths),
             command,
         )
         return True
@@ -187,24 +173,18 @@ class _ContextLaunchWorker(QRunnable):
         self,
         request_id: int,
         package_requests: list[str],
-        package_paths: list[str],
         command: str | None,
     ) -> None:
         super().__init__()
         self._request_id = request_id
         self._package_requests = package_requests
-        self._package_paths = package_paths
         self._command = command
         self.signals = _ContextLaunchWorkerSignals()
 
     @Slot()
     def run(self) -> None:
         try:
-            launch_context(
-                self._package_requests,
-                self._command,
-                package_paths=self._package_paths,
-            )
+            launch_context(self._package_requests, self._command)
         except RezContextLaunchError as exc:
             self.signals.finished.emit(
                 self._request_id,

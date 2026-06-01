@@ -8,6 +8,7 @@ from pathlib import Path
 
 from loguru import logger
 
+from rez_manager.models.settings import AppSettings
 from rez_manager.runtime import IS_COMPILED, IS_WINDOWS
 
 
@@ -41,21 +42,21 @@ def initialize_rez():
         config.override("default_shell", "cmd")
 
 
-def apply_package_cache_settings(
-    enabled: bool,
-    cache_path: str | None,
-    ttl_days: int,
-) -> None:
-    """Apply package cache configuration to Rez at runtime."""
+def apply_settings_to_rez(settings: AppSettings) -> None:
+    """Apply application settings (package cache, package paths) to Rez at runtime."""
     from rez.config import config  # noqa: PLC0415
 
-    if enabled and cache_path:
-        path = Path(cache_path)
+    cache = settings.package_cache
+    if cache.enabled and cache.path:
+        path = Path(cache.path)
         config.override("cache_packages_path", str(path))
         config.override("write_package_cache", True)
         config.override("read_package_cache", True)
-        config.override("package_cache_max_variant_days", ttl_days)
+        config.override("package_cache_max_variant_days", cache.ttl_days)
     else:
         config.override("cache_packages_path", None)
         config.override("write_package_cache", False)
         config.override("read_package_cache", False)
+
+    repos = settings.general.package_repositories
+    config.override("packages_path", list(repos))

@@ -66,12 +66,14 @@ def test_app_settings_controller_save_deduplicates_normalized_repositories(tmp_p
     controller = AppSettingsController()
 
     controller.contextsLocation = str(tmp_path / "normalized-contexts")
-    controller.setPackageRepositories([
-        "  D:\\packages\\maya\\  ",
-        "d:/packages/maya",
-        "D:\\packages\\base\\",
-        "d:\\packages\\BASE",
-    ])
+    controller.setPackageRepositories(
+        [
+            "  D:\\packages\\maya\\  ",
+            "d:/packages/maya",
+            "D:\\packages\\base\\",
+            "d:\\packages\\BASE",
+        ]
+    )
     assert controller.save()
 
     settings = load_settings()
@@ -180,15 +182,20 @@ def test_app_settings_controller_open_path_in_file_manager(tmp_path, monkeypatch
     assert app_error_hub.message == ""
 
 
-def test_app_settings_controller_save_rejects_blank_contexts_location(tmp_path, monkeypatch):
+def test_app_settings_controller_save_allows_blank_contexts_location(tmp_path, monkeypatch):
+    from rez_manager.models.settings import AppSettings
+    from rez_manager.persistence.settings_store import load_settings, save_settings
     from rez_manager.ui.error_hub import app_error_hub
     from rez_manager.ui.settings_controller import AppSettingsController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
+    save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
 
     app_error_hub.clear()
     controller = AppSettingsController()
 
     controller.contextsLocation = "   "
-    assert not controller.save()
-    assert app_error_hub.message == "Contexts location is required."
+    assert controller.save()
+    assert app_error_hub.message == ""
+    saved = load_settings()
+    assert saved.general.contexts_location.strip() == ""

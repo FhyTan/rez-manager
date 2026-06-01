@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-import ntpath
 from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QUrl, Signal, Slot
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.utils import apply_package_cache_settings
+from rez_manager.adapter.utils import apply_settings_to_rez
 from rez_manager.models.settings import AppSettings, GeneralSettings
+from rez_manager.persistence.app_paths import (
+    default_rez_contexts_dir,
+    default_rez_package_caches_dir,
+)
 from rez_manager.persistence.settings_store import read_settings_file, write_settings_file
 from rez_manager.ui.error_hub import clear_ui_error, report_ui_error
 
@@ -44,6 +47,10 @@ class AppSettingsController(QObject):
             self._settings.general.contexts_location = str(value)
             self.contextsLocationChanged.emit()
 
+    @Property(str, constant=True)
+    def contextsLocationPlaceholder(self) -> str:  # noqa: N802
+        return str(default_rez_contexts_dir())
+
     # ── Package Repositories ──────────────────────────────────
 
     @Property("QVariantList", notify=packageRepositoriesChanged)
@@ -72,6 +79,10 @@ class AppSettingsController(QObject):
         if self._settings.package_cache.path != normalized:
             self._settings.package_cache.path = normalized
             self.packageCachePathChanged.emit()
+
+    @Property(str, constant=True)
+    def packageCachePathPlaceholder(self) -> str:  # noqa: N802
+        return str(default_rez_package_caches_dir())
 
     @Property(int, notify=packageCacheMaxSizeChanged)
     def packageCacheMaxSizeGb(self) -> int:  # noqa: N802
@@ -108,15 +119,13 @@ class AppSettingsController(QObject):
     @Slot(result=bool)
     def save(self) -> bool:
         try:
-            if not self._settings.general.contexts_location.strip():
-                raise ValueError("Contexts location is required.")
             self._normalize_repositories()
             self._settings.save()
         except (OSError, TypeError, ValueError) as exc:
             report_ui_error(str(exc))
             return False
 
-        self._apply_package_cache()
+        apply_settings_to_rez(self._settings)
         clear_ui_error()
         return True
 
@@ -134,7 +143,7 @@ class AppSettingsController(QObject):
     @Slot(str, result=str)
     def repositoryIdentity(self, value: str) -> str:  # noqa: N802
         normalized = _normalize_repository_path(value)
-        return ntpath.normcase(normalized) if normalized else ""
+        return _normcase(normalized) if normalized else ""
 
     @Slot(str, result=bool)
     def importFromFile(self, path: str) -> bool:  # noqa: N802
@@ -169,8 +178,6 @@ class AppSettingsController(QObject):
 
         try:
             location = str(contexts_location).strip()
-            if not location:
-                raise ValueError("Contexts location is required.")
             settings = AppSettings(
                 general=GeneralSettings(
                     package_repositories=_normalize_repository_paths(package_repositories),
@@ -211,13 +218,9 @@ class AppSettingsController(QObject):
 
     def _apply_settings(self, settings: AppSettings) -> None:
         repos_changed = (
-            self._settings.general.package_repositories
-            != settings.general.package_repositories
+            self._settings.general.package_repositories != settings.general.package_repositories
         )
-        loc_changed = (
-            self._settings.general.contexts_location
-            != settings.general.contexts_location
-        )
+        loc_changed = self._settings.general.contexts_location != settings.general.contexts_location
         prev_cache = self._settings.package_cache
         next_cache = settings.package_cache
         cache_enabled_changed = prev_cache.enabled != next_cache.enabled
@@ -227,7 +230,7 @@ class AppSettingsController(QObject):
 
         self._settings = settings
 
-        self._apply_package_cache()
+        apply_settings_to_rez(self._settings)
 
         if repos_changed:
             self.packageRepositoriesChanged.emit()
@@ -242,25 +245,24 @@ class AppSettingsController(QObject):
         if cache_ttl_changed:
             self.packageCacheTtlDaysChanged.emit()
 
-    def _apply_package_cache(self) -> None:
-        cache = self._settings.package_cache
-        apply_package_cache_settings(
-            enabled=cache.enabled,
-            cache_path=cache.path,
-            ttl_days=cache.ttl_days,
-        )
-
     def _normalize_repositories(self) -> None:
         self._settings.general.package_repositories = _normalize_repository_paths(
             self._settings.general.package_repositories
         )
 
 
+def _normcase(value: str) -> str:
+    """Normalize path case for cross-platform deduplication."""
+    import ntpath  # noqa: PLC0415
+
+    return ntpath.normcase(value)
+
+
 def _normalize_repository_path(value: str) -> str:
     trimmed = str(value).strip()
     if not trimmed:
         return ""
-    return ntpath.normpath(trimmed)
+    return str(Path(trimmed))
 
 
 def _normalize_repository_paths(values: list[str]) -> list[str]:
@@ -272,7 +274,7 @@ def _normalize_repository_paths(values: list[str]) -> list[str]:
         if not normalized:
             continue
 
-        key = ntpath.normcase(normalized)
+        key = _normcase(normalized)
         if key in seen_keys:
             continue
 

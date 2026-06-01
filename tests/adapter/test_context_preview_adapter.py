@@ -44,7 +44,6 @@ def test_resolve_context_reads_real_rez_repository(
 
     result = resolve_context(
         [str(rez_package_matrix["app_request"])],
-        package_paths=[str(temp_packages_dir)],
     )
 
     assert set(result.packages) == {"app-1.0.0", "python-3.11"}
@@ -62,7 +61,7 @@ def test_resolve_context_wraps_missing_package_family(temp_packages_dir: Path, i
     from rez_manager.exceptions import RezResolveError
 
     with pytest.raises(RezResolveError) as exc_info:
-        resolve_context(["missing-1"], package_paths=[str(temp_packages_dir)])
+        resolve_context(["missing-1"])
 
     assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
 
@@ -79,7 +78,6 @@ def test_resolve_context_wraps_missing_transitive_dependency(
     with pytest.raises(RezResolveError) as exc_info:
         resolve_context(
             [str(rez_package_matrix["broken_dep_request"])],
-            package_paths=[str(temp_packages_dir)],
         )
 
     assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
@@ -98,7 +96,6 @@ def test_save_context_serializes_real_rez_context(
     save_context(
         [str(rez_package_matrix["app_request"])],
         str(context_path),
-        package_paths=[str(temp_packages_dir)],
     )
 
     assert context_path.exists()
@@ -118,7 +115,6 @@ def test_save_context_wraps_missing_dependency(
         save_context(
             [str(rez_package_matrix["broken_dep_request"])],
             str(temp_context_dir / "broken.rxt"),
-            package_paths=[str(temp_packages_dir)],
         )
 
     assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
@@ -136,7 +132,6 @@ def test_load_context_round_trips_saved_context(
     save_context(
         [str(rez_package_matrix["app_request"])],
         str(context_path),
-        package_paths=[str(temp_packages_dir)],
     )
 
     result = load_context(str(context_path))

@@ -18,7 +18,6 @@ def test_launch_context_runs_short_lived_command(
     process = launch_context(
         [str(rez_package_matrix["app_request"])],
         ["cmd.exe", "/c", "exit", "0"],
-        package_paths=[str(temp_packages_dir)],
     )
 
     assert process.wait(timeout=10) == 0
@@ -38,7 +37,6 @@ def test_launch_context_wraps_package_command_errors(
         launch_context(
             [str(rez_package_matrix["bad_commands_request"])],
             ["cmd.exe", "/c", "exit", "0"],
-            package_paths=[str(temp_packages_dir)],
         )
 
     assert isinstance(exc_info.value.__cause__, PackageCommandError)
@@ -60,7 +58,6 @@ def test_launch_context_reports_missing_dependency_after_package_removal(
     save_context(
         [str(rez_package_matrix["app_request"])],
         str(context_path),
-        package_paths=[str(temp_packages_dir)],
     )
 
     shutil.rmtree(Path(rez_package_matrix["python_family_dir"]))
@@ -70,7 +67,6 @@ def test_launch_context_reports_missing_dependency_after_package_removal(
         launch_context(
             [str(rez_package_matrix["app_request"])],
             ["cmd.exe", "/c", "exit", "0"],
-            package_paths=[str(temp_packages_dir)],
         )
 
     assert context_path.exists()

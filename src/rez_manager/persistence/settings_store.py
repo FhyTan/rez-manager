@@ -10,15 +10,12 @@ from pathlib import Path
 
 from rez_manager.models.settings import AppSettings, GeneralSettings, PackageCacheSettings
 
-from .app_paths import app_data_dir, settings_file_path
+from .app_paths import settings_file_path
 
 
 def default_settings() -> AppSettings:
     return AppSettings(
-        general=GeneralSettings(
-            package_repositories=[],
-            contexts_location=str(app_data_dir() / "contexts"),
-        ),
+        general=GeneralSettings(),
         package_cache=PackageCacheSettings(),
     )
 

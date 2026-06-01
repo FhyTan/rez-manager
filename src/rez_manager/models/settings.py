@@ -18,45 +18,24 @@ class PackageCacheSettings:
     enabled: bool = True
     max_size_gb: int = 2
     ttl_days: int = 30
-    _path: str = ""
-
-    @property
-    def path(self) -> str:
-        if self._path:
-            return self._path
-        from rez_manager.persistence.app_paths import app_rez_package_caches_dir
-
-        return str(app_rez_package_caches_dir())
-
-    @path.setter
-    def path(self, value: str) -> None:
-        self._path = value
-
-    def ensure_cache_dir_exists(self) -> None:
-        """
-        If the cache directory does not exist, package caching will be disabled.
-        We need to ensure the directory exists to avoid this.
-        """
-
-        Path(self.path).mkdir(parents=True, exist_ok=True)
+    path: str = ""
 
     def to_dict(self) -> dict[str, object]:
         return {
             "enabled": self.enabled,
-            "path": self._path,
+            "path": self.path,
             "max_size_gb": self.max_size_gb,
             "ttl_days": self.ttl_days,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> PackageCacheSettings:
-        obj = cls(
+        return cls(
             enabled=bool(data.get("enabled", True)),
             max_size_gb=int(data.get("max_size_gb", 2)),
             ttl_days=int(data.get("ttl_days", 30)),
+            path=str(data.get("path", "")),
         )
-        obj._path = str(data.get("path", ""))
-        return obj
 
 
 @dataclass
@@ -119,7 +98,6 @@ class AppSettings:
         return _settings_store().load_settings()
 
     def save(self) -> Path:
-        self.package_cache.ensure_cache_dir_exists()
         return _settings_store().save_settings(self)
 
     def to_dict(self) -> dict[str, object]:

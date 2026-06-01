@@ -40,12 +40,6 @@ def app_cache_dir() -> Path:
     return user_cache_path(APP_NAME, appauthor=False)
 
 
-def app_rez_package_caches_dir() -> Path:
-    path = app_cache_dir() / "rez-packages"
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
 def app_log_dir() -> Path:
     override = _app_home_override()
     if override is not None:
@@ -59,3 +53,13 @@ def settings_file_path() -> Path:
 
 def log_file_path() -> Path:
     return app_log_dir() / LOG_FILE_NAME
+
+
+def default_rez_contexts_dir() -> Path:
+    """Return the default directory for project/context data on disk."""
+    return app_data_dir() / "rez-contexts"
+
+
+def default_rez_package_caches_dir() -> Path:
+    """Return the default directory for Rez package caches."""
+    return app_cache_dir() / "rez-packages"

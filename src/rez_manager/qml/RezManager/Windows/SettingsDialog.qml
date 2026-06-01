@@ -182,6 +182,7 @@ Dialog {
                     TextField {
                         id: contextsLocationField_
                         Layout.fillWidth: true
+                        placeholderText: settingsController_.contextsLocationPlaceholder
                         onTextChanged: settingsController_.contextsLocation = text
                     }
                     CardButton {
@@ -359,6 +360,7 @@ Dialog {
                     TextField {
                         id: packageCachePathField_
                         Layout.fillWidth: true
+                        placeholderText: settingsController_.packageCachePathPlaceholder
                         onTextChanged: settingsController_.packageCachePath = text
                     }
                     CardButton {

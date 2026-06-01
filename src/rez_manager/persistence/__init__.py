@@ -5,6 +5,8 @@ from .app_paths import (
     app_config_dir,
     app_data_dir,
     app_log_dir,
+    default_rez_contexts_dir,
+    default_rez_package_caches_dir,
     log_file_path,
     settings_file_path,
 )
@@ -31,6 +33,8 @@ __all__ = [
     "app_data_dir",
     "app_log_dir",
     "current_settings",
+    "default_rez_contexts_dir",
+    "default_rez_package_caches_dir",
     "create_project",
     "default_settings",
     "delete_context",
