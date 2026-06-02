@@ -40,6 +40,7 @@ applyTo: '**/*.py'
 - Always catch specific exceptions such as `ValueError`, `FileNotFoundError`, or `OSError` rather than using a bare `except:`.
 - Avoid `except Exception:` unless there is a clear boundary where broad handling is intentional; document the reason when doing so.
 - Raise informative exceptions and preserve original context when appropriate.
+- Never use boolean return values to signal success or failure. Always raise a specific exception subclass on failure.
 - Handle edge cases explicitly, including empty input, invalid values, and missing files or directories.
 
 ## Code Structure

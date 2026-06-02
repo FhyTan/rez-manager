@@ -38,6 +38,9 @@ ApplicationWindow {
     LogViewerController {
         id: logViewerController_
     }
+    PackageCacheController {
+        id: cacheController_
+    }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog {
@@ -133,6 +136,11 @@ ApplicationWindow {
         id: logWin
         visible: false
         logViewerController: logViewerController_
+    }
+    PackageCacheWindow {
+        id: cacheWin
+        visible: false
+        cacheController: cacheController_
     }
 
     // ── State ─────────────────────────────────────────────────
@@ -344,6 +352,13 @@ ApplicationWindow {
             Action {
                 text: qsTr("Settings...")
                 onTriggered: settingsDlg.open()
+            }
+            Action {
+                text: qsTr("Package Cache\u2026")
+                onTriggered: {
+                    cacheWin.show();
+                    cacheWin.requestActivate();
+                }
             }
             MenuSeparator {}
             Action {

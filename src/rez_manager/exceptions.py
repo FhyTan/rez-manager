@@ -41,3 +41,7 @@ class RezRepositoryError(RezAdapterError):
 
 class RezPackageQueryError(RezAdapterError):
     """Raised when Rez package detail queries fail."""
+
+
+class RezCacheOperationError(RezAdapterError):
+    """Raised when a package cache operation (query, remove, etc.) fails."""

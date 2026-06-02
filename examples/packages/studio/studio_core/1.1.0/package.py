@@ -10,6 +10,10 @@ tools = [
     "publish-review",
 ]
 
+requires = [
+    "usd",
+]
+
 variants = [
     ["maya"],
     ["houdini"],

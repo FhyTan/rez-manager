@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-from rez_manager.exceptions import RezPackageQueryError, RezRepositoryError
+from rez_manager.exceptions import RezCacheOperationError, RezPackageQueryError, RezRepositoryError
 
 
 @dataclass
@@ -106,6 +106,63 @@ def get_package_versions(name: str, repo_paths: list[str]) -> list[str]:
 
     pkgs.sort(key=lambda p: p.version, reverse=True)
     return [str(p.version) for p in pkgs]
+
+
+def list_cached_variants(
+    cache_path: str,
+) -> list[tuple[object, str, int]]:
+    """
+    Query PackageCache.get_variants() and return all cached variants.
+
+    Returns list of (Variant, cache_path, status) tuples.
+    Creates the cache directory if it does not exist.
+    """
+    from pathlib import Path
+
+    from rez.package_cache import PackageCache
+
+    Path(cache_path).mkdir(parents=True, exist_ok=True)
+    cache = PackageCache(cache_path)
+    return list(cache.get_variants())
+
+
+def remove_cached_variant(cache_path: str, handle_dict: dict) -> None:
+    """
+    Remove a variant from the cache given its handle dict.
+
+    Args:
+        cache_path: Path to the package cache root.
+        handle_dict: Variant handle as stored in the cache JSON
+            (format: {"key": "...", "variables": {...}}).
+
+    Raises:
+        RezCacheOperationError: If the variant handle cannot be reconstructed,
+            the variant is not found, is still copying, or any other failure.
+    """
+    from pathlib import Path
+
+    from rez.package_cache import PackageCache
+
+    try:
+        from rez.packages import get_variant  # noqa: PLC0415
+
+        variant = get_variant(handle_dict)
+    except Exception as exc:
+        raise RezCacheOperationError(f"Failed to reconstruct variant handle: {exc}") from exc
+
+    cache = PackageCache(Path(cache_path))
+    status = cache.remove_variant(variant)
+
+    from rez.package_cache import PackageCache as _PC  # noqa: PLC0415
+
+    if status == _PC.VARIANT_REMOVED:
+        return
+    if status == _PC.VARIANT_NOT_FOUND:
+        raise RezCacheOperationError("Variant was not found in cache.")
+    if status == _PC.VARIANT_COPYING:
+        raise RezCacheOperationError("Variant is currently being copied; cannot remove.")
+
+    raise RezCacheOperationError(f"Unexpected status: {status}")
 
 
 def _repository_exception_types() -> tuple[type[Exception], ...]:
