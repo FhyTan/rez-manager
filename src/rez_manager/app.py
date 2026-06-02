@@ -14,12 +14,22 @@ import rez_manager.ui  # noqa: F401
 from rez_manager import __version__
 from rez_manager.adapter.utils import initialize_rez
 from rez_manager.logging_config import configure_logging
+from rez_manager.persistence.settings_store import load_settings, settings_file_path
 from rez_manager.ui.error_hub import AppErrorHub, app_error_hub
 
 
 def create_app(argv: list[str]) -> tuple[QGuiApplication, QQmlApplicationEngine]:
     configure_logging()
     initialize_rez()
+
+    # Validate settings; reset on corruption so the app always starts cleanly.
+    settings_path = settings_file_path()
+    if settings_path.exists():
+        try:
+            load_settings()
+        except Exception:
+            logger.warning("Settings file corrupted; resetting to defaults.")
+            settings_path.unlink(missing_ok=True)
 
     import rez_manager.exception_hook  # noqa: F401
 

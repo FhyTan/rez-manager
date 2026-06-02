@@ -25,7 +25,7 @@ from .project_store import (
     list_projects,
     rename_project,
 )
-from .settings_store import current_settings, default_settings, load_settings, save_settings
+from .settings_store import current_settings, load_settings, save_settings
 
 __all__ = [
     "app_cache_dir",
@@ -33,10 +33,9 @@ __all__ = [
     "app_data_dir",
     "app_log_dir",
     "current_settings",
+    "create_project",
     "default_rez_contexts_dir",
     "default_rez_package_caches_dir",
-    "create_project",
-    "default_settings",
     "delete_context",
     "delete_project",
     "duplicate_context",

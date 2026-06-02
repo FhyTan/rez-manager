@@ -10,6 +10,11 @@ tools = [
     "publish-review",
 ]
 
+variants = [
+    ["maya"],
+    ["houdini"],
+]
+
 cachable = True
 
 

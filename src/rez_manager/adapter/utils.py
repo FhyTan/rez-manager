@@ -9,6 +9,7 @@ from pathlib import Path
 from loguru import logger
 
 from rez_manager.models.settings import AppSettings
+from rez_manager.persistence.app_paths import default_rez_package_caches_dir
 from rez_manager.runtime import IS_COMPILED, IS_WINDOWS
 
 
@@ -41,18 +42,27 @@ def initialize_rez():
 
         config.override("default_shell", "cmd")
 
+    # Load and apply settings to Rez at startup so that the package cache and package paths
+    # are configured before any package queries or context resolutions happen.
+    apply_settings_to_rez(AppSettings.load())
+
 
 def apply_settings_to_rez(settings: AppSettings) -> None:
     """Apply application settings (package cache, package paths) to Rez at runtime."""
     from rez.config import config  # noqa: PLC0415
 
-    cache = settings.package_cache
-    if cache.enabled and cache.path:
-        path = Path(cache.path)
-        config.override("cache_packages_path", str(path))
+    pkg_cache = settings.package_cache
+    if pkg_cache.enabled:
+        if pkg_cache.path.strip():
+            pkg_cache_path = Path(pkg_cache.path.strip())
+        else:
+            pkg_cache_path = default_rez_package_caches_dir()
+
+        config.override("cache_packages_path", str(pkg_cache_path))
         config.override("write_package_cache", True)
         config.override("read_package_cache", True)
-        config.override("package_cache_max_variant_days", cache.ttl_days)
+        config.override("package_cache_max_variant_days", pkg_cache.ttl_days)
+        config.override("package_cache_space_buffer ", pkg_cache.max_size_gb * 1024**3)
     else:
         config.override("cache_packages_path", None)
         config.override("write_package_cache", False)

@@ -32,7 +32,7 @@ class AppSettingsController(QObject):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self._settings = AppSettings.default()
+        self._settings = AppSettings()
         self.reload()
 
     # ── Contexts Location ────────────────────────────────────

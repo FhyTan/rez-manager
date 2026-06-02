@@ -7,12 +7,6 @@ from os import PathLike
 from pathlib import Path
 
 
-def _settings_store():
-    from rez_manager.persistence import settings_store
-
-    return settings_store
-
-
 @dataclass
 class PackageCacheSettings:
     enabled: bool = True
@@ -90,15 +84,21 @@ class AppSettings:
         object.__setattr__(self, "package_cache", package_cache)
 
     @classmethod
-    def default(cls) -> AppSettings:
-        return _settings_store().default_settings()
-
-    @classmethod
     def load(cls) -> AppSettings:
-        return _settings_store().load_settings()
+        from rez_manager.persistence.settings_store import load_settings  # noqa: PLC0415
+
+        return load_settings()
 
     def save(self) -> Path:
-        return _settings_store().save_settings(self)
+        from rez_manager.persistence.settings_store import save_settings  # noqa: PLC0415
+
+        return save_settings(self)
+
+    @classmethod
+    def current(cls) -> AppSettings:
+        from rez_manager.persistence.settings_store import current_settings  # noqa: PLC0415
+
+        return current_settings()
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -108,19 +108,13 @@ class AppSettings:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> AppSettings:
-        if "general" in data:
-            general_data = data.get("general", {})
-            pkg_cache_data = data.get("package_cache", {})
-            if not isinstance(general_data, dict):
-                raise TypeError("general must be a dict")
-            if not isinstance(pkg_cache_data, dict):
-                raise TypeError("package_cache must be a dict")
-            return cls(
-                general=GeneralSettings.from_dict(general_data),
-                package_cache=PackageCacheSettings.from_dict(pkg_cache_data),
-            )
-
+        general_data = data.get("general", {})
+        pkg_cache_data = data.get("package_cache", {})
+        if not isinstance(general_data, dict):
+            raise TypeError("general must be a dict")
+        if not isinstance(pkg_cache_data, dict):
+            raise TypeError("package_cache must be a dict")
         return cls(
-            general=GeneralSettings.from_dict(data),
-            package_cache=PackageCacheSettings.from_dict(data.get("package_cache", {})),
+            general=GeneralSettings.from_dict(general_data),
+            package_cache=PackageCacheSettings.from_dict(pkg_cache_data),
         )

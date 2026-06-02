@@ -3,21 +3,12 @@
 from __future__ import annotations
 
 import json
-import warnings
-from json import JSONDecodeError
 from os import PathLike
 from pathlib import Path
 
-from rez_manager.models.settings import AppSettings, GeneralSettings, PackageCacheSettings
+from rez_manager.models.settings import AppSettings
 
 from .app_paths import settings_file_path
-
-
-def default_settings() -> AppSettings:
-    return AppSettings(
-        general=GeneralSettings(),
-        package_cache=PackageCacheSettings(),
-    )
 
 
 def read_settings_file(path: str | PathLike[str]) -> AppSettings:
@@ -29,17 +20,7 @@ def read_settings_file(path: str | PathLike[str]) -> AppSettings:
     if not isinstance(data, dict):
         raise TypeError(f"{settings_path} must contain a JSON object")
 
-    has_general = "general" in data
-    settings = AppSettings.from_dict(data)
-
-    if not has_general:
-        _migrate_settings_file(settings, path)
-
-    return settings
-
-
-def _migrate_settings_file(settings: AppSettings, path: str | PathLike[str]) -> None:
-    write_settings_file(settings, path)
+    return AppSettings.from_dict(data)
 
 
 def write_settings_file(settings: AppSettings, path: str | PathLike[str]) -> Path:
@@ -56,36 +37,13 @@ def write_settings_file(settings: AppSettings, path: str | PathLike[str]) -> Pat
 def load_settings() -> AppSettings:
     path = settings_file_path()
     if not path.exists():
-        return default_settings()
-
-    try:
-        return read_settings_file(path)
-    except (JSONDecodeError, OSError) as exc:
-        warnings.warn(
-            f"Failed to load settings from {path}: {exc}",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-        return default_settings()
-    except TypeError as exc:
-        warnings.warn(
-            f"Failed to validate settings from {path}: {exc}",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-        return default_settings()
-    except ValueError as exc:
-        warnings.warn(
-            f"Failed to validate settings from {path}: {exc}",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-        return default_settings()
-
-
-def current_settings() -> AppSettings:
-    return load_settings()
+        return AppSettings()
+    return read_settings_file(path)
 
 
 def save_settings(settings: AppSettings) -> Path:
     return write_settings_file(settings, settings_file_path())
+
+
+def current_settings() -> AppSettings:
+    return load_settings()

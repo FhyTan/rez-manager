@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from rez_manager.models.project import Project
@@ -49,17 +51,15 @@ def test_storage_discovers_projects_and_contexts(tmp_path, monkeypatch):
     assert contexts[0].packages == ["maya-2024", "python-3.11"]
 
 
-def test_load_settings_falls_back_to_default_on_invalid_json(tmp_path, monkeypatch):
+def test_load_settings_raises_on_invalid_json(tmp_path, monkeypatch):
+
     from rez_manager.persistence.settings_store import load_settings
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     (tmp_path / "settings.json").write_text("{invalid json", encoding="utf-8")
 
-    with pytest.warns(RuntimeWarning, match="Failed to load settings"):
-        settings = load_settings()
-
-    assert settings.general.package_repositories == []
-    assert settings.general.contexts_location == ""
+    with pytest.raises(json.JSONDecodeError):
+        load_settings()
 
 
 def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
@@ -81,7 +81,7 @@ def test_platformdirs_paths_used_without_override(tmp_path, monkeypatch):
     assert app_paths.app_log_dir() == log_root
     assert app_paths.log_file_path() == log_root / "rez-manager.log"
     assert app_paths.settings_file_path() == config_root / "settings.json"
-    assert settings_store.default_settings().general.contexts_location == ""
+    assert settings_store.load_settings().general.contexts_location == ""
 
 
 def test_app_home_override_provides_cache_and_log_directories(tmp_path, monkeypatch):
