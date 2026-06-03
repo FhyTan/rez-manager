@@ -23,6 +23,7 @@ Window {
     }
 
     // Context menu state
+    property int selectedRow: -1
     property string contextMenuPackageName: ""
     property string contextMenuHandleJson: ""
     property string contextActionSource: "" // "variant" | "package"
@@ -64,7 +65,9 @@ Window {
                     font.family: "Consolas, Courier New, monospace"
                     elide: Text.ElideLeft
                 }
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
                 CardButton {
                     glyph: "\u25B6"
                     label: qsTr("Reveal")
@@ -82,7 +85,9 @@ Window {
 
             Rectangle {
                 anchors.bottom: parent.bottom
-                width: parent.width; height: 1; color: Style.border
+                width: parent.width
+                height: 1
+                color: Style.border
             }
         }
 
@@ -110,8 +115,10 @@ Window {
             TextField {
                 id: filterField_
                 anchors {
-                    left: parent.left; leftMargin: Style.lg
-                    right: parent.right; rightMargin: Style.lg
+                    left: parent.left
+                    leftMargin: Style.lg
+                    right: parent.right
+                    rightMargin: Style.lg
                     verticalCenter: parent.verticalCenter
                 }
                 placeholderText: qsTr("Filter by package name\u2026")
@@ -124,7 +131,9 @@ Window {
 
             Rectangle {
                 anchors.bottom: parent.bottom
-                width: parent.width; height: 1; color: Style.border
+                width: parent.width
+                height: 1
+                color: Style.border
             }
         }
 
@@ -144,19 +153,18 @@ Window {
                     Layout.fillWidth: true
                     syncView: treeView_
                     clip: true
+                    onWidthChanged: treeView_.forceLayout()
+
+                    model: [qsTr("Variant"), qsTr("Status"), qsTr("Source Path")]
 
                     delegate: Rectangle {
                         implicitHeight: 28
                         color: Style.surface
+                        required property string modelData
 
                         Text {
                             anchors.centerIn: parent
-                            text: {
-                                var col = header.model.index;
-                                if (col === 0) return qsTr("Variant");
-                                if (col === 1) return qsTr("Status");
-                                return qsTr("Source Path");
-                            }
+                            text: parent.modelData
                             color: Style.textSecondary
                             font.pixelSize: Style.fontSm
                             font.bold: true
@@ -164,7 +172,8 @@ Window {
 
                         Rectangle {
                             anchors.right: parent.right
-                            width: 1; height: parent.height
+                            width: 1
+                            height: parent.height
                             color: Style.border
                         }
                     }
@@ -182,10 +191,18 @@ Window {
                         enabled: cacheController_.cacheEnabled
                         model: cacheController_.variantModel
                         columnWidthProvider: function (column) {
-                            if (column === 0) return 220;
-                            if (column === 1) return 130;
-                            return Math.max(150, treeView_.width - 220 - 130);
+                            const lastCol = treeView_.columns - 1;
+                            if (column === lastCol) {
+                                let used = 0;
+                                for (let i = 0; i < lastCol; ++i)
+                                    used += treeView_.columnWidth(i);
+                                return Math.max(150, treeView_.width - used);
+                            }
+                            const w = treeView_.explicitColumnWidth(column);
+                            return w > 0 ? w : (column === 0 ? 220 : 130);
                         }
+
+                        onWidthChanged: treeView_.forceLayout()
 
                         delegate: Rectangle {
                             id: delegateRoot_
@@ -205,12 +222,18 @@ Window {
 
                             readonly property bool delegateIsPackage: nodeType === "package"
                             readonly property bool delegateIsVariant: nodeType === "variant"
+                            readonly property bool isSelected: row === root.selectedRow
 
-                            implicitWidth: treeView.width
                             implicitHeight: delegateRoot_.delegateIsPackage ? 34 : 28
-                            color: hoverHandler_.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent"
+                            color: delegateRoot_.isSelected
+                                ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.15)
+                                : (hoverHandler_.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
 
-                            Behavior on color { ColorAnimation { duration: 80 } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 80
+                                }
+                            }
 
                             // Column 0: expand toggle + label
                             RowLayout {
@@ -232,7 +255,8 @@ Window {
 
                                 Rectangle {
                                     visible: delegateRoot_.delegateIsVariant
-                                    implicitWidth: 4; implicitHeight: 4
+                                    implicitWidth: 4
+                                    implicitHeight: 4
                                     radius: 2
                                     color: Style.textDisabled
                                     Layout.alignment: Qt.AlignVCenter
@@ -241,10 +265,9 @@ Window {
                                 Text {
                                     Layout.fillWidth: true
                                     text: delegateRoot_.label
-                                    color: delegateRoot_.delegateIsPackage ? Style.textPrimary : Style.textSecondary
-                                    font.pixelSize: delegateRoot_.delegateIsPackage ? Style.fontSm : Style.fontMd
+                                    color: Style.textPrimary
+                                    font.pixelSize: Style.fontSm
                                     font.bold: delegateRoot_.delegateIsPackage
-                                    font.family: delegateRoot_.delegateIsVariant ? "Consolas, Courier New, monospace" : ""
                                     elide: Text.ElideRight
                                 }
                             }
@@ -261,12 +284,16 @@ Window {
 
                                 Rectangle {
                                     visible: delegateRoot_.delegateIsVariant
-                                    implicitWidth: 8; implicitHeight: 8
+                                    implicitWidth: 8
+                                    implicitHeight: 8
                                     radius: 4
                                     color: {
-                                        if (delegateRoot_.statusCode === 1) return Style.success;
-                                        if (delegateRoot_.statusCode === 3) return Style.warning;
-                                        if (delegateRoot_.statusCode === 4) return Style.error;
+                                        if (delegateRoot_.statusCode === 1)
+                                            return Style.success;
+                                        if (delegateRoot_.statusCode === 3)
+                                            return Style.warning;
+                                        if (delegateRoot_.statusCode === 4)
+                                            return Style.error;
                                         return Style.textDisabled;
                                     }
                                     Layout.alignment: Qt.AlignVCenter
@@ -274,18 +301,22 @@ Window {
 
                                 Text {
                                     visible: delegateRoot_.delegateIsVariant
+                                    Layout.fillWidth: true
                                     text: delegateRoot_.statusLabel
                                     color: Style.textSecondary
-                                    font.pixelSize: Style.fontMd
+                                    font.pixelSize: Style.fontSm
+                                    elide: Text.ElideRight
                                     Layout.alignment: Qt.AlignVCenter
                                 }
 
                                 Text {
                                     visible: delegateRoot_.delegateIsPackage && delegateRoot_.statusLabel.length > 0
+                                    Layout.fillWidth: true
                                     text: delegateRoot_.statusLabel
-                                    color: Style.textDisabled
-                                    font.pixelSize: Style.fontXs
+                                    color: Style.textSecondary
+                                    font.pixelSize: Style.fontSm
                                     font.italic: true
+                                    elide: Text.ElideRight
                                     Layout.alignment: Qt.AlignVCenter
                                 }
                             }
@@ -299,7 +330,7 @@ Window {
                                     rightMargin: Style.md
                                 }
                                 text: delegateRoot_.sourcePath
-                                color: Style.textDisabled
+                                color: Style.textSecondary
                                 font.pixelSize: Style.fontSm
                                 font.family: "Consolas, Courier New, monospace"
                                 elide: Text.ElideLeft
@@ -315,6 +346,7 @@ Window {
                                 gesturePolicy: TapHandler.WithinBounds
                                 acceptedButtons: Qt.LeftButton
                                 onTapped: {
+                                    root.selectedRow = delegateRoot_.row;
                                     if (delegateRoot_.delegateIsPackage) {
                                         if (delegateRoot_.treeView.isExpanded(delegateRoot_.row))
                                             delegateRoot_.treeView.collapse(delegateRoot_.row);
@@ -337,7 +369,8 @@ Window {
 
                             Rectangle {
                                 anchors.bottom: parent.bottom
-                                width: parent.width; height: delegateRoot_.delegateIsPackage ? 1 : 0
+                                width: parent.width
+                                height: delegateRoot_.delegateIsPackage ? 1 : 0
                                 color: Style.border
                             }
                         }
@@ -353,7 +386,9 @@ Window {
                             anchors.centerIn: parent
                             spacing: Style.sm
 
-                            BusyIndicator { running: parent.visible }
+                            BusyIndicator {
+                                running: parent.visible
+                            }
                             Text {
                                 text: qsTr("Scanning cache\u2026")
                                 color: Style.textSecondary
@@ -366,9 +401,7 @@ Window {
                     Text {
                         anchors.centerIn: parent
                         visible: treeView_.rows === 0 && !cacheController_.isLoading
-                        text: filterField_.text.length > 0
-                            ? qsTr("No matching cached packages.")
-                            : qsTr("No packages cached yet.\nResolve a context to populate the cache.")
+                        text: filterField_.text.length > 0 ? qsTr("No matching cached packages.") : qsTr("No packages cached yet.\nResolve a context to populate the cache.")
                         color: Style.textSecondary
                         font.pixelSize: Style.fontMd
                         horizontalAlignment: Text.AlignHCenter
@@ -386,17 +419,21 @@ Window {
 
             Rectangle {
                 anchors.top: parent.top
-                width: parent.width; height: 1; color: Style.border
+                width: parent.width
+                height: 1
+                color: Style.border
             }
 
             Text {
                 anchors {
-                    left: parent.left; leftMargin: Style.lg
+                    left: parent.left
+                    leftMargin: Style.lg
                     verticalCenter: parent.verticalCenter
                 }
                 text: {
                     const count = cacheController_.totalVariants;
-                    if (count === 0) return qsTr("No cached variants");
+                    if (count === 0)
+                        return qsTr("No cached variants");
                     return qsTr("%n variant(s) cached", "", count);
                 }
                 color: Style.textDisabled
@@ -451,5 +488,9 @@ Window {
         visible: false
     }
 
-    Component.onCompleted: cacheController_.refresh()
+    Component.onCompleted: {
+        treeView_.setColumnWidth(0, 220);
+        treeView_.setColumnWidth(1, 130);
+        cacheController_.refresh();
+    }
 }
