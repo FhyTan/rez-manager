@@ -9,8 +9,8 @@ T.MenuItem {
     property color hoverColor: Qt.tint(Style.elevated, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.16))
     property color pressedColor: Qt.tint(Style.elevated, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.24))
 
-    implicitWidth: Math.max(160, implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(34, implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
     padding: 0
     leftPadding: Style.md
     rightPadding: Style.md
@@ -19,8 +19,8 @@ T.MenuItem {
 
     background: Rectangle {
         id: background_
-        implicitWidth: control.implicitWidth
-        implicitHeight: control.implicitHeight
+        implicitWidth: 160
+        implicitHeight: 34
         radius: Style.radiusSm
         color: "transparent"
 
@@ -39,7 +39,6 @@ T.MenuItem {
         font.weight: control.font.weight
         font.pixelSize: Style.fontMd
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
     }
 
     // qmllint disable

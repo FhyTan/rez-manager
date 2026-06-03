@@ -6,9 +6,7 @@ import ".."
 T.Menu {
     id: control
 
-    property int minimumWidth: 176
-
-    implicitWidth: Math.max(minimumWidth, implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
 
     modal: false
@@ -63,7 +61,7 @@ T.Menu {
     }
 
     background: Rectangle {
-        implicitWidth: control.minimumWidth
+        implicitWidth: 160
         implicitHeight: 40
         radius: Style.radius
         color: Style.elevated
@@ -80,5 +78,16 @@ T.Menu {
         currentIndex: control.currentIndex
 
         ScrollIndicator.vertical: ScrollIndicator {}
+
+        // Delegate's implicitWidth doesn't propagate up to Menu, so we calculate it here.
+        implicitWidth: {
+            var max = 0;
+            for (let i = 0; i < count; ++i) {
+                let item = itemAtIndex(i);
+                if (item && item.implicitWidth > max)
+                    max = item.implicitWidth;
+            }
+            return max;
+        }
     }
 }

@@ -4,6 +4,7 @@ __pycache__
 *.pyc
 *.pyo
 try*.py
+try*.qml
 .vscode
 .env
 qmltypes/

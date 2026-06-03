@@ -38,9 +38,6 @@ ApplicationWindow {
     LogViewerController {
         id: logViewerController_
     }
-    PackageCacheController {
-        id: cacheController_
-    }
 
     // ── Sub-windows (instantiated here, shown on demand) ──────
     SettingsDialog {
@@ -140,7 +137,6 @@ ApplicationWindow {
     PackageCacheWindow {
         id: cacheWin
         visible: false
-        cacheController: cacheController_
     }
 
     // ── State ─────────────────────────────────────────────────

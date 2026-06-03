@@ -13,7 +13,7 @@ T.MenuSeparator {
     bottomPadding: Style.sm
 
     contentItem: Rectangle {
-        implicitWidth: 188
+        implicitWidth: 160
         implicitHeight: 1
         radius: 0.5
         color: Style.borderBright
