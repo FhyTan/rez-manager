@@ -218,7 +218,7 @@ Window {
                         selectionBehavior: TableView.SelectRows
                         selectionMode: TableView.SingleSelection
                         selectionModel: ItemSelectionModel {}
-                        
+
                         columnWidthProvider: function (column) {
                             const lastCol = treeView_.columns - 1;
                             if (column === lastCol) {
@@ -248,14 +248,13 @@ Window {
                             required property int statusCode
                             required property string handleJson
                             required property string packageName
-                            required property bool selected
                             property bool highlighted: row === treeView.currentRow
 
                             readonly property bool delegateIsPackage: nodeType === "package"
                             readonly property bool delegateIsVariant: nodeType === "variant"
 
                             implicitHeight: 34
-                            color: highlighted ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.15) : (hoverHandler_.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
+                            color: highlighted ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.15) : "transparent"
 
                             Behavior on color {
                                 ColorAnimation {
@@ -374,6 +373,7 @@ Window {
                                 gesturePolicy: TapHandler.WithinBounds
                                 acceptedButtons: Qt.RightButton
                                 onTapped: function (eventPoint) {
+                                    treeView_.selectionModel.setCurrentIndex(treeView_.index(delegateRoot_.row, 0), "SelectCurrent");
                                     root.contextMenuHandleJson = delegateRoot_.handleJson;
                                     root.contextMenuPackageName = delegateRoot_.packageName;
                                     root.contextActionSource = delegateRoot_.delegateIsVariant ? "variant" : "package";
@@ -511,9 +511,8 @@ Window {
         visible: false
     }
 
-    Component.onCompleted: {
-        treeView_.setColumnWidth(0, 220);
-        treeView_.setColumnWidth(1, 130);
-        cacheController_.refresh();
+    onVisibleChanged: {
+        if (visible)
+            cacheController_.refresh();     // ← every open
     }
 }

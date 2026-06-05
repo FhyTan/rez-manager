@@ -45,3 +45,11 @@ class RezPackageQueryError(RezAdapterError):
 
 class RezCacheOperationError(RezAdapterError):
     """Raised when a package cache operation (query, remove, etc.) fails."""
+
+
+class RezCacheVariantNotFoundError(RezCacheOperationError):
+    """Raised when attempting to remove a variant that is not in the cache."""
+
+
+class RezCacheVariantCopyingError(RezCacheOperationError):
+    """Raised when attempting to remove a variant that is still being copied."""

@@ -24,7 +24,11 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtQml import QmlElement
 
 from rez_manager.adapter.packages import list_cached_variants, remove_cached_variant
-from rez_manager.exceptions import RezCacheOperationError
+from rez_manager.exceptions import (
+    RezCacheOperationError,
+    RezCacheVariantCopyingError,
+    RezCacheVariantNotFoundError,
+)
 from rez_manager.models.settings import AppSettings
 from rez_manager.persistence.app_paths import default_rez_package_caches_dir
 from rez_manager.ui.error_hub import report_object_ui_error
@@ -258,6 +262,78 @@ class CachedVariantTreeModel(QAbstractItemModel):
         self._root = root
         self.endResetModel()
 
+    def remove_variant(self, handle_json: str) -> bool:
+        """
+        Remove a single variant node from the tree.
+
+        If the parent package becomes empty, it is removed as well.
+        Returns True if the variant was found and removed.
+        """
+        for pkg_node in self._root.children:
+            for i, var_node in enumerate(pkg_node.children):
+                if var_node.handle_json == handle_json:
+                    parent_idx = self.createIndex(pkg_node.row(), 0, pkg_node)
+                    self.beginRemoveRows(parent_idx, i, i)
+                    del pkg_node.children[i]
+                    self.endRemoveRows()
+
+                    if not pkg_node.children:
+                        pkg_row = pkg_node.row()
+                        self.beginRemoveRows(QModelIndex(), pkg_row, pkg_row)
+                        del self._root.children[pkg_row]
+                        self.endRemoveRows()
+                    else:
+                        pkg_node.label = (
+                            f"{pkg_node.package_name} ({len(pkg_node.children)})"
+                        )
+                        pkg_node.status_label = _compute_package_status_summary(
+                            pkg_node.children
+                        )
+                        pkg_index = self.createIndex(pkg_node.row(), 0, pkg_node)
+                        self.dataChanged.emit(pkg_index, pkg_index, [])
+
+                    return True
+        return False
+
+    def remove_package(self, package_name: str) -> bool:
+        """
+        Remove a package node and all its variant children from the tree.
+
+        Returns True if the package was found and removed.
+        """
+        for i, pkg_node in enumerate(self._root.children):
+            if pkg_node.package_name == package_name:
+                self.beginRemoveRows(QModelIndex(), i, i)
+                del self._root.children[i]
+                self.endRemoveRows()
+                return True
+        return False
+
+    def set_variant_status(self, handle_json: str, status_code: int) -> bool:
+        """
+        Update the status of a variant in-place and emit dataChanged.
+
+        Also refreshes the parent package's status summary.
+        Returns True if the variant was found and updated.
+        """
+        for pkg_node in self._root.children:
+            for var_node in pkg_node.children:
+                if var_node.handle_json == handle_json:
+                    var_node.status_code = status_code
+                    var_node.status_label = STATUS_LABELS.get(
+                        status_code, f"Unknown ({status_code})"
+                    )
+                    pkg_node.status_label = _compute_package_status_summary(
+                        pkg_node.children
+                    )
+
+                    var_idx = self.createIndex(var_node.row(), 0, var_node)
+                    self.dataChanged.emit(var_idx, var_idx, [])
+                    pkg_idx = self.createIndex(pkg_node.row(), 0, pkg_node)
+                    self.dataChanged.emit(pkg_idx, pkg_idx, [])
+                    return True
+        return False
+
     def package_names(self) -> list[str]:
         return [child.package_name for child in self._root.children]
 
@@ -325,11 +401,25 @@ class PackageCacheController(QObject):
         try:
             handle_dict = json.loads(handle_json)
             remove_cached_variant(cache_path, handle_dict)
-            self.refresh()
+        except RezCacheVariantNotFoundError:
+            # Already gone from disk — remove from model
+            self._model.remove_variant(handle_json)
+            self._recalculate_total_variants()
             return True
+        except RezCacheVariantCopyingError:
+            report_object_ui_error(
+                self, "Cannot delete variant: it is still being copied."
+            )
+            self._model.set_variant_status(handle_json, 3)
+            return False
         except (json.JSONDecodeError, RezCacheOperationError) as exc:
             report_object_ui_error(self, f"Failed to delete variant: {exc}")
             return False
+        else:
+            # Successfully removed from disk
+            self._model.remove_variant(handle_json)
+            self._recalculate_total_variants()
+            return True
 
     @Slot(str, result=bool)
     def deletePackage(self, package_name: str) -> bool:  # noqa: N802
@@ -339,15 +429,32 @@ class PackageCacheController(QObject):
 
         cache_path = self._resolve_cache_path()
         errors = 0
+        copying = False
+
         for var_node in variants:
             try:
                 handle_dict = json.loads(var_node.handle_json)
                 remove_cached_variant(cache_path, handle_dict)
+            except RezCacheVariantNotFoundError:
+                continue
+            except RezCacheVariantCopyingError:
+                report_object_ui_error(
+                    self,
+                    f"Cannot delete '{var_node.label}': still being copied.",
+                )
+                self._model.set_variant_status(var_node.handle_json, 3)
+                copying = True
+                errors += 1
+                break
             except (json.JSONDecodeError, RezCacheOperationError) as exc:
                 report_object_ui_error(self, f"Failed to delete variant: {exc}")
                 errors += 1
 
-        self.refresh()
+        if not copying and errors == 0:
+            self._model.remove_package(package_name)
+            self._recalculate_total_variants()
+            return True
+
         return errors == 0
 
     @Slot(str, result=bool)
@@ -364,6 +471,12 @@ class PackageCacheController(QObject):
         if path_str:
             return str(Path(path_str).resolve())
         return str(default_rez_package_caches_dir())
+
+    def _recalculate_total_variants(self) -> None:
+        self._total_variants = sum(
+            len(pkg.children) for pkg in self._model._root.children
+        )
+        self.totalVariantsChanged.emit()
 
     def _on_refresh_finished(self, result: object) -> None:
         try:

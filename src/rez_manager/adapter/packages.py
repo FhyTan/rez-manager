@@ -5,7 +5,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-from rez_manager.exceptions import RezCacheOperationError, RezPackageQueryError, RezRepositoryError
+from rez_manager.exceptions import (
+    RezCacheOperationError,
+    RezCacheVariantCopyingError,
+    RezCacheVariantNotFoundError,
+    RezPackageQueryError,
+    RezRepositoryError,
+)
 
 
 @dataclass
@@ -158,9 +164,9 @@ def remove_cached_variant(cache_path: str, handle_dict: dict) -> None:
     if status == _PC.VARIANT_REMOVED:
         return
     if status == _PC.VARIANT_NOT_FOUND:
-        raise RezCacheOperationError("Variant was not found in cache.")
+        raise RezCacheVariantNotFoundError("Variant was not found in cache.")
     if status == _PC.VARIANT_COPYING:
-        raise RezCacheOperationError("Variant is currently being copied; cannot remove.")
+        raise RezCacheVariantCopyingError("Variant is currently being copied; cannot remove.")
 
     raise RezCacheOperationError(f"Unexpected status: {status}")
 
