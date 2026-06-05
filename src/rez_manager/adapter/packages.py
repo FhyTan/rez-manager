@@ -23,6 +23,7 @@ class PackageInfo:
     variants: list[list[str]]
     tools: list[str]
     python_statements: str
+    cachable: bool = False
 
 
 @dataclass
@@ -83,6 +84,7 @@ def get_package_info(name: str, version: str, repo_paths: list[str]) -> PackageI
         requires = [str(r) for r in (pkg.requires or [])]
         description = pkg.description or ""
         python_statements = str(pkg.data.get("commands", ""))
+        cachable = bool(pkg.is_cachable)
     except _package_query_exception_types() as exc:
         raise RezPackageQueryError(
             f"Failed to query Rez package '{name}-{version}': {exc}"
@@ -96,6 +98,7 @@ def get_package_info(name: str, version: str, repo_paths: list[str]) -> PackageI
         variants=variants,
         tools=tools,
         python_statements=python_statements,
+        cachable=cachable,
     )
 
 

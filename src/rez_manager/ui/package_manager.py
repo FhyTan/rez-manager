@@ -399,6 +399,7 @@ class PackageDetailObject(QObject):
         self._variants: list[str] = []
         self._tools: list[str] = []
         self._code = ""
+        self._cachable = False
 
     @Property(bool, notify=stateChanged)
     def hasSelection(self) -> bool:  # noqa: N802
@@ -442,6 +443,10 @@ class PackageDetailObject(QObject):
     def code(self) -> str:
         return self._code
 
+    @Property(bool, notify=stateChanged)
+    def cachable(self) -> bool:
+        return self._cachable
+
     def reset(self) -> None:
         self.apply(
             name="",
@@ -452,6 +457,7 @@ class PackageDetailObject(QObject):
             variants=[],
             tools=[],
             code="",
+            cachable=False,
         )
 
     def setPackageWithSelectedVersion(  # noqa: N802
@@ -471,6 +477,7 @@ class PackageDetailObject(QObject):
                 variants=[],
                 tools=[],
                 code="",
+                cachable=False,
             )
         else:
             self.apply(
@@ -482,6 +489,7 @@ class PackageDetailObject(QObject):
                 variants=[" ".join(variant) for variant in package_info.variants],
                 tools=list(package_info.tools),
                 code=package_info.python_statements,
+                cachable=package_info.cachable,
             )
 
     def apply(
@@ -495,6 +503,7 @@ class PackageDetailObject(QObject):
         variants: Sequence[str],
         tools: Sequence[str],
         code: str,
+        cachable: bool,
     ) -> None:
         next_state = (
             name,
@@ -505,6 +514,7 @@ class PackageDetailObject(QObject):
             list(variants),
             list(tools),
             code,
+            cachable,
         )
         current_state = (
             self._name,
@@ -515,6 +525,7 @@ class PackageDetailObject(QObject):
             self._variants,
             self._tools,
             self._code,
+            self._cachable,
         )
         if next_state == current_state:
             return
@@ -528,6 +539,7 @@ class PackageDetailObject(QObject):
             self._variants,
             self._tools,
             self._code,
+            self._cachable,
         ) = next_state
         self.stateChanged.emit()
 

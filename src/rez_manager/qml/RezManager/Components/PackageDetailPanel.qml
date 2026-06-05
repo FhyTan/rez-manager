@@ -29,7 +29,7 @@ Rectangle {
         Text {
             text: detailBox_.title
             color: Style.textSecondary
-            font.pixelSize: Style.fontXs
+            font.pixelSize: Style.fontSm
             font.bold: true
             font.letterSpacing: 0.5
         }
@@ -69,7 +69,6 @@ Rectangle {
                     text: detailBox_.body.length > 0 ? detailBox_.body : "—"
                     color: detailBox_.body.length > 0 ? Style.textPrimary : Style.textDisabled
                     font.pixelSize: Style.fontSm
-                    font.family: detailBox_.monospace ? "Consolas, Courier New, monospace" : font.family
                     wrapMode: Text.NoWrap
                 }
             }
@@ -148,6 +147,26 @@ Rectangle {
                 DetailBox {
                     title: "Description"
                     body: root.packageDetail ? root.packageDetail.description : ""
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+
+                    Text {
+                        text: "Cachable"
+                        color: Style.textSecondary
+                        font.pixelSize: Style.fontSm
+                        font.bold: true
+                        font.letterSpacing: 0.5
+                    }
+
+                    CheckBox {
+                        text: root.packageDetail.cachable ? "Supported" : "Not Support"
+                        font.pixelSize: Style.fontSm
+                        checked: root.packageDetail ? root.packageDetail.cachable : false
+                        enabled: false
+                    }
                 }
 
                 DetailBox {
