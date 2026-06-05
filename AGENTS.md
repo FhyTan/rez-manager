@@ -57,6 +57,55 @@ src/rez_manager/
 - Run QML lint: `uv run pyside6-qmllint -I ./qmltypes <qml-files>`.
 - Format QML: `uv run pyside6-qmlformat -i <qml-files>`.
 
+## Error Push Flow (Python → QML)
+
+```
+Python error → report_object_ui_error(owner, message)
+                    ↓
+            AppErrorHub.errorOccurred(message, target)   ← Signal(QString, QString)
+                    ↓
+        QML Connections { target: AppErrorHub; function onErrorOccurred(message, target) }
+                    ↓
+        filter by target === errorTarget_
+                    ↓
+            StatusToast.show(message, accentColor)
+```
+
+Backend failures use `report_object_ui_error(owner, message)` from `rez_manager.ui.error_hub`. It resolves the QML-declared `errorTarget` from the owner's attached-property chain, then broadcasts via `AppErrorHub.errorOccurred`.
+
+Every new window must do three things:
+
+1. **Declare a unique error target string:**
+   ```qml
+   readonly property string errorTarget_: "your-window-id"
+   AppErrorTarget.errorTarget: root.errorTarget_
+   ```
+
+2. **Listen for matching errors in QML:**
+   ```qml
+   Connections {
+       target: AppErrorHub // qmllint disable incompatible-type
+       function onErrorOccurred(message, target) {
+           if (target === root.errorTarget_ && root.visible)
+               statusToast_.show(message, Style.error);
+       }
+   }
+   ```
+
+3. **Add a StatusToast somewhere in the layout:**
+   ```qml
+   StatusToast { id: statusToast_ }
+   ```
+
+On the Python controller side, import and call:
+```python
+from rez_manager.ui.error_hub import report_object_ui_error
+
+report_object_ui_error(self, "Human-readable error message")
+```
+
+This pattern keeps error display consistent across the application — the Python side only reports what happened, and the QML side decides how to surface it.
+
 ## Useful Commands
 
 ```bash

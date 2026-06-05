@@ -40,6 +40,8 @@ QML_IMPORT_MAJOR_VERSION = 1
 
 _AUTO_VERSION = "auto"
 _PACKAGE_REQUEST_WITH_VERSION = re.compile(r"^(?P<name>.+?)(?:-(?P<version>.*))?$")
+
+
 @dataclass(frozen=True)
 class _PackageRequestItem:
     request: str

@@ -17,13 +17,14 @@ Window {
     minimumHeight: 400
     color: Style.bg
     flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
+    readonly property string errorTarget_: "package-cache"
+    AppErrorTarget.errorTarget: root.errorTarget_
 
     PackageCacheController {
         id: cacheController_
     }
 
     // Context menu state
-    property int selectedRow: -1
     property string contextMenuPackageName: ""
     property string contextMenuHandleJson: ""
     property string contextActionSource: "" // "variant" | "package"
@@ -31,6 +32,30 @@ Window {
     readonly property string effectiveCachePath: {
         const p = cacheController_.cachePath;
         return p.length > 0 ? p : cacheController_.cachePathPlaceholder;
+    }
+
+    function showStatus(message, isError) {
+        statusToast_.show(message, isError ? Style.error : Style.success);
+    }
+
+    Connections {
+        target: AppErrorHub // qmllint disable incompatible-type
+        function onErrorOccurred(message, target) {
+            if (target === root.errorTarget_ && root.visible)
+                statusToast_.show(message, Style.error);
+        }
+    }
+
+    Connections {
+        target: cacheController_
+        function onLoadingChanged() {
+            if (!cacheController_.isLoading)
+                treeView_.expandRecursively();
+        }
+    }
+
+    StatusToast {
+        id: statusToast_
     }
 
     // ── Header area ──────────────────────────────────────────────
@@ -69,7 +94,7 @@ Window {
                     Layout.fillWidth: true
                 }
                 CardButton {
-                    glyph: "\u25B6"
+                    glyph: "\u{1F5C1}"
                     label: qsTr("Reveal")
                     onClicked: {
                         if (root.effectiveCachePath.length > 0)
@@ -190,6 +215,10 @@ Window {
                         clip: true
                         enabled: cacheController_.cacheEnabled
                         model: cacheController_.variantModel
+                        selectionBehavior: TableView.SelectRows
+                        selectionMode: TableView.SingleSelection
+                        selectionModel: ItemSelectionModel {}
+                        
                         columnWidthProvider: function (column) {
                             const lastCol = treeView_.columns - 1;
                             if (column === lastCol) {
@@ -199,7 +228,7 @@ Window {
                                 return Math.max(150, treeView_.width - used);
                             }
                             const w = treeView_.explicitColumnWidth(column);
-                            return w > 0 ? w : (column === 0 ? 220 : 130);
+                            return Math.max(w, column === 0 ? 220 : 130);
                         }
 
                         onWidthChanged: treeView_.forceLayout()
@@ -219,15 +248,14 @@ Window {
                             required property int statusCode
                             required property string handleJson
                             required property string packageName
+                            required property bool selected
+                            property bool highlighted: row === treeView.currentRow
 
                             readonly property bool delegateIsPackage: nodeType === "package"
                             readonly property bool delegateIsVariant: nodeType === "variant"
-                            readonly property bool isSelected: row === root.selectedRow
 
-                            implicitHeight: delegateRoot_.delegateIsPackage ? 34 : 28
-                            color: delegateRoot_.isSelected
-                                ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.15)
-                                : (hoverHandler_.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
+                            implicitHeight: 34
+                            color: highlighted ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.15) : (hoverHandler_.hovered ? Qt.rgba(1, 1, 1, 0.03) : "transparent")
 
                             Behavior on color {
                                 ColorAnimation {
@@ -340,20 +368,6 @@ Window {
                             HoverHandler {
                                 id: hoverHandler_
                                 cursorShape: Qt.PointingHandCursor
-                            }
-
-                            TapHandler {
-                                gesturePolicy: TapHandler.WithinBounds
-                                acceptedButtons: Qt.LeftButton
-                                onTapped: {
-                                    root.selectedRow = delegateRoot_.row;
-                                    if (delegateRoot_.delegateIsPackage) {
-                                        if (delegateRoot_.treeView.isExpanded(delegateRoot_.row))
-                                            delegateRoot_.treeView.collapse(delegateRoot_.row);
-                                        else
-                                            delegateRoot_.treeView.expand(delegateRoot_.row);
-                                    }
-                                }
                             }
 
                             TapHandler {
@@ -480,6 +494,15 @@ Window {
                 clipboardProxy_.copy();
                 clipboardProxy_.deselect();
             }
+        }
+        MenuSeparator {}
+        MenuItem {
+            text: qsTr("Expand All")
+            onTriggered: treeView_.expandRecursively()
+        }
+        MenuItem {
+            text: qsTr("Collapse All")
+            onTriggered: treeView_.collapseRecursively()
         }
     }
 

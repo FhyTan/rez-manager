@@ -27,6 +27,7 @@ from rez_manager.adapter.packages import list_cached_variants, remove_cached_var
 from rez_manager.exceptions import RezCacheOperationError
 from rez_manager.models.settings import AppSettings
 from rez_manager.persistence.app_paths import default_rez_package_caches_dir
+from rez_manager.ui.error_hub import report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -282,7 +283,7 @@ class PackageCacheController(QObject):
         self._thread_pool = QThreadPool.globalInstance()
         self._latest_variants: list[tuple[object, str, int]] = []
 
-    @Property(QObject, constant=True)
+    @Property(CachedVariantTreeModel, constant=True)
     def variantModel(self) -> CachedVariantTreeModel:  # noqa: N802
         return self._model
 
@@ -326,7 +327,8 @@ class PackageCacheController(QObject):
             remove_cached_variant(cache_path, handle_dict)
             self.refresh()
             return True
-        except (json.JSONDecodeError, RezCacheOperationError):
+        except (json.JSONDecodeError, RezCacheOperationError) as exc:
+            report_object_ui_error(self, f"Failed to delete variant: {exc}")
             return False
 
     @Slot(str, result=bool)
@@ -341,7 +343,8 @@ class PackageCacheController(QObject):
             try:
                 handle_dict = json.loads(var_node.handle_json)
                 remove_cached_variant(cache_path, handle_dict)
-            except (json.JSONDecodeError, RezCacheOperationError):
+            except (json.JSONDecodeError, RezCacheOperationError) as exc:
+                report_object_ui_error(self, f"Failed to delete variant: {exc}")
                 errors += 1
 
         self.refresh()
@@ -351,6 +354,7 @@ class PackageCacheController(QObject):
     def revealInExplorer(self, path: str) -> bool:  # noqa: N802
         target = Path(path)
         if not target.exists():
+            report_object_ui_error(self, f"Path not found: {path}")
             return False
         return QDesktopServices.openUrl(QUrl.fromLocalFile(str(target)))
 
@@ -362,18 +366,20 @@ class PackageCacheController(QObject):
         return str(default_rez_package_caches_dir())
 
     def _on_refresh_finished(self, result: object) -> None:
-        self._loading = False
-        self.loadingChanged.emit()
+        try:
+            if isinstance(result, Exception):
+                report_object_ui_error(self, f"Failed to refresh cache: {result}")
+                self._model.build_tree([])
+                return
 
-        if isinstance(result, Exception):
-            self._model.build_tree([])
-            return
+            if isinstance(result, list):
+                self._latest_variants = result
+                self._model.build_tree(result)
 
-        if isinstance(result, list):
-            self._latest_variants = result
-            self._model.build_tree(result)
-
-        self._total_variants = sum(len(pkg.children) for pkg in self._model._root.children)
-        self.totalVariantsChanged.emit()
-        self.cachePathChanged.emit()
-        self.cacheEnabledChanged.emit()
+            self._total_variants = sum(len(pkg.children) for pkg in self._model._root.children)
+            self.totalVariantsChanged.emit()
+            self.cachePathChanged.emit()
+            self.cacheEnabledChanged.emit()
+        finally:
+            self._loading = False
+            self.loadingChanged.emit()
