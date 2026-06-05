@@ -3,6 +3,7 @@ Button 2.15 Button.qml
 CheckBox 2.15 CheckBox.qml
 ComboBox 2.15 ComboBox.qml
 Dialog 2.15 Dialog.qml
+TreeViewDelegate 2.15 TreeViewDelegate.qml
 Menu 2.15 Menu.qml
 MenuBar 2.15 MenuBar.qml
 MenuBarItem 2.15 MenuBarItem.qml

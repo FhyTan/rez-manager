@@ -225,7 +225,7 @@ Window {
                                 let used = 0;
                                 for (let i = 0; i < lastCol; ++i)
                                     used += treeView_.columnWidth(i);
-                                return Math.max(150, treeView_.width - used);
+                                return treeView_.width - used;
                             }
                             const w = treeView_.explicitColumnWidth(column);
                             return Math.max(w, column === 0 ? 220 : 130);
@@ -233,13 +233,8 @@ Window {
 
                         onWidthChanged: treeView_.forceLayout()
 
-                        delegate: Rectangle {
+                        delegate: TreeViewDelegate {
                             id: delegateRoot_
-                            required property TreeView treeView
-                            required property bool expanded
-                            required property bool hasChildren
-                            required property int depth
-                            required property int row
                             required property int column
                             required property string nodeType
                             required property string label
@@ -248,124 +243,107 @@ Window {
                             required property int statusCode
                             required property string handleJson
                             required property string packageName
-                            property bool highlighted: row === treeView.currentRow
 
                             readonly property bool delegateIsPackage: nodeType === "package"
                             readonly property bool delegateIsVariant: nodeType === "variant"
 
                             implicitHeight: 34
-                            color: highlighted ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.15) : "transparent"
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 80
-                                }
-                            }
-
-                            // Column 0: expand toggle + label
-                            RowLayout {
-                                visible: delegateRoot_.column === 0
-                                anchors {
-                                    fill: parent
-                                    leftMargin: delegateRoot_.delegateIsPackage ? Style.sm : Style.sm + Style.lg
-                                    rightMargin: Style.md
-                                }
-                                spacing: Style.xs
-
-                                Text {
-                                    visible: delegateRoot_.delegateIsPackage
-                                    text: delegateRoot_.expanded ? "\u25BE" : "\u25B8"
-                                    color: Style.accent
-                                    font.pixelSize: Style.fontXs
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-
-                                Rectangle {
-                                    visible: delegateRoot_.delegateIsVariant
-                                    implicitWidth: 4
-                                    implicitHeight: 4
-                                    radius: 2
-                                    color: Style.textDisabled
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: delegateRoot_.label
-                                    color: Style.textPrimary
-                                    font.pixelSize: Style.fontSm
-                                    font.bold: delegateRoot_.delegateIsPackage
-                                    elide: Text.ElideRight
-                                }
-                            }
-
-                            // Column 1: status badge
-                            RowLayout {
-                                visible: delegateRoot_.column === 1
-                                anchors {
-                                    fill: parent
-                                    leftMargin: Style.md
-                                    rightMargin: Style.md
-                                }
-                                spacing: Style.xs
-
-                                Rectangle {
-                                    visible: delegateRoot_.delegateIsVariant
-                                    implicitWidth: 8
-                                    implicitHeight: 8
-                                    radius: 4
-                                    color: {
-                                        if (delegateRoot_.statusCode === 1)
-                                            return Style.success;
-                                        if (delegateRoot_.statusCode === 3)
-                                            return Style.warning;
-                                        if (delegateRoot_.statusCode === 4)
-                                            return Style.error;
-                                        return Style.textDisabled;
+                            
+                            contentItem: Item {
+                                // Column 0: label
+                                RowLayout {
+                                    visible: delegateRoot_.column === 0
+                                    anchors {
+                                        fill: parent
+                                        rightMargin: Style.md
                                     }
-                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: Style.xs
+
+                                    Rectangle {
+                                        visible: delegateRoot_.delegateIsVariant
+                                        implicitWidth: 4
+                                        implicitHeight: 4
+                                        radius: 2
+                                        color: Style.textDisabled
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: delegateRoot_.label
+                                        color: Style.textPrimary
+                                        font.pixelSize: Style.fontSm
+                                        font.bold: delegateRoot_.delegateIsPackage
+                                        elide: Text.ElideRight
+                                    }
                                 }
 
+                                // Column 1: status badge
+                                RowLayout {
+                                    visible: delegateRoot_.column === 1
+                                    anchors {
+                                        fill: parent
+                                        rightMargin: Style.md
+                                    }
+                                    spacing: Style.xs
+
+                                    Rectangle {
+                                        visible: delegateRoot_.delegateIsVariant
+                                        implicitWidth: 8
+                                        implicitHeight: 8
+                                        radius: 4
+                                        color: {
+                                            if (delegateRoot_.statusCode === 1)
+                                                return Style.success;
+                                            if (delegateRoot_.statusCode === 3)
+                                                return Style.warning;
+                                            if (delegateRoot_.statusCode === 4)
+                                                return Style.error;
+                                            return Style.textDisabled;
+                                        }
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Text {
+                                        visible: delegateRoot_.delegateIsVariant
+                                        Layout.fillWidth: true
+                                        text: delegateRoot_.statusLabel
+                                        color: Style.textSecondary
+                                        font.pixelSize: Style.fontSm
+                                        elide: Text.ElideRight
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Text {
+                                        visible: delegateRoot_.delegateIsPackage && delegateRoot_.statusLabel.length > 0
+                                        Layout.fillWidth: true
+                                        text: delegateRoot_.statusLabel
+                                        color: Style.textSecondary
+                                        font.pixelSize: Style.fontSm
+                                        font.italic: true
+                                        elide: Text.ElideRight
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                }
+
+                                // Column 2: source path
                                 Text {
-                                    visible: delegateRoot_.delegateIsVariant
-                                    Layout.fillWidth: true
-                                    text: delegateRoot_.statusLabel
+                                    visible: delegateRoot_.column === 2 && delegateRoot_.delegateIsVariant
+                                    anchors {
+                                        fill: parent
+                                        leftMargin: Style.md
+                                        rightMargin: Style.md
+                                    }
+                                    text: delegateRoot_.sourcePath
                                     color: Style.textSecondary
                                     font.pixelSize: Style.fontSm
-                                    elide: Text.ElideRight
-                                    Layout.alignment: Qt.AlignVCenter
+                                    font.family: "Consolas, Courier New, monospace"
+                                    elide: Text.ElideLeft
+                                    verticalAlignment: Text.AlignVCenter
                                 }
-
-                                Text {
-                                    visible: delegateRoot_.delegateIsPackage && delegateRoot_.statusLabel.length > 0
-                                    Layout.fillWidth: true
-                                    text: delegateRoot_.statusLabel
-                                    color: Style.textSecondary
-                                    font.pixelSize: Style.fontSm
-                                    font.italic: true
-                                    elide: Text.ElideRight
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                            }
-
-                            // Column 2: source path
-                            Text {
-                                visible: delegateRoot_.column === 2 && delegateRoot_.delegateIsVariant
-                                anchors {
-                                    fill: parent
-                                    leftMargin: Style.md
-                                    rightMargin: Style.md
-                                }
-                                text: delegateRoot_.sourcePath
-                                color: Style.textSecondary
-                                font.pixelSize: Style.fontSm
-                                font.family: "Consolas, Courier New, monospace"
-                                elide: Text.ElideLeft
-                                verticalAlignment: Text.AlignVCenter
                             }
 
                             HoverHandler {
-                                id: hoverHandler_
                                 cursorShape: Qt.PointingHandCursor
                             }
 
@@ -379,13 +357,6 @@ Window {
                                     root.contextActionSource = delegateRoot_.delegateIsVariant ? "variant" : "package";
                                     contextMenu_.popup(delegateRoot_, eventPoint.position.x, eventPoint.position.y);
                                 }
-                            }
-
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: delegateRoot_.delegateIsPackage ? 1 : 0
-                                color: Style.border
                             }
                         }
                     }

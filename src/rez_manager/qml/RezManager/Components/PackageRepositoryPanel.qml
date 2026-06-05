@@ -67,92 +67,65 @@ Rectangle {
             clip: true
             enabled: !root.isLoading
             opacity: root.isLoading ? 0.45 : 1
+
             model: root.repositoryModel
+            selectionBehavior: TableView.SelectRows
+            selectionMode: TableView.SingleSelection
+            selectionModel: ItemSelectionModel {}
+
             columnWidthProvider: function (column) {
                 return width;
             }
 
-            delegate: Rectangle {
+            delegate: TreeViewDelegate {
                 id: delegateRoot_
-                required property TreeView treeView
-                required property bool expanded
-                required property bool hasChildren
-                required property int depth
-                required property int row
-                required property int column
                 required property string label
                 required property string nodeType
                 required property int repoIndex
                 required property int packageIndex
 
                 readonly property bool isRepository: nodeType === "repository"
-                readonly property bool isSelected: !isRepository && repoIndex === root.selectedRepoIndex && packageIndex === root.selectedPkgIndex
 
-                implicitWidth: treeView.width
-                implicitHeight: isRepository ? 36 : 32
-                color: isSelected ? Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.12) : (hoverHandler_.hovered ? (isRepository ? Style.elevated : Qt.rgba(1, 1, 1, 0.02)) : (isRepository ? Style.surface : "transparent"))
+                contentItem: Item {
+                    RowLayout {
+                        anchors {
+                            fill: parent
+                            rightMargin: Style.md
+                        }
+                        spacing: Style.xs
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 80
-                    }
-                }
+                        Rectangle {
+                            visible: !delegateRoot_.isRepository
+                            implicitWidth: 4
+                            implicitHeight: 4
+                            radius: 2
+                            color: delegateRoot_.highlighted ? Style.accent : Style.textDisabled
+                            Layout.alignment: Qt.AlignVCenter
+                        }
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Style.sm + delegateRoot_.depth * Style.lg
-                    anchors.rightMargin: Style.md
-                    spacing: Style.xs
-
-                    Text {
-                        visible: delegateRoot_.isRepository
-                        text: delegateRoot_.expanded ? "▾" : "▸"
-                        color: Style.accent
-                        font.pixelSize: Style.fontXs
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Rectangle {
-                        visible: !delegateRoot_.isRepository
-                        implicitWidth: 4
-                        implicitHeight: 4
-                        radius: 2
-                        color: delegateRoot_.isSelected ? Style.accent : Style.textDisabled
-                        Layout.alignment: Qt.AlignVCenter
+                        Text {
+                            Layout.fillWidth: true
+                            text: delegateRoot_.label
+                            color: delegateRoot_.highlighted ? Style.accent : (delegateRoot_.isRepository ? Style.textPrimary : Style.textSecondary)
+                            font.pixelSize: delegateRoot_.isRepository ? Style.fontSm : Style.fontMd
+                            font.bold: delegateRoot_.isRepository
+                            elide: Text.ElideRight
+                        }
                     }
 
-                    Text {
-                        Layout.fillWidth: true
-                        text: delegateRoot_.label
-                        color: delegateRoot_.isSelected ? Style.accent : (delegateRoot_.isRepository ? Style.textPrimary : Style.textSecondary)
-                        font.pixelSize: delegateRoot_.isRepository ? Style.fontSm : Style.fontMd
-                        font.bold: delegateRoot_.isRepository
-                        font.family: delegateRoot_.isRepository ? font.family : "Consolas, Courier New, monospace"
-                        elide: Text.ElideRight
+                    TapHandler {
+                        gesturePolicy: TapHandler.WithinBounds
+                        acceptedButtons: Qt.LeftButton
+                        onTapped: {
+                            if (delegateRoot_.isRepository)
+                                // root.toggleTopLevelRow(delegateRoot_.treeView, delegateRoot_.row, delegateRoot_.repoIndex);
+                                repositoryTreeView_.toggleExpanded(delegateRoot_.row);
+                            else {
+                                root.packageSelected(delegateRoot_.repoIndex, delegateRoot_.packageIndex);
+                                repositoryTreeView_.selectionModel.setCurrentIndex(repositoryTreeView_.index(delegateRoot_.row, 0), "SelectCurrent");
+                            }
+                        }
                     }
-                }
-
-                HoverHandler {
-                    id: hoverHandler_
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                TapHandler {
-                    gesturePolicy: TapHandler.WithinBounds
-                    acceptedButtons: Qt.LeftButton
-                    onTapped: {
-                        if (delegateRoot_.isRepository)
-                            root.toggleTopLevelRow(delegateRoot_.treeView, delegateRoot_.row, delegateRoot_.repoIndex);
-                        else
-                            root.packageSelected(delegateRoot_.repoIndex, delegateRoot_.packageIndex);
-                    }
-                }
-
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    width: parent.width
-                    height: delegateRoot_.isRepository ? 1 : 0
-                    color: Style.border
                 }
             }
         }
