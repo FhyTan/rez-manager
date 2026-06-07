@@ -20,6 +20,8 @@ Window {
     readonly property string errorTarget_: "package-cache"
     AppErrorTarget.errorTarget: root.errorTarget_
 
+    signal openLogsRequested
+
     PackageCacheController {
         id: cacheController_
     }
@@ -56,6 +58,8 @@ Window {
 
     StatusToast {
         id: statusToast_
+        z: 999
+        onActivated: root.openLogsRequested()
     }
 
     // ── Header area ──────────────────────────────────────────────
@@ -248,7 +252,7 @@ Window {
                             readonly property bool delegateIsVariant: nodeType === "variant"
 
                             implicitHeight: 34
-                            
+
                             contentItem: Item {
                                 // Column 0: label
                                 RowLayout {

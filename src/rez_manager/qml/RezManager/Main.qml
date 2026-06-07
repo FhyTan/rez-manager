@@ -137,6 +137,7 @@ ApplicationWindow {
     PackageCacheWindow {
         id: cacheWin
         visible: false
+        onOpenLogsRequested: root.openLogWindow()
     }
 
     // ── State ─────────────────────────────────────────────────

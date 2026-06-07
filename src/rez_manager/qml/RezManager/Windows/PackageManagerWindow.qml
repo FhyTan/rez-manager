@@ -260,6 +260,7 @@ Window {
 
     StatusToast {
         id: statusToast_
+        z: 999
         onActivated: root.openLogsRequested()
     }
 }
