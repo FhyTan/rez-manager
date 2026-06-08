@@ -147,8 +147,8 @@ def test_app_settings_controller_export_to_file_writes_normalized_settings(tmp_p
         "package_cache": {
             "enabled": True,
             "path": "",
-            "max_size_gb": 2,
-            "ttl_days": 30,
+            "space_buffer_mb": 100,
+            "max_variant_days": 30,
             "async_mode": True,
         },
     }

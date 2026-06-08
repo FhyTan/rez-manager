@@ -41,14 +41,14 @@ Dialog {
         value: settingsController_.packageCachePath
     }
     Binding {
-        target: packageCacheMaxSize_
+        target: packageCacheSpaceBuffer_
         property: "value"
-        value: settingsController_.packageCacheMaxSizeGb
+        value: settingsController_.packageCacheSpaceBufferMb
     }
     Binding {
-        target: packageCacheTtlDays_
+        target: packageCacheMaxVariantDays_
         property: "value"
-        value: settingsController_.packageCacheTtlDays
+        value: settingsController_.packageCacheMaxVariantDays
     }
 
     function addRepository(path) {
@@ -347,8 +347,8 @@ Dialog {
                             settingsController_.packageCacheEnabled = checked;
                             packageCachePathField_.enabled = checked;
                             packageCacheBrowseBtn_.enabled = checked;
-                            packageCacheMaxSize_.enabled = checked;
-                            packageCacheTtlDays_.enabled = checked;
+                            packageCacheSpaceBuffer_.enabled = checked;
+                            packageCacheMaxVariantDays_.enabled = checked;
                         }
                     }
                 }
@@ -370,7 +370,7 @@ Dialog {
                     }
                 }
 
-                // Max size + TTL
+                // Space Buffer + Max Variant Days
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Style.lg
@@ -379,18 +379,24 @@ Dialog {
                         Layout.fillWidth: true
                         spacing: Style.sm
 
-                        Text {
-                            text: "Max Cache Size (GB)"
-                            color: Style.textSecondary
-                            font.pixelSize: Style.fontSm
+                        RowLayout {
+                            spacing: Style.xs
+                            Text {
+                                text: "Space Buffer"
+                                color: Style.textSecondary
+                                font.pixelSize: Style.fontSm
+                            }
+                            HintIcon {
+                                tip: "Minimum free disk space (in MB) reserved for the cache. When remaining space drops below this threshold, caching stops. Required to protect the disk from filling completely. Maps to rez's package_cache_space_buffer."
+                            }
                         }
                         SpinBox {
-                            id: packageCacheMaxSize_
-                            from: 1
-                            to: 1024
-                            stepSize: 1
+                            id: packageCacheSpaceBuffer_
+                            from: 10
+                            to: 10240
+                            stepSize: 10
                             Layout.fillWidth: true
-                            onValueChanged: settingsController_.packageCacheMaxSizeGb = value
+                            onValueChanged: settingsController_.packageCacheSpaceBufferMb = value
                         }
                     }
 
@@ -398,18 +404,24 @@ Dialog {
                         Layout.fillWidth: true
                         spacing: Style.sm
 
-                        Text {
-                            text: "TTL (days, 0 = never expire)"
-                            color: Style.textSecondary
-                            font.pixelSize: Style.fontSm
+                        RowLayout {
+                            spacing: Style.xs
+                            Text {
+                                text: "Max Variant Days"
+                                color: Style.textSecondary
+                                font.pixelSize: Style.fontSm
+                            }
+                            HintIcon {
+                                tip: "Variants unused for longer than this number of days are deleted during cache cleanup. Set to 0 to disable automatic expiration. Maps to rez's package_cache_max_variant_days."
+                            }
                         }
                         SpinBox {
-                            id: packageCacheTtlDays_
+                            id: packageCacheMaxVariantDays_
                             from: 0
                             to: 365
                             stepSize: 1
                             Layout.fillWidth: true
-                            onValueChanged: settingsController_.packageCacheTtlDays = value
+                            onValueChanged: settingsController_.packageCacheMaxVariantDays = value
                         }
                     }
                 }

@@ -10,8 +10,8 @@ from pathlib import Path
 @dataclass
 class PackageCacheSettings:
     enabled: bool = True
-    max_size_gb: int = 2
-    ttl_days: int = 30
+    space_buffer_mb: int = 100
+    max_variant_days: int = 30
     path: str = ""
     async_mode: bool = True
 
@@ -19,8 +19,8 @@ class PackageCacheSettings:
         return {
             "enabled": self.enabled,
             "path": self.path,
-            "max_size_gb": self.max_size_gb,
-            "ttl_days": self.ttl_days,
+            "space_buffer_mb": self.space_buffer_mb,
+            "max_variant_days": self.max_variant_days,
             "async_mode": self.async_mode,
         }
 
@@ -28,8 +28,8 @@ class PackageCacheSettings:
     def from_dict(cls, data: dict[str, object]) -> PackageCacheSettings:
         return cls(
             enabled=bool(data.get("enabled", True)),
-            max_size_gb=int(data.get("max_size_gb", 2)),
-            ttl_days=int(data.get("ttl_days", 30)),
+            space_buffer_mb=int(data.get("space_buffer_mb", 100)),
+            max_variant_days=int(data.get("max_variant_days", 30)),
             path=str(data.get("path", "")),
             async_mode=bool(data.get("async_mode", True)),
         )

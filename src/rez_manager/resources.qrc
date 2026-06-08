@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource>
         <file>qtquickcontrols2.conf</file>
     </qresource>
     <qresource prefix="/icons/dcc">
@@ -13,5 +13,8 @@
     <qresource prefix="/icons/logo">
         <file alias="rez_manager.ico">../../resources/icons/logo/rez_manager.ico</file>
         <file alias="rez_manager.svg">../../resources/icons/logo/rez_manager.svg</file>
+    </qresource>
+    <qresource prefix="/icons/app">
+        <file alias="question.svg">../../resources/icons/app/question.svg</file>
     </qresource>
 </RCC>

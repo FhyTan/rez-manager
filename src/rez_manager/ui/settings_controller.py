@@ -27,8 +27,8 @@ class AppSettingsController(QObject):
     contextsLocationChanged = Signal()
     packageCacheEnabledChanged = Signal()
     packageCachePathChanged = Signal()
-    packageCacheMaxSizeChanged = Signal()
-    packageCacheTtlDaysChanged = Signal()
+    packageCacheSpaceBufferChanged = Signal()
+    packageCacheMaxVariantDaysChanged = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -84,25 +84,25 @@ class AppSettingsController(QObject):
     def packageCachePathPlaceholder(self) -> str:  # noqa: N802
         return str(default_rez_package_caches_dir())
 
-    @Property(int, notify=packageCacheMaxSizeChanged)
-    def packageCacheMaxSizeGb(self) -> int:  # noqa: N802
-        return self._settings.package_cache.max_size_gb
+    @Property(int, notify=packageCacheSpaceBufferChanged)
+    def packageCacheSpaceBufferMb(self) -> int:  # noqa: N802
+        return self._settings.package_cache.space_buffer_mb
 
-    @packageCacheMaxSizeGb.setter
-    def packageCacheMaxSizeGb(self, value: int) -> None:  # noqa: N802
-        if self._settings.package_cache.max_size_gb != value:
-            self._settings.package_cache.max_size_gb = value
-            self.packageCacheMaxSizeChanged.emit()
+    @packageCacheSpaceBufferMb.setter
+    def packageCacheSpaceBufferMb(self, value: int) -> None:  # noqa: N802
+        if self._settings.package_cache.space_buffer_mb != value:
+            self._settings.package_cache.space_buffer_mb = value
+            self.packageCacheSpaceBufferChanged.emit()
 
-    @Property(int, notify=packageCacheTtlDaysChanged)
-    def packageCacheTtlDays(self) -> int:  # noqa: N802
-        return self._settings.package_cache.ttl_days
+    @Property(int, notify=packageCacheMaxVariantDaysChanged)
+    def packageCacheMaxVariantDays(self) -> int:  # noqa: N802
+        return self._settings.package_cache.max_variant_days
 
-    @packageCacheTtlDays.setter
-    def packageCacheTtlDays(self, value: int) -> None:  # noqa: N802
-        if self._settings.package_cache.ttl_days != value:
-            self._settings.package_cache.ttl_days = value
-            self.packageCacheTtlDaysChanged.emit()
+    @packageCacheMaxVariantDays.setter
+    def packageCacheMaxVariantDays(self, value: int) -> None:  # noqa: N802
+        if self._settings.package_cache.max_variant_days != value:
+            self._settings.package_cache.max_variant_days = value
+            self.packageCacheMaxVariantDaysChanged.emit()
 
     # ── Public slots ─────────────────────────────────────────
 
@@ -225,8 +225,8 @@ class AppSettingsController(QObject):
         next_cache = settings.package_cache
         cache_enabled_changed = prev_cache.enabled != next_cache.enabled
         cache_path_changed = prev_cache.path != next_cache.path
-        cache_max_changed = prev_cache.max_size_gb != next_cache.max_size_gb
-        cache_ttl_changed = prev_cache.ttl_days != next_cache.ttl_days
+        cache_buffer_changed = prev_cache.space_buffer_mb != next_cache.space_buffer_mb
+        cache_variant_changed = prev_cache.max_variant_days != next_cache.max_variant_days
 
         self._settings = settings
 
@@ -240,10 +240,10 @@ class AppSettingsController(QObject):
             self.packageCacheEnabledChanged.emit()
         if cache_path_changed:
             self.packageCachePathChanged.emit()
-        if cache_max_changed:
-            self.packageCacheMaxSizeChanged.emit()
-        if cache_ttl_changed:
-            self.packageCacheTtlDaysChanged.emit()
+        if cache_buffer_changed:
+            self.packageCacheSpaceBufferChanged.emit()
+        if cache_variant_changed:
+            self.packageCacheMaxVariantDaysChanged.emit()
 
     def _normalize_repositories(self) -> None:
         self._settings.general.package_repositories = _normalize_repository_paths(

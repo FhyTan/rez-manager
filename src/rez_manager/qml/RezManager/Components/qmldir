@@ -8,3 +8,4 @@ PackageRepositoryPanel 1.0 PackageRepositoryPanel.qml
 ProjectListItem 1.0 ProjectListItem.qml
 RequiredPackagesPanel 1.0 RequiredPackagesPanel.qml
 StatusToast 1.0 StatusToast.qml
+HintIcon 1.0 HintIcon.qml

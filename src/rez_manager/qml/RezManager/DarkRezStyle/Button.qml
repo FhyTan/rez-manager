@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.impl
 import QtQuick.Templates as T
 import ".."
 
@@ -20,16 +21,18 @@ T.Button {
     rightPadding: Style.md
     topPadding: Style.sm
     bottomPadding: Style.sm
+    font.pixelSize: Style.fontMd
+    font.weight: Font.DemiBold
 
-    contentItem: Text {
+    contentItem: IconLabel {
         id: label_
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        icon: control.icon
         text: control.text
+        font: control.font
         color: Style.textPrimary
-        font.pixelSize: Style.fontMd
-        font.weight: Font.DemiBold
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
     }
 
     background: Rectangle {
