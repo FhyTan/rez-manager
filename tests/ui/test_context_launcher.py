@@ -56,10 +56,9 @@ def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp
 
     captured: dict[str, object] = {}
 
-    def capture_start_launch_job(self, request_id, package_requests, package_paths, command):
+    def capture_start_launch_job(self, request_id, package_requests, command):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
-        captured["package_paths"] = package_paths
         captured["command"] = command
 
     monkeypatch.setattr(
@@ -75,7 +74,6 @@ def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp
     assert controller.contextName == "Base"
     assert controller.isLaunching
     assert captured["package_requests"] == ["houdini-20.5", "python-3.11"]
-    assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
     assert captured["command"] == 'start "" houdini'
 
 
@@ -96,10 +94,9 @@ def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
 
     captured: dict[str, object] = {}
 
-    def capture_start_launch_job(self, request_id, package_requests, package_paths, command):
+    def capture_start_launch_job(self, request_id, package_requests, command):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
-        captured["package_paths"] = package_paths
         captured["command"] = command
 
     monkeypatch.setattr(
@@ -119,7 +116,6 @@ def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
     assert controller.contextName == "Draft"
     assert controller.isLaunching
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
-    assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
     assert captured["command"] is None
 
 
@@ -142,11 +138,7 @@ def test_context_launcher_controller_emits_success_after_completed_launch(tmp_pa
     monkeypatch.setattr(
         ContextLauncherController,
         "_start_launch_job",
-        lambda self,
-        request_id,
-        package_requests,
-        package_paths,
-        command: self._apply_launch_result(
+        lambda self, request_id, package_requests, command: self._apply_launch_result(
             request_id,
             LaunchResult(success=True),
         ),
@@ -256,7 +248,7 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     monkeypatch.setattr(
         ContextLauncherController,
         "_start_launch_job",
-        lambda self, request_id, package_requests, package_paths, command: None,
+        lambda self, request_id, package_requests, command: None,
     )
 
     app_error_hub.clear()
@@ -279,13 +271,13 @@ def test_context_launch_worker_reports_custom_launch_errors(monkeypatch):
 
     monkeypatch.setattr(
         "rez_manager.ui.context_launcher.launch_context",
-        lambda package_requests, command, package_paths: (_ for _ in ()).throw(
+        lambda package_requests, command: (_ for _ in ()).throw(
             RezContextLaunchError("Launch failed.")
         ),
     )
 
     emitted: list[tuple[int, LaunchResult]] = []
-    worker = _ContextLaunchWorker(7, ["python-3.11"], ["D:\\packages\\python"], None)
+    worker = _ContextLaunchWorker(7, ["python-3.11"], None)
     worker.signals.finished.connect(lambda request_id, result: emitted.append((request_id, result)))
 
     worker.run()

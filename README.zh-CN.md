@@ -67,9 +67,13 @@ uv run rez-manager
 
 ### 构建桌面可执行文件
 
-```bash
-uv run nuitka --output-dir=build\nuitka .\build_nuitka.py
+```batch
+.\build_scripts\build.bat
 ```
+
+该脚本会将 `rez-manager` 和 `rez-pkg-cache`（如尚未编译）编译到 `build/` 目录下，
+然后将 `rez-pkg-cache.exe` 复制到 `build/rez-manager.dist/` 中，
+以便主程序在运行时可以调用缓存子进程。
 
 ## 开发
 

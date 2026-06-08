@@ -10,6 +10,17 @@ tools = [
     "publish-review",
 ]
 
+requires = [
+    "usd",
+]
+
+variants = [
+    ["maya"],
+    ["houdini"],
+]
+
+cachable = True
+
 
 def commands():
     env.PATH.append("{root}/bin")

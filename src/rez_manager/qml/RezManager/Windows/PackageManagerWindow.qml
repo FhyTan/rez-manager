@@ -55,7 +55,7 @@ Window {
     }
 
     Connections {
-        target: AppErrorHub // qmllint disable unqualified
+        target: AppErrorHub // qmllint disable incompatible-type
         function onErrorOccurred(message, target) {
             if (target === root.errorTarget_ && root.visible)
                 statusToast_.show(message, Style.error);
@@ -260,6 +260,7 @@ Window {
 
     StatusToast {
         id: statusToast_
+        z: 999
         onActivated: root.openLogsRequested()
     }
 }

@@ -9,6 +9,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.conftest import RezTestPackage
+
 
 def _install_fake_rez_packages(
     monkeypatch: pytest.MonkeyPatch,
@@ -37,8 +39,9 @@ def _install_fake_rez_packages(
 
 
 def test_list_repositories_lists_real_package_families(
+    rez_settings,
     temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    app_package: RezTestPackage,
 ):
     from rez_manager.adapter.packages import list_repositories
 
@@ -47,19 +50,14 @@ def test_list_repositories_lists_real_package_families(
     assert len(repositories) == 1
     assert repositories[0].path == str(temp_packages_dir)
     assert repositories[0].label == f"{temp_packages_dir.name} [{temp_packages_dir}]"
-    assert repositories[0].packages == [
-        "app",
-        "bad_commands",
-        "bad_requires",
-        "broken_dep",
-        "python",
-        "syntax_pkg",
-    ]
+    assert app_package.name in repositories[0].packages
 
 
 def test_get_package_versions_returns_newest_first(
+    rez_settings,
     temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    python_310_package: RezTestPackage,
+    python_311_package: RezTestPackage,
 ):
     from rez_manager.adapter.packages import get_package_versions
 
@@ -67,8 +65,10 @@ def test_get_package_versions_returns_newest_first(
 
 
 def test_get_package_info_reads_real_package_metadata(
+    rez_settings,
     temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    app_package: RezTestPackage,
+    python_311_package: RezTestPackage,
 ):
     from rez_manager.adapter.packages import get_package_info
 
@@ -84,8 +84,9 @@ def test_get_package_info_reads_real_package_metadata(
 
 
 def test_get_package_info_returns_none_for_missing_version(
+    rez_settings,
     temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    app_package: RezTestPackage,
 ):
     from rez_manager.adapter.packages import get_package_info
 
@@ -93,8 +94,9 @@ def test_get_package_info_returns_none_for_missing_version(
 
 
 def test_get_package_info_wraps_invalid_package_metadata(
+    rez_settings,
     temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    bad_requires_package: RezTestPackage,
 ):
     from rez.exceptions import PackageMetadataError
 

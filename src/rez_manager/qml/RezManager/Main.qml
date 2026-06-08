@@ -134,6 +134,11 @@ ApplicationWindow {
         visible: false
         logViewerController: logViewerController_
     }
+    PackageCacheWindow {
+        id: cacheWin
+        visible: false
+        onOpenLogsRequested: root.openLogWindow()
+    }
 
     // ── State ─────────────────────────────────────────────────
     property int selectedProjectIndex: 0
@@ -307,7 +312,7 @@ ApplicationWindow {
     }
 
     Connections {
-        target: AppErrorHub // qmllint disable unqualified
+        target: AppErrorHub // qmllint disable incompatible-type
         function onErrorOccurred(message, target) {
             if (target === root.errorTarget_ || target === "global")
                 statusToast_.show(message, Style.error);
@@ -344,6 +349,13 @@ ApplicationWindow {
             Action {
                 text: qsTr("Settings...")
                 onTriggered: settingsDlg.open()
+            }
+            Action {
+                text: qsTr("Package Cache\u2026")
+                onTriggered: {
+                    cacheWin.show();
+                    cacheWin.requestActivate();
+                }
             }
             MenuSeparator {}
             Action {

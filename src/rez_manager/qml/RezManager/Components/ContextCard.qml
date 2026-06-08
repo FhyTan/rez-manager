@@ -302,7 +302,7 @@ Rectangle {
             spacing: Style.sm
 
             RowLayout {
-                spacing: Style.sm
+                spacing: 0
 
                 CardButton {
                     glyph: "✎"

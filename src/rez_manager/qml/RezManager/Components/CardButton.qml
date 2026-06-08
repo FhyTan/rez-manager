@@ -48,7 +48,7 @@ Rectangle {
         anchors.rightMargin: 10
         text: root.text
         color: root.accent ? Style.white : root.danger ? Style.error : Style.textPrimary
-        font.pixelSize: Style.fontSm
+        font.pixelSize: Style.fontMd
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight

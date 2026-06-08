@@ -30,7 +30,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+        lambda self, request_id, package_requests: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -88,7 +88,7 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+        lambda self, request_id, package_requests: self._apply_preview_result(
             request_id, preview_error
         ),
     )
@@ -144,7 +144,7 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: None,
+        lambda self, request_id, package_requests: None,
     )
 
     app_error_hub.clear()
@@ -167,7 +167,7 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
     assert app_error_hub.messageTarget == "main"
 
 
-def test_context_preview_controller_passes_settings_package_paths(tmp_path, monkeypatch):
+def test_context_preview_controller_triggers_preview_on_context_load(tmp_path, monkeypatch):
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -186,10 +186,9 @@ def test_context_preview_controller_passes_settings_package_paths(tmp_path, monk
 
     captured: dict[str, object] = {}
 
-    def capture_start_preview_job(self, request_id, package_requests, package_paths):
+    def capture_start_preview_job(self, request_id, package_requests):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
-        captured["package_paths"] = package_paths
 
     monkeypatch.setattr(
         ContextPreviewController,
@@ -201,7 +200,6 @@ def test_context_preview_controller_passes_settings_package_paths(tmp_path, monk
 
     assert controller.loadContext("Pipeline", "Base")
     assert captured["package_requests"] == ["maya-2025.0"]
-    assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
 
 
 def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, monkeypatch):
@@ -219,10 +217,9 @@ def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, mon
 
     captured: dict[str, object] = {}
 
-    def capture_start_preview_job(self, request_id, package_requests, package_paths):
+    def capture_start_preview_job(self, request_id, package_requests):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
-        captured["package_paths"] = package_paths
 
     monkeypatch.setattr(
         ContextPreviewController,
@@ -241,7 +238,6 @@ def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, mon
     assert controller.contextName == "Draft"
     assert controller.isLoading
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
-    assert captured["package_paths"] == ["D:\\packages\\maya", "D:\\packages\\base"]
 
 
 def test_context_preview_controller_emits_preview_resolution_signal(tmp_path, monkeypatch):
@@ -257,7 +253,7 @@ def test_context_preview_controller_emits_preview_resolution_signal(tmp_path, mo
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+        lambda self, request_id, package_requests: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -297,7 +293,7 @@ def test_context_preview_controller_splits_path_into_user_and_system_sections(
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+        lambda self, request_id, package_requests: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -342,7 +338,7 @@ def test_context_preview_controller_classifies_windows_system_names_case_insensi
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+        lambda self, request_id, package_requests: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -383,7 +379,7 @@ def test_context_preview_controller_adds_launch_system_variables_missing_from_re
     monkeypatch.setattr(
         ContextPreviewController,
         "_start_preview_job",
-        lambda self, request_id, package_requests, package_paths: self._apply_preview_result(
+        lambda self, request_id, package_requests: self._apply_preview_result(
             request_id, preview_result
         ),
     )

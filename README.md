@@ -71,30 +71,15 @@ Pre-built executables can be downloaded from the [Releases](https://github.com/F
 
 ### Build a desktop executable
 
-```bash
-uv run nuitka --output-dir=build\nuitka .\build_nuitka.py
+```batch
+.\build_scripts\build.bat
 ```
+
+This compiles `rez-manager` and `rez-pkg-cache` (if not already built) into `build/`,
+then copies `rez-pkg-cache.exe` into the `build/rez-manager.dist/` directory so that
+the main executable can spawn the cache subprocess at runtime.
 
 ## Development
-
-### Commonly used commands
-
-```bash
-uvx ruff check src      # Lint
-uvx ruff format src     # Format
-uv run pytest           # Test
-pyside6-qml-stubgen.exe src --out-dir ./qmltypes
-pyside6-qmllint -I ./qmltypes <qml-files>
-```
-
-`qmltypes/` is generated output and is intentionally not tracked in git.
-
-For correct QML hints and completion in editors such as VS Code, generate QML type stubs with
-`pyside6-qml-stubgen.exe src --out-dir ./qmltypes`, then add `./qmltypes` to
-`qt-qml.qmlls.additionalImportPaths`.
-
-To lint QML files against those generated types, use
-`pyside6-qmllint -I ./qmltypes <qml-files>`.
 
 ### Project layout
 
@@ -124,6 +109,53 @@ tests/
 bridges Python and QML, and `qml/` contains the declarative interface.
 
 See `docs/design.md` for the detailed architecture and UI specification.
+
+### Commonly used commands
+
+```bash
+uvx ruff check src      # Lint
+uvx ruff format src     # Format
+uv run pytest           # Test
+pyside6-qml-stubgen.exe src --out-dir ./qmltypes
+pyside6-qmllint -I ./qmltypes <qml-files>
+```
+
+`qmltypes/` is generated output and is intentionally not tracked in git.
+
+For correct QML hints and completion in editors such as VS Code, generate QML type stubs with
+`pyside6-qml-stubgen.exe src --out-dir ./qmltypes`, then add `./qmltypes` to
+`qt-qml.qmlls.additionalImportPaths`.
+
+To lint QML files against those generated types, use
+`pyside6-qmllint -I ./qmltypes <qml-files>`.
+
+### Package caching (development)
+
+Rez's built-in package caching spawns a `rez-pkg-cache` subprocess during context resolution.
+In a production (Nuitka) build the executable is bundled alongside the main app. When running
+from source you must tell Rez where to find it and enable a few package cache settings:
+
+Create a `.env` file in the project root (already in `.gitignore`) with:
+
+```
+REZ_BIN_PATH=<path-to-rez-bin-directory>
+REZ_PACKAGE_CACHE_LOCAL=1
+REZ_DEFAULT_CACHABLE=1
+```
+
+- `REZ_BIN_PATH` — directory containing a pre-built `rez-pkg-cache.exe` (e.g. your Rez
+  install's `Scripts/` directory).
+- `REZ_PACKAGE_CACHE_LOCAL=1` — allows caching packages that live on the local filesystem
+  (normally only network packages are cached).
+- `REZ_DEFAULT_CACHABLE=1` — makes all packages eligible for caching (by default only
+  packages that declare themselves relocatable are cached).
+
+These environment variables are picked up automatically by the VS Code Python debugger
+(which loads `.env` from the project root by default). Rez itself reads `REZ_*` prefixed
+variables via its own config system — no extra library is needed.
+
+When `REZ_BIN_PATH` is not set and the app is not frozen, `rez_bin_path` is left at its
+default so package caching is disabled. Context resolution still works without caching.
 
 ## License
 

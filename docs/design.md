@@ -122,6 +122,103 @@ Fields:
 
 ---
 
+### 6. Package Cache Viewer Window
+
+Opened from **File → Package Cache…** menu. A non-modal `Window` that displays the local Rez package cache contents.
+
+**Layout:** Single-column vertical layout with header, search filter, and a multi-column TreeView grouped by package name.
+
+#### Header Area
+
+| Widget | Description |
+|---|---|
+| Cache path label + value | Current cache directory (from settings, or default) |
+| "Reveal in Explorer" button | Opens cache directory in system file manager |
+| "Refresh" button | Rescans cache asynchronously via `PackageCache.get_variants()` |
+| Disabled banner (conditional) | Shown when package cache is disabled in settings |
+
+#### Search / Filter
+
+`TextField` with placeholder "Filter by package name…". Real-time filtering rebuilds the tree model with only matching packages.
+
+#### Cached Variants Tree
+
+**TreeView** with 3 columns, header provided by `HorizontalHeaderView` (sync'd with `syncView`):
+
+| Column | Header | Initial width | Resizable |
+|---|---|---|---|
+| 0 | `Variant` | 220px | Yes |
+| 1 | `Status` | 130px | Yes |
+| 2 | `Source Path` | Stretch | Yes |
+
+**Tree structure (two levels):**
+
+```
+Package node (depth 0)
+├── render: "▾ package_name (N variants)"
+├── col 1: (summary) "all cached" / "2 stalled"
+├── col 2: (empty)
+└── children: Variant nodes (depth 1)
+
+Variant node (depth 1)
+├── col 0: version[variant_index] (+requires)
+├── col 1: status badge (colored dot + label)
+└── col 2: source path (var.root)
+```
+
+**Variant display:** `var.qualified_name` with the `{package_name}-` prefix stripped (e.g., `arnold-7.3.1.0[]` → `7.3.1.0[]`), suffixed with `(+deps)` if `variant_requires` is non-empty.
+
+**Status mapping:** `1` → "Cached" (green), `3` → "Copying…" (yellow), `4` → "Stalled" (red), `5` → "Pending" (gray).
+
+#### Context Menus
+
+| Target | Menu Items |
+|---|---|
+| Package node | "Delete all variants of [package]" / "Reveal in File Explorer" / "Copy path" |
+| Variant node | "Delete this variant" / "Reveal in File Explorer" / "Copy path" |
+
+#### Deletion Flow
+
+1. User right-clicks → selects delete action
+2. Controller calls `PackageCache.remove_variant(Variant)` (moves payload to remove dir)
+3. Does **not** call `clean()` — the `rez-pkg-cache` daemon handles cleanup asynchronously
+4. Tree refreshes automatically on success
+
+#### Cache Path Handling
+
+- Reads from `AppSettings.package_cache.path`
+- If empty, falls back to `default_rez_package_caches_dir()`
+- Creates the directory automatically (`mkdir(parents=True, exist_ok=True)`) before querying
+
+#### Edge Cases
+
+| Scenario | Behavior |
+|---|---|
+| Cache disabled | Banner "Package cache is disabled. Enable it in Settings." + disabled TreeView |
+| Cache directory missing | Auto-created on refresh |
+| No cached variants | Empty state: "No packages cached yet. Resolve a context to populate the cache." |
+| Filter matches nothing | "No matching cached packages." |
+| Delete fails (variant being copied) | Error toast via AppErrorHub |
+
+#### Rez API Reference
+
+```python
+from rez.package_cache import PackageCache
+
+cache = PackageCache(path)
+cache.get_variants()        # → list[(Variant, cache_path, status)]
+cache.remove_variant(var)   # → status_code (VARIANT_REMOVED, etc.)
+
+# Variant properties used:
+#   var.qualified_name       → "arnold-7.3.1.0[]"
+#   var.root                 → "D:\...\arnold\7.3.1.0"
+#   var.version              → version object
+#   var.index                → None | int
+#   var.variant_requires     → list[PackageRequest]
+```
+
+---
+
 ## On-Disk Data Layout
 
 All context data lives under the configured **contexts location** directory:

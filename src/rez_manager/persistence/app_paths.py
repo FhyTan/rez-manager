@@ -53,3 +53,13 @@ def settings_file_path() -> Path:
 
 def log_file_path() -> Path:
     return app_log_dir() / LOG_FILE_NAME
+
+
+def default_rez_contexts_dir() -> Path:
+    """Return the default directory for project/context data on disk."""
+    return app_data_dir() / "rez-contexts"
+
+
+def default_rez_package_caches_dir() -> Path:
+    """Return the default directory for Rez package caches."""
+    return app_cache_dir() / "rez-packages"

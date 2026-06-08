@@ -27,7 +27,6 @@ from rez_manager.adapter.context import (
 )
 from rez_manager.exceptions import RezResolveError
 from rez_manager.models.rez_context import RezContext
-from rez_manager.models.settings import AppSettings
 from rez_manager.runtime import IS_WINDOWS
 from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
@@ -96,7 +95,6 @@ class ContextPreviewController(QObject):
         request_id = self._request_id
         try:
             context = RezContext.load(project_name, context_name)
-            settings = AppSettings.load()
         except (KeyError, OSError, TypeError, ValueError) as exc:
             self._clear_state()
             report_object_ui_error(self, str(exc))
@@ -107,7 +105,6 @@ class ContextPreviewController(QObject):
             project_name,
             context_name,
             context.packages,
-            settings.package_repositories,
         )
 
     @Slot(str, str, "QVariantList", result=bool)
@@ -119,12 +116,6 @@ class ContextPreviewController(QObject):
     ) -> bool:
         self._request_id += 1
         request_id = self._request_id
-        try:
-            settings = AppSettings.load()
-        except (OSError, TypeError, ValueError) as exc:
-            self._clear_state()
-            report_object_ui_error(self, str(exc))
-            return False
 
         normalized_requests = [str(request).strip() for request in package_requests]
         return self._load_package_requests(
@@ -132,7 +123,6 @@ class ContextPreviewController(QObject):
             project_name,
             context_name,
             normalized_requests,
-            settings.package_repositories,
         )
 
     @Slot()
@@ -153,9 +143,8 @@ class ContextPreviewController(QObject):
         self,
         request_id: int,
         package_requests: list[str],
-        package_paths: list[str],
     ) -> None:
-        worker = _ContextPreviewWorker(request_id, list(package_requests), list(package_paths))
+        worker = _ContextPreviewWorker(request_id, list(package_requests))
         worker.signals.finished.connect(self._apply_preview_result)
         self._active_workers[request_id] = worker
         self._thread_pool.start(worker)
@@ -166,7 +155,6 @@ class ContextPreviewController(QObject):
         project_name: str,
         context_name: str,
         package_requests: Sequence[str],
-        package_paths: Sequence[str],
     ) -> bool:
         self._project_name = project_name
         self._context_name = context_name
@@ -174,7 +162,7 @@ class ContextPreviewController(QObject):
         self._is_loading = True
         self.stateChanged.emit()
         clear_ui_error()
-        self._start_preview_job(request_id, list(package_requests), list(package_paths))
+        self._start_preview_job(request_id, list(package_requests))
         return True
 
     @Slot(int, object)
@@ -308,22 +296,16 @@ class _ContextPreviewWorkerSignals(QObject):
 
 
 class _ContextPreviewWorker(QRunnable):
-    def __init__(
-        self, request_id: int, package_requests: list[str], package_paths: list[str]
-    ) -> None:
+    def __init__(self, request_id: int, package_requests: list[str]) -> None:
         super().__init__()
         self._request_id = request_id
         self._package_requests = package_requests
-        self._package_paths = package_paths
         self.signals = _ContextPreviewWorkerSignals()
 
     @Slot()
     def run(self) -> None:
         try:
-            preview_result = resolve_context(
-                self._package_requests,
-                package_paths=self._package_paths,
-            )
+            preview_result = resolve_context(self._package_requests)
         except RezResolveError as exc:
             self.signals.finished.emit(self._request_id, exc)
             return

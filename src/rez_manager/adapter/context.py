@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from functools import cache
 from importlib.resources import files
 from os import environ
+from pathlib import Path
 from typing import Protocol
 
 from rez_manager.exceptions import (
@@ -41,12 +42,10 @@ class _ResolvedContextLike(Protocol):
     def get_tools(self) -> Mapping[object, object]: ...
 
 
-def resolve_context(
-    package_requests: list[str], *, package_paths: Sequence[str] | None = None
-) -> ResolveResult:
+def resolve_context(package_requests: list[str]) -> ResolveResult:
     """Resolve a list of package requests using the Rez Python API."""
     try:
-        ctx = _create_resolved_context(package_requests, package_paths=package_paths)
+        ctx = _create_resolved_context(package_requests)
     except _context_creation_exception_types() as exc:
         raise RezResolveError(f"Failed to resolve Rez context: {exc}") from exc
 
@@ -103,12 +102,10 @@ def preserved_system_environment(
 def save_context(
     package_requests: list[str],
     path: str,
-    *,
-    package_paths: Sequence[str] | None = None,
 ) -> None:
     """Serialize a resolved context to a .rxt file at the given path."""
     try:
-        ctx = _create_resolved_context(package_requests, package_paths=package_paths)
+        ctx = _create_resolved_context(package_requests)
         ctx.save(path)
     except _context_creation_exception_types() as exc:
         raise RezContextSaveError(f"Failed to save Rez context to '{path}': {exc}") from exc
@@ -133,17 +130,12 @@ def load_context(path: str) -> ResolveResult:
 def launch_context(
     package_requests: list[str],
     command: None | str | Sequence[str],
-    *,
-    package_paths: Sequence[str] | None = None,
 ) -> subprocess.Popen:
     """Launch a subprocess inside a resolved Rez context."""
     from rez.resolved_context import ResolvedContext
 
     try:
-        ctx: ResolvedContext = _create_resolved_context(
-            package_requests,
-            package_paths=package_paths,
-        )
+        ctx: ResolvedContext = _create_resolved_context(package_requests)
         return ctx.execute_shell(
             command=_normalized_launch_command(command),
             detached=True,
@@ -204,15 +196,20 @@ def _resolve_result_from_context(
 
 def _create_resolved_context(
     package_requests: Sequence[str],
-    *,
-    package_paths: Sequence[str] | None = None,
 ) -> _ResolvedContextLike:
+    from rez.config import config  # noqa: PLC0415
     from rez.resolved_context import ResolvedContext  # noqa: PLC0415
 
-    resolved_package_paths = (
-        None if package_paths is None else [str(path) for path in package_paths]
+    # Ensure the package cache directory exists before resolving,
+    # so that rez can spawn rez-pkg-cache without running into a missing directory.
+    cache_path = config.get("cache_packages_path")
+    if cache_path:
+        Path(str(cache_path)).mkdir(parents=True, exist_ok=True)
+
+    return ResolvedContext(
+        list(package_requests),
+        package_paths=config.get("packages_path"),
     )
-    return ResolvedContext(list(package_requests), package_paths=resolved_package_paths)
 
 
 def _normalized_launch_command(command: None | str | Sequence[str]) -> None | str | list[str]:

@@ -8,8 +8,8 @@ T.MenuBarItem {
     readonly property color highlightColor: Qt.tint(Style.card, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.18))
     readonly property color pressedColor: Qt.tint(Style.card, Qt.rgba(Style.accent.r, Style.accent.g, Style.accent.b, 0.28))
 
-    implicitWidth: Math.max(68, implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(32, implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset, implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset, implicitContentHeight + topPadding + bottomPadding)
 
     padding: 0
     leftPadding: Style.md
@@ -26,13 +26,12 @@ T.MenuBarItem {
         font.pixelSize: Style.fontMd
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
     }
 
     background: Rectangle {
         id: background_
-        implicitWidth: control.implicitWidth
-        implicitHeight: control.implicitHeight
+        implicitWidth: 68
+        implicitHeight: 32
         radius: Style.radiusSm
         color: "transparent"
         border.width: control.highlighted ? 1 : 0
