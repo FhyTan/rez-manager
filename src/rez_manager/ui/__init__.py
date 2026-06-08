@@ -1,5 +1,6 @@
 """PySide6 UI controllers and models exposed to QML."""
 
+from .context_editor import ContextEditorController
 from .context_launcher import ContextLauncherController
 from .context_preview import ContextPreviewController
 from .launch_target_model import LaunchTargetListModel
@@ -11,6 +12,7 @@ from .settings_controller import AppSettingsController
 
 __all__ = [
     "AppSettingsController",
+    "ContextEditorController",
     "ContextLauncherController",
     "ContextPreviewController",
     "LaunchTargetListModel",

@@ -8,7 +8,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-
 from tests.conftest import RezTestPackage
 
 

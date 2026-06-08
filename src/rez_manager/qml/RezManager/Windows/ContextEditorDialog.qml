@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
+import RezManager
 import ".."
 import "../Components"
 
@@ -45,18 +46,19 @@ Dialog {
     }
 
     padding: Style.xl
-    standardButtons: Dialog.Save | Dialog.Cancel
     onAboutToShow: {
         projectNameField_.text = root.contextNameValue;
         const projectIndex = projectCombo_.model.indexOf(root.projectValue);
         projectCombo_.currentIndex = projectIndex >= 0 ? projectIndex : 0;
         descriptionField_.text = root.descriptionValue;
         customCommandField_.text = root.customCommandValue;
-    }
-    onAccepted: {
-        root.saveRequested(root.originalProjectValue, root.originalContextNameValue, projectCombo_.currentText, projectNameField_.text, descriptionField_.text, root.launchTargetValue, customCommandField_.text, root.builtinThumbnailSourceValue, root.thumbnailSourceValue.toString(), root.packagesValue);
+        contextEditorController_.checkNameAvailability(projectCombo_.currentText, projectNameField_.text, root.originalProjectValue, root.originalContextNameValue);
     }
     onRejected: root.close()
+
+    ContextEditorController {
+        id: contextEditorController_
+    }
 
     contentItem: ColumnLayout {
         spacing: Style.lg
@@ -64,10 +66,14 @@ Dialog {
         // ── Name ──────────────────────────────────────────────
         FormField {
             label: "Name"
+            errorMessage: contextEditorController_.nameError
             Layout.fillWidth: true
             FieldInput {
                 id: projectNameField_
                 Layout.fillWidth: true
+                onEditingFinished: {
+                    contextEditorController_.checkNameAvailability(projectCombo_.currentText, text, root.originalProjectValue, root.originalContextNameValue);
+                }
             }
         }
 
@@ -79,6 +85,11 @@ Dialog {
                 id: projectCombo_
                 Layout.fillWidth: true
                 model: root.comboProjectOptions()
+                onCurrentTextChanged: {
+                    if (projectNameField_.text.trim().length > 0) {
+                        contextEditorController_.checkNameAvailability(currentText, projectNameField_.text, root.originalProjectValue, root.originalContextNameValue);
+                    }
+                }
             }
         }
 
@@ -222,10 +233,57 @@ Dialog {
         }
     }
 
+    footer: Rectangle {
+        implicitHeight: footerLayout_.implicitHeight + Style.lg * 2 + 1
+        color: "transparent"
+
+        Rectangle {
+            anchors.top: parent.top
+            width: parent.width
+            height: 1
+            color: Style.border
+        }
+
+        RowLayout {
+            id: footerLayout_
+            anchors {
+                fill: parent
+                leftMargin: Style.lg
+                rightMargin: Style.lg
+                topMargin: Style.lg + 1
+                bottomMargin: Style.lg
+            }
+            spacing: Style.sm
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            Button {
+                text: "Cancel"
+                onClicked: root.reject()
+            }
+            Button {
+                text: "Save"
+                highlighted: true
+                enabled: contextEditorController_.nameAvailable
+                onClicked: {
+                    contextEditorController_.checkNameAvailability(projectCombo_.currentText, projectNameField_.text, root.originalProjectValue, root.originalContextNameValue);
+                    if (contextEditorController_.nameAvailable) {
+                        root.saveRequested(root.originalProjectValue, root.originalContextNameValue, projectCombo_.currentText, projectNameField_.text, descriptionField_.text, root.launchTargetValue, customCommandField_.text, root.builtinThumbnailSourceValue, root.thumbnailSourceValue.toString(), root.packagesValue);
+                    } else {
+                        projectNameField_.forceActiveFocus();
+                    }
+                }
+            }
+        }
+    }
+
     // Inline helper components ────────────────────────────────
     component FormField: ColumnLayout {
         id: formField_
         property string label: ""
+        property string errorMessage: ""
         default property alias content: contentHolder_.data
         spacing: Style.xs
         Text {
@@ -236,6 +294,15 @@ Dialog {
         ColumnLayout {
             id: contentHolder_
             spacing: 0
+        }
+        Text {
+            visible: formField_.errorMessage.length > 0
+            text: formField_.errorMessage
+            color: Style.error
+            font.pixelSize: Style.fontSm
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+            topPadding: Style.xs
         }
     }
 
