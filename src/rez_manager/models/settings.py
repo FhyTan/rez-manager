@@ -13,6 +13,7 @@ class PackageCacheSettings:
     max_size_gb: int = 2
     ttl_days: int = 30
     path: str = ""
+    async_mode: bool = True
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -20,6 +21,7 @@ class PackageCacheSettings:
             "path": self.path,
             "max_size_gb": self.max_size_gb,
             "ttl_days": self.ttl_days,
+            "async_mode": self.async_mode,
         }
 
     @classmethod
@@ -29,6 +31,7 @@ class PackageCacheSettings:
             max_size_gb=int(data.get("max_size_gb", 2)),
             ttl_days=int(data.get("ttl_days", 30)),
             path=str(data.get("path", "")),
+            async_mode=bool(data.get("async_mode", True)),
         )
 
 

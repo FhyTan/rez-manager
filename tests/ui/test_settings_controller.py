@@ -95,12 +95,14 @@ def test_app_settings_controller_import_from_file_updates_in_memory_state(tmp_pa
     import_path.write_text(
         json.dumps(
             {
-                "package_repositories": [
-                    " D:\\packages\\maya\\ ",
-                    "d:/packages/maya",
-                    "D:\\packages\\base",
-                ],
-                "contexts_location": str(tmp_path / "imported-contexts"),
+                "general": {
+                    "package_repositories": [
+                        " D:\\packages\\maya\\ ",
+                        "d:/packages/maya",
+                        "D:\\packages\\base",
+                    ],
+                    "contexts_location": str(tmp_path / "imported-contexts"),
+                }
             }
         ),
         encoding="utf-8",
@@ -147,6 +149,7 @@ def test_app_settings_controller_export_to_file_writes_normalized_settings(tmp_p
             "path": "",
             "max_size_gb": 2,
             "ttl_days": 30,
+            "async_mode": True,
         },
     }
     persisted = load_settings()

@@ -61,6 +61,7 @@ def apply_settings_to_rez(settings: AppSettings) -> None:
         config.override("cache_packages_path", str(pkg_cache_path))
         config.override("write_package_cache", True)
         config.override("read_package_cache", True)
+        config.override("package_cache_async", pkg_cache.async_mode)
         config.override("package_cache_max_variant_days", pkg_cache.ttl_days)
         config.override("package_cache_space_buffer ", pkg_cache.max_size_gb * 1024**3)
     else:

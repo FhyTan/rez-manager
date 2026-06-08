@@ -6,27 +6,26 @@ import shutil
 from pathlib import Path
 
 import pytest
+from tests.conftest import RezTestPackage
 
 
 def test_launch_context_runs_short_lived_command(
     rez_host_environment,
-    temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    rez_settings,
+    app_package: RezTestPackage,
+    python_311_package: RezTestPackage,
 ):
     from rez_manager.adapter.context import launch_context
 
-    process = launch_context(
-        [str(rez_package_matrix["app_request"])],
-        ["cmd.exe", "/c", "exit", "0"],
-    )
+    process = launch_context([app_package.request], ["cmd.exe", "/c", "exit", "0"])
 
     assert process.wait(timeout=10) == 0
 
 
 def test_launch_context_wraps_package_command_errors(
     rez_host_environment,
-    temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    rez_settings,
+    bad_commands_package: RezTestPackage,
 ):
     from rez.exceptions import PackageCommandError
 
@@ -34,10 +33,7 @@ def test_launch_context_wraps_package_command_errors(
     from rez_manager.exceptions import RezContextLaunchError
 
     with pytest.raises(RezContextLaunchError) as exc_info:
-        launch_context(
-            [str(rez_package_matrix["bad_commands_request"])],
-            ["cmd.exe", "/c", "exit", "0"],
-        )
+        launch_context([bad_commands_package.request], ["cmd.exe", "/c", "exit", "0"])
 
     assert isinstance(exc_info.value.__cause__, PackageCommandError)
 
@@ -45,8 +41,9 @@ def test_launch_context_wraps_package_command_errors(
 def test_launch_context_reports_missing_dependency_after_package_removal(
     rez_host_environment,
     temp_context_dir: Path,
-    temp_packages_dir: Path,
-    rez_package_matrix: dict[str, object],
+    rez_settings,
+    app_package: RezTestPackage,
+    python_311_package: RezTestPackage,
 ):
     from rez.exceptions import PackageFamilyNotFoundError
 
@@ -55,19 +52,13 @@ def test_launch_context_reports_missing_dependency_after_package_removal(
     from rez_manager.exceptions import RezContextLaunchError
 
     context_path = temp_context_dir / "app.rxt"
-    save_context(
-        [str(rez_package_matrix["app_request"])],
-        str(context_path),
-    )
+    save_context([app_package.request], str(context_path))
 
-    shutil.rmtree(Path(rez_package_matrix["python_family_dir"]))
+    shutil.rmtree(python_311_package.directory.parent)
     clear_package_cache()
 
     with pytest.raises(RezContextLaunchError) as exc_info:
-        launch_context(
-            [str(rez_package_matrix["app_request"])],
-            ["cmd.exe", "/c", "exit", "0"],
-        )
+        launch_context([app_package.request], ["cmd.exe", "/c", "exit", "0"])
 
     assert context_path.exists()
     assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)

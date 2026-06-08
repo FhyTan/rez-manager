@@ -83,6 +83,7 @@ def test_app_settings_normalize_pathlike_inputs():
             "path": "",
             "max_size_gb": 2,
             "ttl_days": 30,
+            "async_mode": True,
         },
     }
 
