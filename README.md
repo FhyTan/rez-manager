@@ -44,6 +44,10 @@ for DCC workflows.
 
 ![error logs](./images/error_logs.gif)
 
+### Support package caching
+
+When the Rez package is stored on a network shared drive with caching enabled, resolve or launch action will automatically cache the package locally in the background. On subsequent launches, the local cache will be used directly, significantly accelerating the startup process.
+
 ## Example Data
 
 The [`./examples`](./examples) directory contains sample projects and Rez packages for trying the

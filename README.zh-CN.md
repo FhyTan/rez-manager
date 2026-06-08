@@ -41,6 +41,10 @@ rez-manager 提供桌面 UI，用于创建、编辑、预览和启动面向 DCC 
 
 ![error logs](./images/error_logs.gif)
 
+### 支持本地包缓存
+
+当 Rez 包存放到网络共享盘并允许缓存时，解析或启动环境会在后台自动缓存包到本地，下次启动直接使用本地缓存，大大加快启动过程。
+
 ## 示例数据
 
 [`./examples`](./examples) 目录中包含了一组示例项目和 Rez packages，可用于快速体验应用。
