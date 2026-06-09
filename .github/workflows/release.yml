@@ -1,34 +1,43 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_run:
+    workflows: ["Test"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: windows-latest
+  autotag:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tagname: ${{ steps.autotag_step.outputs.tagname }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
         with:
-          enable-cache: true
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Install dependencies
-        run: uv sync --dev
-
-      - name: Run tests
-        run: uv run pytest
+      - name: Auto-tag new version
+        id: autotag_step
+        uses: butlerlogic/action-autotag@1.1.2
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          strategy: regex
+          root: "pyproject.toml"
+          regex_pattern: 'version\s*=\s*"((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)"'
+          tag_prefix: "v"
 
   release:
-    needs: test
+    needs: autotag
+    if: needs.autotag.outputs.tagname != ''
     runs-on: windows-latest
     permissions:
       contents: write
@@ -36,6 +45,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ needs.autotag.outputs.tagname }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
@@ -51,10 +62,11 @@ jobs:
       - name: Archive release bundle
         shell: pwsh
         run: |
-          $archiveName = "rez-manager-${{ github.ref_name }}-windows.zip"
+          $archiveName = "rez-manager-${{ needs.autotag.outputs.tagname }}-windows.zip"
           Compress-Archive -Path "build/rez-manager.dist/*" -DestinationPath $archiveName -Force
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3
         with:
-          files: rez-manager-${{ github.ref_name }}-windows.zip
+          tag_name: ${{ needs.autotag.outputs.tagname }}
+          files: rez-manager-${{ needs.autotag.outputs.tagname }}-windows.zip
