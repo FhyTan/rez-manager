@@ -38,12 +38,12 @@ src/rez_manager/
 
 - **All source code and comments must be in English.**
 - **Line length:** 100 chars.
-- Use `pathlib.Path` for filesystem paths — never raw `str` paths.
 - Provide PEP 257 docstrings for public modules, classes, and functions. No obvious comments.
 - Catch specific exceptions — no bare `except:`.
 - Prefer Python 3.10+ syntax (`int | str`, `list[str]`, `match/case`).
 - Use `from __future__ import annotations` when it improves forward references.
 - Always specify `encoding="utf-8"` when reading/writing text files.
+- The project currently supports Windows only. Tests and builds must be run on Windows; Linux compatibility is not yet implemented.
 
 ## QML / PySide6 Patterns
 
