@@ -33,7 +33,7 @@ jobs:
   autotag:
     needs: test
     if: github.ref == 'refs/heads/main'
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
