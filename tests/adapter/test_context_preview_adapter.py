@@ -88,29 +88,34 @@ def test_save_context_serializes_real_rez_context(
     app_package: RezTestPackage,
     python_311_package: RezTestPackage,
 ):
-    from rez_manager.adapter.context import save_context
+    from rez_manager.adapter.context import resolve_context, save_context
 
     context_path = temp_context_dir / "app.rxt"
+    ctx = resolve_context([app_package.request])
 
-    save_context([app_package.request], str(context_path))
+    save_context(ctx, str(context_path))
 
     assert context_path.exists()
 
 
-def test_save_context_wraps_missing_dependency(
-    temp_context_dir: Path,
-    rez_settings,
-    broken_dep_package: RezTestPackage,
-):
-    from rez.exceptions import PackageFamilyNotFoundError
-
-    from rez_manager.adapter.context import save_context
+def test_save_context_wraps_os_error(temp_context_dir: Path):
+    from rez_manager.adapter.context import ContextInfo, save_context
     from rez_manager.exceptions import RezContextSaveError
 
-    with pytest.raises(RezContextSaveError) as exc_info:
-        save_context([broken_dep_package.request], str(temp_context_dir / "broken.rxt"))
+    class _FakeCtx:
+        def save(self, _path):
+            raise OSError("disk full")
 
-    assert isinstance(exc_info.value.__cause__, PackageFamilyNotFoundError)
+    ctx = ContextInfo(
+        packages=[],
+        environ={},
+        tools=[],
+        _resolved_context=_FakeCtx(),
+    )
+    with pytest.raises(RezContextSaveError) as exc_info:
+        save_context(ctx, str(temp_context_dir / "should_fail.rxt"))
+
+    assert "disk full" in str(exc_info.value)
 
 
 def test_load_context_round_trips_saved_context(
@@ -120,10 +125,11 @@ def test_load_context_round_trips_saved_context(
     app_package: RezTestPackage,
     python_311_package: RezTestPackage,
 ):
-    from rez_manager.adapter.context import load_context, save_context
+    from rez_manager.adapter.context import load_context, resolve_context, save_context
 
     context_path = temp_context_dir / "app.rxt"
-    save_context([app_package.request], str(context_path))
+    ctx = resolve_context([app_package.request])
+    save_context(ctx, str(context_path))
 
     result = load_context(str(context_path))
 

@@ -29,7 +29,7 @@ def test_command_resolver_uses_none_for_shell_launch(monkeypatch):
     assert LAUNCH_TARGETS.launch_command_for("Shell") is None
 
 
-def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp_path, monkeypatch):
+def test_context_launcher_controller_starts_resolve_job_with_command(tmp_path, monkeypatch):
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
     from rez_manager.models.settings import AppSettings
@@ -56,15 +56,16 @@ def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp
 
     captured: dict[str, object] = {}
 
-    def capture_start_launch_job(self, request_id, package_requests, command):
+    def capture_start_resolve_job(self, request_id, package_requests, command, rxt_path=None):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
         captured["command"] = command
+        captured["rxt_path"] = rxt_path
 
     monkeypatch.setattr(
         ContextLauncherController,
-        "_start_launch_job",
-        capture_start_launch_job,
+        "_start_resolve_job",
+        capture_start_resolve_job,
     )
 
     controller = ContextLauncherController()
@@ -75,6 +76,7 @@ def test_context_launcher_controller_starts_launch_job_with_resolved_command(tmp
     assert controller.isLaunching
     assert captured["package_requests"] == ["houdini-20.5", "python-3.11"]
     assert captured["command"] == 'start "" houdini'
+    assert captured["rxt_path"].endswith("context.rxt")
 
 
 def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
@@ -94,15 +96,16 @@ def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
 
     captured: dict[str, object] = {}
 
-    def capture_start_launch_job(self, request_id, package_requests, command):
+    def capture_start_resolve_job(self, request_id, package_requests, command, rxt_path=None):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
         captured["command"] = command
+        captured["rxt_path"] = rxt_path
 
     monkeypatch.setattr(
         ContextLauncherController,
-        "_start_launch_job",
-        capture_start_launch_job,
+        "_start_resolve_job",
+        capture_start_resolve_job,
     )
     monkeypatch.setattr(
         "rez_manager.ui.context_launcher.RezContext.load",
@@ -117,15 +120,16 @@ def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
     assert controller.isLaunching
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
     assert captured["command"] is None
+    assert captured["rxt_path"] is None
 
 
 def test_context_launcher_controller_emits_success_after_completed_launch(tmp_path, monkeypatch):
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
-    from rez_manager.ui.context_launcher import ContextLauncherController, LaunchResult
-    from rez_manager.ui.error_hub import app_error_hub
+    from rez_manager.ui.context_launcher import ContextLauncherController
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     monkeypatch.setattr("rez_manager.models.launch_target.IS_WINDOWS", False)
@@ -135,16 +139,21 @@ def test_context_launcher_controller_emits_success_after_completed_launch(tmp_pa
         "Pipeline",
         ContextMeta(name="Base", launch_target=LaunchTarget.MAYA, packages=["maya-2025.0"]),
     )
+
+    result = ContextInfo(
+        packages=["maya-2025.0"],
+        environ={},
+        tools=[],
+        _resolved_context=None,
+    )
     monkeypatch.setattr(
         ContextLauncherController,
-        "_start_launch_job",
-        lambda self, request_id, package_requests, command: self._apply_launch_result(
-            request_id,
-            LaunchResult(success=True),
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, command, rxt_path=None: (
+            self._apply_launch_result(request_id, result)
         ),
     )
 
-    app_error_hub.clear()
     launched: list[tuple[str, str]] = []
     controller = ContextLauncherController()
     controller.launchSucceeded.connect(lambda project, context: launched.append((project, context)))
@@ -152,7 +161,6 @@ def test_context_launcher_controller_emits_success_after_completed_launch(tmp_pa
     assert controller.launchContext("Pipeline", "Base")
     assert not controller.isLaunching
     assert launched == [("Pipeline", "Base")]
-    assert app_error_hub.message == ""
 
 
 def test_context_launcher_controller_rejects_blank_custom_command(tmp_path, monkeypatch):
@@ -230,11 +238,12 @@ def test_context_launcher_controller_uses_attached_error_target_for_launch_error
 def test_context_launcher_controller_ignores_stale_worker_results_after_failed_reload(
     tmp_path, monkeypatch
 ):
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, LaunchTarget, RezContext
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
-    from rez_manager.ui.context_launcher import ContextLauncherController, LaunchResult
+    from rez_manager.ui.context_launcher import ContextLauncherController
     from rez_manager.ui.error_hub import app_error_hub
 
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
@@ -247,8 +256,8 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     )
     monkeypatch.setattr(
         ContextLauncherController,
-        "_start_launch_job",
-        lambda self, request_id, package_requests, command: None,
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, command, rxt_path=None: None,
     )
 
     app_error_hub.clear()
@@ -257,7 +266,10 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     assert controller.launchContext("Pipeline", "Base")
     assert controller.isLaunching
     assert not controller.launchContext("Pipeline", "Missing")
-    controller._apply_launch_result(1, LaunchResult(success=True))
+    stale_result = ContextInfo(
+        packages=["maya-2025.0"], environ={}, tools=[], _resolved_context=None
+    )
+    controller._apply_launch_result(1, stale_result)
 
     assert controller.projectName == ""
     assert controller.contextName == ""
@@ -265,23 +277,24 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     assert "not exist" in app_error_hub.message
 
 
-def test_context_launch_worker_reports_custom_launch_errors(monkeypatch):
-    from rez_manager.exceptions import RezContextLaunchError
-    from rez_manager.ui.context_launcher import LaunchResult, _ContextLaunchWorker
+def test_context_resolve_worker_reports_adapter_errors(monkeypatch):
+    from rez_manager.exceptions import RezResolveError
+    from rez_manager.ui.context_resolve import ContextResolveWorker
 
     monkeypatch.setattr(
-        "rez_manager.ui.context_launcher.launch_context",
-        lambda package_requests, command: (_ for _ in ()).throw(
-            RezContextLaunchError("Launch failed.")
+        "rez_manager.ui.context_resolve.resolve_context",
+        lambda package_requests: (_ for _ in ()).throw(
+            RezResolveError("Resolution failed.")
         ),
     )
 
-    emitted: list[tuple[int, LaunchResult]] = []
-    worker = _ContextLaunchWorker(7, ["python-3.11"], None)
+    emitted: list[tuple[int, object]] = []
+    worker = ContextResolveWorker(7, ["python-3.11"], mode="resolve")
     worker.signals.finished.connect(lambda request_id, result: emitted.append((request_id, result)))
 
     worker.run()
 
     assert len(emitted) == 1
     assert emitted[0][0] == 7
-    assert emitted[0][1] == LaunchResult(success=False, error="Launch failed.")
+    assert isinstance(emitted[0][1], RezResolveError)
+    assert "Resolution failed" in str(emitted[0][1])

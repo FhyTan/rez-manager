@@ -1,4 +1,4 @@
-"""Rez context adapter — create, resolve, serialize, and launch contexts."""
+"""Rez context adapter — resolve, serialize, launch, and introspect contexts."""
 
 from __future__ import annotations
 
@@ -11,7 +11,8 @@ from functools import cache
 from importlib.resources import files
 from os import environ
 from pathlib import Path
-from typing import Protocol
+
+from loguru import logger
 
 from rez_manager.exceptions import (
     RezContextLaunchError,
@@ -26,30 +27,99 @@ _WINDOWS_PLATFORM = "windows"
 
 
 @dataclass
-class ResolveResult:
+class ContextInfo:
+    """Resolved context data returned by the adapter layer.
+
+    ``_resolved_context`` holds the live Rez ``ResolvedContext`` object
+    and is consumed by ``save_context`` and ``launch_context`` — external
+    code should treat it as opaque.
+    """
+
     packages: list[str]
     environ: dict[str, str]
     tools: list[str]
+    _resolved_context: object
 
 
-class _ResolvedContextLike(Protocol):
-    resolved_packages: list[object]
-
-    def get_environ(
-        self, *, parent_environ: Mapping[str, str] | None = None
-    ) -> Mapping[object, object]: ...
-
-    def get_tools(self) -> Mapping[object, object]: ...
-
-
-def resolve_context(package_requests: list[str]) -> ResolveResult:
+def resolve_context(package_requests: list[str]) -> ContextInfo:
     """Resolve a list of package requests using the Rez Python API."""
+    logger.info("Resolving context for requests: {}", package_requests)
+
+    from rez.config import config  # noqa: PLC0415
+    from rez.resolved_context import ResolvedContext  # noqa: PLC0415
+
+    cache_path = config.get("cache_packages_path")
+    if cache_path:
+        Path(str(cache_path)).mkdir(parents=True, exist_ok=True)
+
     try:
-        ctx = _create_resolved_context(package_requests)
+        ctx = ResolvedContext(
+            list(package_requests),
+            package_paths=config.get("packages_path"),
+        )
     except _context_creation_exception_types() as exc:
+        logger.error("Failed to resolve context: {}", exc)
         raise RezResolveError(f"Failed to resolve Rez context: {exc}") from exc
 
-    return _resolve_result_from_context(ctx)
+    result = _context_info_from_resolved_context(ctx)
+    logger.info("Resolved context: {} packages", len(result.packages))
+    return result
+
+
+def load_context(path: str) -> ContextInfo:
+    """Load a serialized context from a .rxt file."""
+    logger.info("Loading resolved context from {}", path)
+
+    from rez.resolved_context import ResolvedContext  # noqa: PLC0415
+
+    try:
+        ctx = ResolvedContext.load(path)
+    except _context_load_exception_types() as exc:
+        logger.warning("Failed to load .rxt context from {}: {}", path, exc)
+        raise RezContextLoadError(f"Failed to load Rez context from '{path}': {exc}") from exc
+    except OSError as exc:
+        logger.warning("Failed to load .rxt context from {}: {}", path, exc)
+        raise RezContextLoadError(f"Failed to load Rez context from '{path}': {exc}") from exc
+
+    result = _context_info_from_resolved_context(ctx)
+    logger.info("Loaded context from .rxt: {} packages", len(result.packages))
+    return result
+
+
+def save_context(context: ContextInfo, path: str) -> None:
+    """Serialize an already-resolved context to a .rxt file at the given path."""
+    logger.info("Saving resolved context to {}", path)
+
+    try:
+        context._resolved_context.save(path)
+    except OSError as exc:
+        logger.error("Failed to save .rxt context to {}: {}", path, exc)
+        raise RezContextSaveError(f"Failed to save Rez context to '{path}': {exc}") from exc
+
+    logger.info("Saved resolved context to {}", path)
+
+
+def launch_context(
+    context: ContextInfo,
+    command: str | None | Sequence[str],
+) -> subprocess.Popen:
+    """Launch a subprocess inside an already-resolved Rez context."""
+    logger.info("Launching resolved context with command: {}", command)
+
+    try:
+        return context._resolved_context.execute_shell(
+            command=_normalized_launch_command(command),
+            detached=True,
+            block=False,
+            start_new_session=True,
+            parent_environ=preserved_system_environment(),
+        )
+    except _context_launch_exception_types() as exc:
+        logger.error("Failed to launch context: {}", exc)
+        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
+    except OSError as exc:
+        logger.error("Failed to launch context: {}", exc)
+        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
 
 
 def system_environment_variable_names(platform_name: str | None = None) -> list[str]:
@@ -99,56 +169,29 @@ def preserved_system_environment(
     return preserved
 
 
-def save_context(
-    package_requests: list[str],
-    path: str,
-) -> None:
-    """Serialize a resolved context to a .rxt file at the given path."""
+def _context_info_from_resolved_context(
+    ctx: object,
+    *,
+    process_environ: Mapping[str, str] | None = None,
+    platform_name: str | None = None,
+) -> ContextInfo:
+    preserved_environ = preserved_system_environment(
+        process_environ=process_environ,
+        platform_name=platform_name,
+    )
     try:
-        ctx = _create_resolved_context(package_requests)
-        ctx.save(path)
+        effective_environ = {
+            str(key): str(value)
+            for key, value in ctx.get_environ(parent_environ=preserved_environ).items()
+        }
     except _context_creation_exception_types() as exc:
-        raise RezContextSaveError(f"Failed to save Rez context to '{path}': {exc}") from exc
-    except OSError as exc:
-        raise RezContextSaveError(f"Failed to save Rez context to '{path}': {exc}") from exc
-
-
-def load_context(path: str) -> ResolveResult:
-    """Load a serialized context from a .rxt file."""
-    try:
-        from rez.resolved_context import ResolvedContext  # noqa: PLC0415
-
-        ctx = ResolvedContext.load(path)
-    except _context_load_exception_types() as exc:
-        raise RezContextLoadError(f"Failed to load Rez context from '{path}': {exc}") from exc
-    except OSError as exc:
-        raise RezContextLoadError(f"Failed to load Rez context from '{path}': {exc}") from exc
-
-    return _resolve_result_from_context(ctx)
-
-
-def launch_context(
-    package_requests: list[str],
-    command: None | str | Sequence[str],
-) -> subprocess.Popen:
-    """Launch a subprocess inside a resolved Rez context."""
-    from rez.resolved_context import ResolvedContext
-
-    try:
-        ctx: ResolvedContext = _create_resolved_context(package_requests)
-        return ctx.execute_shell(
-            command=_normalized_launch_command(command),
-            detached=True,
-            block=False,
-            start_new_session=True,
-            parent_environ=preserved_system_environment(),
-        )
-    except _context_creation_exception_types() as exc:
-        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
-    except _context_launch_exception_types() as exc:
-        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
-    except OSError as exc:
-        raise RezContextLaunchError(f"Failed to launch Rez context: {exc}") from exc
+        raise RezResolveError(f"Failed to apply resolved environment: {exc}") from exc
+    return ContextInfo(
+        packages=[package.qualified_package_name for package in ctx.resolved_packages],
+        environ=effective_environ,
+        tools=[str(tool) for tool in ctx.get_tools().keys()],
+        _resolved_context=ctx,
+    )
 
 
 def _platform_key(platform_name: str | None) -> str:
@@ -171,45 +214,6 @@ def _platform_key(platform_name: str | None) -> str:
     if resolved_platform.startswith("linux"):
         return "linux"
     raise ValueError(f"Unsupported platform for system environment preservation: {platform_name}")
-
-
-def _resolve_result_from_context(
-    context: _ResolvedContextLike,
-    *,
-    process_environ: Mapping[str, str] | None = None,
-    platform_name: str | None = None,
-) -> ResolveResult:
-    preserved_environ = preserved_system_environment(
-        process_environ=process_environ,
-        platform_name=platform_name,
-    )
-    effective_environ = {
-        str(key): str(value)
-        for key, value in context.get_environ(parent_environ=preserved_environ).items()
-    }
-    return ResolveResult(
-        packages=[package.qualified_package_name for package in context.resolved_packages],
-        environ=effective_environ,
-        tools=[str(tool) for tool in context.get_tools().keys()],
-    )
-
-
-def _create_resolved_context(
-    package_requests: Sequence[str],
-) -> _ResolvedContextLike:
-    from rez.config import config  # noqa: PLC0415
-    from rez.resolved_context import ResolvedContext  # noqa: PLC0415
-
-    # Ensure the package cache directory exists before resolving,
-    # so that rez can spawn rez-pkg-cache without running into a missing directory.
-    cache_path = config.get("cache_packages_path")
-    if cache_path:
-        Path(str(cache_path)).mkdir(parents=True, exist_ok=True)
-
-    return ResolvedContext(
-        list(package_requests),
-        package_paths=config.get("packages_path"),
-    )
 
 
 def _normalized_launch_command(command: None | str | Sequence[str]) -> None | str | list[str]:

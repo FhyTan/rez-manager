@@ -3,27 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from pathlib import Path
 
-from PySide6.QtCore import Property, QObject, QRunnable, QThreadPool, Signal, Slot
+from PySide6.QtCore import Property, QObject, QThreadPool, Signal, Slot
 from PySide6.QtQml import QmlElement
 
-from rez_manager.adapter.context import launch_context
-from rez_manager.exceptions import RezContextLaunchError
+from rez_manager.adapter.context import ContextInfo
+from rez_manager.exceptions import RezAdapterError
 from rez_manager.models.launch_target import LAUNCH_TARGETS
 from rez_manager.models.rez_context import RezContext
+from rez_manager.persistence.filesystem import CONTEXT_FILE_NAME
+from rez_manager.ui.context_resolve import ContextResolveWorker
 from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
 QML_IMPORT_MAJOR_VERSION = 1
-
-
-@dataclass(slots=True)
-class LaunchResult:
-    """Result payload emitted by the background launch worker."""
-
-    success: bool
-    error: str | None = None
 
 
 @QmlElement
@@ -40,7 +34,7 @@ class ContextLauncherController(QObject):
         self._is_launching = False
         self._request_id = 0
         self._thread_pool = QThreadPool.globalInstance()
-        self._active_workers: dict[int, _ContextLaunchWorker] = {}
+        self._active_workers: dict[int, ContextResolveWorker] = {}
 
     @Property(str, notify=stateChanged)
     def projectName(self) -> str:  # noqa: N802
@@ -70,12 +64,15 @@ class ContextLauncherController(QObject):
             report_object_ui_error(self, str(exc))
             return False
 
-        return self._launch_package_requests(
+        rxt_path = str(Path(context.path) / CONTEXT_FILE_NAME)
+
+        return self._launch(
             request_id,
             project_name,
             context_name,
             context.packages,
             command,
+            rxt_path=rxt_path,
         )
 
     @Slot(str, str, "QVariantList", result=bool)
@@ -89,7 +86,7 @@ class ContextLauncherController(QObject):
         request_id = self._request_id
 
         normalized_requests = [str(request).strip() for request in package_requests]
-        return self._launch_package_requests(
+        return self._launch(
             request_id,
             project_name,
             context_name,
@@ -109,87 +106,62 @@ class ContextLauncherController(QObject):
         self._is_launching = False
         self.stateChanged.emit()
 
-    def _start_launch_job(
+    def _start_resolve_job(
         self,
         request_id: int,
         package_requests: list[str],
         command: str | None,
+        *,
+        rxt_path: str | None = None,
     ) -> None:
-        worker = _ContextLaunchWorker(
+        worker = ContextResolveWorker(
             request_id,
             list(package_requests),
-            command,
+            rxt_path=rxt_path,
+            command=command,
+            mode="launch",
         )
         worker.signals.finished.connect(self._apply_launch_result)
         self._active_workers[request_id] = worker
         self._thread_pool.start(worker)
 
-    def _launch_package_requests(
+    def _launch(
         self,
         request_id: int,
         project_name: str,
         context_name: str,
         package_requests: Sequence[str],
         command: str | None,
+        *,
+        rxt_path: str | None = None,
     ) -> bool:
         self._project_name = project_name
         self._context_name = context_name
         self._is_launching = True
         self.stateChanged.emit()
         clear_ui_error()
-        self._start_launch_job(
+        self._start_resolve_job(
             request_id,
             list(package_requests),
             command,
+            rxt_path=rxt_path,
         )
         return True
 
     @Slot(int, object)
-    def _apply_launch_result(self, request_id: int, launch_result: object) -> None:
+    def _apply_launch_result(self, request_id: int, resolve_result: object) -> None:
         self._active_workers.pop(request_id, None)
         if request_id != self._request_id:
             return
 
         self._is_launching = False
         self.stateChanged.emit()
-        if not isinstance(launch_result, LaunchResult):
+        if isinstance(resolve_result, ContextInfo):
+            clear_ui_error()
+            self.launchSucceeded.emit(self._project_name, self._context_name)
+            return
+
+        if isinstance(resolve_result, RezAdapterError):
+            report_object_ui_error(self, str(resolve_result))
+        else:
             report_object_ui_error(self, "Failed to launch context.")
-            return
-
-        if not launch_result.success:
-            report_object_ui_error(self, launch_result.error or "Failed to launch context.")
-            return
-
-        clear_ui_error()
-        self.launchSucceeded.emit(self._project_name, self._context_name)
-
-
-class _ContextLaunchWorkerSignals(QObject):
-    finished = Signal(int, object)
-
-
-class _ContextLaunchWorker(QRunnable):
-    def __init__(
-        self,
-        request_id: int,
-        package_requests: list[str],
-        command: str | None,
-    ) -> None:
-        super().__init__()
-        self._request_id = request_id
-        self._package_requests = package_requests
-        self._command = command
-        self.signals = _ContextLaunchWorkerSignals()
-
-    @Slot()
-    def run(self) -> None:
-        try:
-            launch_context(self._package_requests, self._command)
-        except RezContextLaunchError as exc:
-            self.signals.finished.emit(
-                self._request_id,
-                LaunchResult(success=False, error=str(exc)),
-            )
-            return
-
-        self.signals.finished.emit(self._request_id, LaunchResult(success=True))

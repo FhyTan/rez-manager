@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from os import environ, pathsep
+from pathlib import Path
 
 from PySide6.QtCore import (
     Property,
@@ -12,7 +13,6 @@ from PySide6.QtCore import (
     QByteArray,
     QModelIndex,
     QObject,
-    QRunnable,
     Qt,
     QThreadPool,
     Signal,
@@ -21,13 +21,14 @@ from PySide6.QtCore import (
 from PySide6.QtQml import QmlElement
 
 from rez_manager.adapter.context import (
-    ResolveResult,
-    resolve_context,
+    ContextInfo,
     system_environment_variable_names,
 )
-from rez_manager.exceptions import RezResolveError
+from rez_manager.exceptions import RezAdapterError
 from rez_manager.models.rez_context import RezContext
+from rez_manager.persistence.filesystem import CONTEXT_FILE_NAME
 from rez_manager.runtime import IS_WINDOWS
+from rez_manager.ui.context_resolve import ContextResolveWorker
 from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -44,12 +45,12 @@ class ContextPreviewController(QObject):
         self._project_name = ""
         self._context_name = ""
         self._is_loading = False
-        self._result: ResolveResult | None = None
+        self._result: ContextInfo | None = None
         self._environment_sections: list[dict[str, object]] = []
         self._environment_models: list[EnvironmentsTableModel] = []
         self._request_id = 0
         self._thread_pool = QThreadPool.globalInstance()
-        self._active_workers: dict[int, _ContextPreviewWorker] = {}
+        self._active_workers: dict[int, ContextResolveWorker] = {}
 
     @Property(str, notify=stateChanged)
     def projectName(self) -> str:  # noqa: N802
@@ -100,11 +101,14 @@ class ContextPreviewController(QObject):
             report_object_ui_error(self, str(exc))
             return False
 
-        return self._load_package_requests(
+        rxt_path = str(Path(context.path) / CONTEXT_FILE_NAME)
+
+        return self._load(
             request_id,
             project_name,
             context_name,
             context.packages,
+            rxt_path=rxt_path,
         )
 
     @Slot(str, str, "QVariantList", result=bool)
@@ -118,7 +122,7 @@ class ContextPreviewController(QObject):
         request_id = self._request_id
 
         normalized_requests = [str(request).strip() for request in package_requests]
-        return self._load_package_requests(
+        return self._load(
             request_id,
             project_name,
             context_name,
@@ -139,22 +143,31 @@ class ContextPreviewController(QObject):
         self._set_environment_sections(None)
         self.stateChanged.emit()
 
-    def _start_preview_job(
+    def _start_resolve_job(
         self,
         request_id: int,
         package_requests: list[str],
+        *,
+        rxt_path: str | None = None,
     ) -> None:
-        worker = _ContextPreviewWorker(request_id, list(package_requests))
+        worker = ContextResolveWorker(
+            request_id,
+            list(package_requests),
+            rxt_path=rxt_path,
+            mode="resolve",
+        )
         worker.signals.finished.connect(self._apply_preview_result)
         self._active_workers[request_id] = worker
         self._thread_pool.start(worker)
 
-    def _load_package_requests(
+    def _load(
         self,
         request_id: int,
         project_name: str,
         context_name: str,
         package_requests: Sequence[str],
+        *,
+        rxt_path: str | None = None,
     ) -> bool:
         self._project_name = project_name
         self._context_name = context_name
@@ -162,7 +175,7 @@ class ContextPreviewController(QObject):
         self._is_loading = True
         self.stateChanged.emit()
         clear_ui_error()
-        self._start_preview_job(request_id, list(package_requests))
+        self._start_resolve_job(request_id, list(package_requests), rxt_path=rxt_path)
         return True
 
     @Slot(int, object)
@@ -172,25 +185,21 @@ class ContextPreviewController(QObject):
             return
 
         self._is_loading = False
-        if isinstance(resolve_result, RezResolveError):
-            self._result = None
-            self._set_environment_sections(None)
+        if isinstance(resolve_result, ContextInfo):
+            self._result = resolve_result
+            self._set_environment_sections(resolve_result.environ)
             self.stateChanged.emit()
-            report_object_ui_error(self, str(resolve_result))
+            clear_ui_error()
+            self.previewResolved.emit()
             return
 
-        if not isinstance(resolve_result, ResolveResult):
-            self._result = None
-            self._set_environment_sections(None)
-            self.stateChanged.emit()
-            report_object_ui_error(self, "Failed to resolve preview data.")
-            return
-
-        self._result = resolve_result
-        self._set_environment_sections(resolve_result.environ)
+        self._result = None
+        self._set_environment_sections(None)
         self.stateChanged.emit()
-        clear_ui_error()
-        self.previewResolved.emit()
+        if isinstance(resolve_result, RezAdapterError):
+            report_object_ui_error(self, str(resolve_result))
+        else:
+            report_object_ui_error(self, "Failed to resolve preview data.")
 
     def _set_environment_sections(self, resolved_environ: Mapping[str, str] | None) -> None:
         if resolved_environ is None:
@@ -228,7 +237,6 @@ class ContextPreviewController(QObject):
         system_entries: dict[str, str] = {}
         rez_entries: dict[str, str] = {}
 
-        # Classify variables into REZ_, system, and user sections.
         for raw_name, raw_value in resolved_environ.items():
             name = str(raw_name)
             value = str(raw_value)
@@ -247,7 +255,6 @@ class ContextPreviewController(QObject):
 
             user_entries[name] = value
 
-        # Special handling for PATH.
         system_path_entries: list[str] = []
         user_path_entries: list[str] = []
         for entry in _split_path_entries(resolved_environ.get("PATH", "")):
@@ -262,10 +269,6 @@ class ContextPreviewController(QObject):
         if system_path_entries:
             system_entries["PATH"] = pathsep.join(system_path_entries)
 
-        # Rez resolves against the preserved system environment, but the preview payload only
-        # contains variables that Rez returns explicitly. Launch still inherits the preserved
-        # system variables from the current process, so the preview must add them back here to
-        # reflect the effective launch environment and avoid future regressions.
         for key, value in environ.items():
             for name in system_names:
                 if IS_WINDOWS:
@@ -289,28 +292,6 @@ class ContextPreviewController(QObject):
             ("System Environment", sort_dict(system_entries)),
             ("REZ_ Environment", sort_dict(rez_entries)),
         ]
-
-
-class _ContextPreviewWorkerSignals(QObject):
-    finished = Signal(int, object)
-
-
-class _ContextPreviewWorker(QRunnable):
-    def __init__(self, request_id: int, package_requests: list[str]) -> None:
-        super().__init__()
-        self._request_id = request_id
-        self._package_requests = package_requests
-        self.signals = _ContextPreviewWorkerSignals()
-
-    @Slot()
-    def run(self) -> None:
-        try:
-            preview_result = resolve_context(self._package_requests)
-        except RezResolveError as exc:
-            self.signals.finished.emit(self._request_id, exc)
-            return
-
-        self.signals.finished.emit(self._request_id, preview_result)
 
 
 def _package_entry(label: str) -> dict[str, str]:

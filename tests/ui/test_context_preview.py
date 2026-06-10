@@ -4,7 +4,7 @@ from __future__ import annotations
 
 
 def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -18,7 +18,7 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0", "python-3.11"]))
 
-    preview_result = ResolveResult(
+    preview_result = ContextInfo(
         packages=["maya-2025.0", "python-3.11"],
         environ={
             "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
@@ -26,11 +26,12 @@ def test_context_preview_controller_loads_resolved_preview(tmp_path, monkeypatch
             "REZ_USED_RESOLVE": "maya-2025.0 python-3.11",
         },
         tools=["maya.exe"],
+        _resolved_context=None,
     )
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: self._apply_preview_result(
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -87,8 +88,8 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
     preview_error = RezResolveError("Resolve failed.")
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: self._apply_preview_result(
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: self._apply_preview_result(
             request_id, preview_error
         ),
     )
@@ -128,7 +129,7 @@ def test_context_preview_controller_reports_invalid_context_metadata(tmp_path, m
 def test_context_preview_controller_ignores_stale_worker_results_after_failed_reload(
     tmp_path, monkeypatch
 ):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -143,18 +144,19 @@ def test_context_preview_controller_ignores_stale_worker_results_after_failed_re
 
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: None,
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: None,
     )
 
     app_error_hub.clear()
     controller = ContextPreviewController()
 
     assert controller.loadContext("Pipeline", "Base")
-    stale_result = ResolveResult(
+    stale_result = ContextInfo(
         packages=["maya-2025.0"],
         environ={},
         tools=[],
+        _resolved_context=None,
     )
 
     assert not controller.loadContext("Pipeline", "Missing")
@@ -186,20 +188,22 @@ def test_context_preview_controller_triggers_preview_on_context_load(tmp_path, m
 
     captured: dict[str, object] = {}
 
-    def capture_start_preview_job(self, request_id, package_requests):
+    def capture_start_resolve_job(self, request_id, package_requests, rxt_path=None):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
+        captured["rxt_path"] = rxt_path
 
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        capture_start_preview_job,
+        "_start_resolve_job",
+        capture_start_resolve_job,
     )
 
     controller = ContextPreviewController()
 
     assert controller.loadContext("Pipeline", "Base")
     assert captured["package_requests"] == ["maya-2025.0"]
+    assert captured["rxt_path"].endswith("context.rxt")
 
 
 def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, monkeypatch):
@@ -217,14 +221,15 @@ def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, mon
 
     captured: dict[str, object] = {}
 
-    def capture_start_preview_job(self, request_id, package_requests):
+    def capture_start_resolve_job(self, request_id, package_requests, rxt_path=None):
         captured["request_id"] = request_id
         captured["package_requests"] = package_requests
+        captured["rxt_path"] = rxt_path
 
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        capture_start_preview_job,
+        "_start_resolve_job",
+        capture_start_resolve_job,
     )
     monkeypatch.setattr(
         "rez_manager.ui.context_preview.RezContext.load",
@@ -238,10 +243,11 @@ def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, mon
     assert controller.contextName == "Draft"
     assert controller.isLoading
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
+    assert captured["rxt_path"] is None
 
 
 def test_context_preview_controller_emits_preview_resolution_signal(tmp_path, monkeypatch):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.settings import AppSettings
     from rez_manager.persistence.settings_store import save_settings
     from rez_manager.ui.context_preview import ContextPreviewController
@@ -249,11 +255,13 @@ def test_context_preview_controller_emits_preview_resolution_signal(tmp_path, mo
     monkeypatch.setenv("REZ_MANAGER_HOME", str(tmp_path))
     save_settings(AppSettings(contexts_location=str(tmp_path / "contexts")))
 
-    preview_result = ResolveResult(packages=["python-3.11"], environ={}, tools=[])
+    preview_result = ContextInfo(
+        packages=["python-3.11"], environ={}, tools=[], _resolved_context=None
+    )
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: self._apply_preview_result(
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -269,7 +277,7 @@ def test_context_preview_controller_emits_preview_resolution_signal(tmp_path, mo
 def test_context_preview_controller_splits_path_into_user_and_system_sections(
     tmp_path, monkeypatch
 ):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -282,18 +290,19 @@ def test_context_preview_controller_splits_path_into_user_and_system_sections(
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
-    preview_result = ResolveResult(
+    preview_result = ContextInfo(
         packages=["maya-2025.0"],
         environ={
             "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
             "PATH": "D:\\packages\\maya\\bin;C:\\Windows\\System32;C:\\Tools",
         },
         tools=["maya.exe"],
+        _resolved_context=None,
     )
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: self._apply_preview_result(
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -314,7 +323,7 @@ def test_context_preview_controller_splits_path_into_user_and_system_sections(
 def test_context_preview_controller_classifies_windows_system_names_case_insensitively(
     tmp_path, monkeypatch
 ):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -327,18 +336,19 @@ def test_context_preview_controller_classifies_windows_system_names_case_insensi
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
-    preview_result = ResolveResult(
+    preview_result = ContextInfo(
         packages=["maya-2025.0"],
         environ={
             "SystemRoot": "C:\\Windows",
             "MAYA_LOCATION": "D:\\packages\\maya\\2025.0",
         },
         tools=[],
+        _resolved_context=None,
     )
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: self._apply_preview_result(
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: self._apply_preview_result(
             request_id, preview_result
         ),
     )
@@ -357,7 +367,7 @@ def test_context_preview_controller_classifies_windows_system_names_case_insensi
 def test_context_preview_controller_adds_launch_system_variables_missing_from_resolve(
     tmp_path, monkeypatch
 ):
-    from rez_manager.adapter.context import ResolveResult
+    from rez_manager.adapter.context import ContextInfo
     from rez_manager.models.project import Project
     from rez_manager.models.rez_context import ContextMeta, RezContext
     from rez_manager.models.settings import AppSettings
@@ -371,15 +381,16 @@ def test_context_preview_controller_adds_launch_system_variables_missing_from_re
     Project.create("Pipeline")
     RezContext.create("Pipeline", ContextMeta(name="Base", packages=["maya-2025.0"]))
 
-    preview_result = ResolveResult(
+    preview_result = ContextInfo(
         packages=["maya-2025.0"],
         environ={"MAYA_LOCATION": "D:\\packages\\maya\\2025.0"},
         tools=[],
+        _resolved_context=None,
     )
     monkeypatch.setattr(
         ContextPreviewController,
-        "_start_preview_job",
-        lambda self, request_id, package_requests: self._apply_preview_result(
+        "_start_resolve_job",
+        lambda self, request_id, package_requests, rxt_path=None: self._apply_preview_result(
             request_id, preview_result
         ),
     )

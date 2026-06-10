@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from PySide6.QtCore import (
     Property,
@@ -21,6 +22,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtQml import QmlElement
 
+from rez_manager.adapter.context import resolve_context, save_context
 from rez_manager.adapter.packages import (
     PackageInfo,
     RepositoryInfo,
@@ -29,10 +31,11 @@ from rez_manager.adapter.packages import (
     get_package_versions,
     list_repositories,
 )
-from rez_manager.exceptions import RezAdapterError
+from rez_manager.exceptions import RezAdapterError, RezContextSaveError, RezResolveError
 from rez_manager.models.launch_target import parse_launch_target
 from rez_manager.models.rez_context import ContextMeta, RezContext
 from rez_manager.models.settings import AppSettings
+from rez_manager.persistence.filesystem import CONTEXT_FILE_NAME
 from rez_manager.ui.error_hub import clear_ui_error, report_object_ui_error
 
 QML_IMPORT_NAME = "RezManager"
@@ -723,13 +726,26 @@ class PackageManagerController(QObject):
             report_object_ui_error(self, "No context is loaded.")
             return False
 
+        package_requests = self._package_requests_model.requests()
+
+        try:
+            rxt_path = str(Path(self._context.path) / CONTEXT_FILE_NAME)
+            context = resolve_context(package_requests)
+            save_context(context, rxt_path)
+        except RezResolveError as exc:
+            report_object_ui_error(self, str(exc))
+            return False
+        except RezContextSaveError as exc:
+            report_object_ui_error(self, str(exc))
+            return False
+
         try:
             updated_meta = ContextMeta(
                 name=self._context.name,
                 description=self._context.description,
                 launch_target=parse_launch_target(self._context.launch_target),
                 custom_command=self._context.meta.custom_command,
-                packages=self._package_requests_model.requests(),
+                packages=package_requests,
             )
             self._context.update(self._context.project_name, updated_meta)
         except (OSError, TypeError, ValueError) as exc:
