@@ -52,7 +52,6 @@ Dialog {
         projectCombo_.currentIndex = projectIndex >= 0 ? projectIndex : 0;
         descriptionField_.text = root.descriptionValue;
         customCommandField_.text = root.customCommandValue;
-        contextEditorController_.checkNameAvailability(projectCombo_.currentText, projectNameField_.text, root.originalProjectValue, root.originalContextNameValue);
     }
     onRejected: root.close()
 

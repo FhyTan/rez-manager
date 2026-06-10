@@ -44,7 +44,6 @@ class ContextPreviewController(QObject):
         super().__init__(parent)
         self._project_name = ""
         self._context_name = ""
-        self._is_loading = False
         self._result: ContextInfo | None = None
         self._environment_sections: list[dict[str, object]] = []
         self._environment_models: list[EnvironmentsTableModel] = []
@@ -65,10 +64,6 @@ class ContextPreviewController(QObject):
         if self._result is None:
             return False
         return bool(self._environment_sections or self._result.packages)
-
-    @Property(bool, notify=stateChanged)
-    def isLoading(self) -> bool:  # noqa: N802
-        return self._is_loading
 
     @Property(str, constant=True)
     def pathSeparator(self) -> str:  # noqa: N802
@@ -138,7 +133,6 @@ class ContextPreviewController(QObject):
     def _clear_state(self) -> None:
         self._project_name = ""
         self._context_name = ""
-        self._is_loading = False
         self._result = None
         self._set_environment_sections(None)
         self.stateChanged.emit()
@@ -172,7 +166,6 @@ class ContextPreviewController(QObject):
         self._project_name = project_name
         self._context_name = context_name
         self._result = None
-        self._is_loading = True
         self.stateChanged.emit()
         clear_ui_error()
         self._start_resolve_job(request_id, list(package_requests), rxt_path=rxt_path)
@@ -184,7 +177,6 @@ class ContextPreviewController(QObject):
         if request_id != self._request_id:
             return
 
-        self._is_loading = False
         if isinstance(resolve_result, ContextInfo):
             self._result = resolve_result
             self._set_environment_sections(resolve_result.environ)

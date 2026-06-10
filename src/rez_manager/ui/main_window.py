@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -12,15 +13,21 @@ from PySide6.QtCore import (
     QModelIndex,
     QObject,
     Qt,
+    QThreadPool,
     Signal,
     Slot,
 )
 from PySide6.QtGui import QColor
 from PySide6.QtQml import QmlElement
 
+from rez_manager.adapter.context import ContextInfo
+from rez_manager.adapter.packages import clear_package_cache
+from rez_manager.exceptions import RezAdapterError
 from rez_manager.models.launch_target import parse_launch_target
 from rez_manager.models.project import Project
 from rez_manager.models.rez_context import ContextMeta, RezContext
+from rez_manager.persistence.filesystem import CONTEXT_FILE_NAME
+from rez_manager.ui.context_resolve import ContextResolveWorker
 from rez_manager.ui.context_thumbnail import (
     apply_context_thumbnail_selection,
     thumbnail_file_url,
@@ -230,6 +237,7 @@ class ProjectListModel(QAbstractListModel):
 class RezContextListModel(QAbstractListModel):
     contextsChanged = Signal()
     projectModelChanged = Signal()
+    resolveAgainCompleted = Signal(str, str, str)
     ProjectRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
     DescriptionRole = Qt.UserRole + 3
@@ -240,12 +248,15 @@ class RezContextListModel(QAbstractListModel):
     CustomCommandRole = Qt.UserRole + 8
     BuiltinThumbnailSourceRole = Qt.UserRole + 9
     ThumbnailSourceRole = Qt.UserRole + 10
+    ContextPathRole = Qt.UserRole + 11
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._items: list[RezContext] = []
         self._project_model: ProjectListModel | None = None
         self._current_project_name = ""
+        self._resolve_again_request_id = 0
+        self._resolve_again_workers: dict[int, ContextResolveWorker] = {}
         self.reload()
 
     def _reset_items(self, items: Sequence[RezContext]) -> None:
@@ -284,6 +295,7 @@ class RezContextListModel(QAbstractListModel):
             self.CustomCommandRole: QByteArray(b"customCommand"),
             self.BuiltinThumbnailSourceRole: QByteArray(b"builtinThumbnailSource"),
             self.ThumbnailSourceRole: QByteArray(b"thumbnailSource"),
+            self.ContextPathRole: QByteArray(b"contextPath"),
         }
 
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole):  # noqa: ANN201
@@ -312,6 +324,8 @@ class RezContextListModel(QAbstractListModel):
             return payload["builtinThumbnailSource"]
         if role == self.ThumbnailSourceRole:
             return payload["thumbnailSource"]
+        if role == self.ContextPathRole:
+            return payload["contextPath"]
         return None
 
     @Slot()
@@ -357,6 +371,7 @@ class RezContextListModel(QAbstractListModel):
             "customCommand": context.meta.custom_command or "",
             "builtinThumbnailSource": context.builtin_thumbnail_source,
             "thumbnailSource": thumbnail_source,
+            "contextPath": str(context.path),
         }
 
     def _context_roles(self) -> list[int]:
@@ -371,6 +386,7 @@ class RezContextListModel(QAbstractListModel):
             self.CustomCommandRole,
             self.BuiltinThumbnailSourceRole,
             self.ThumbnailSourceRole,
+            self.ContextPathRole,
         ]
 
     def _bind_context_project(self, context: RezContext) -> RezContext:
@@ -617,6 +633,50 @@ class RezContextListModel(QAbstractListModel):
                 self._remove_context(row)
         clear_ui_error()
         return True
+
+    @Slot(str, str, result=bool)
+    def resolveAgainContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
+        context = self._load_context_for_action(project_name, context_name)
+        if context is None:
+            return False
+        clear_package_cache()
+        rxt_path = str(Path(context.path) / CONTEXT_FILE_NAME)
+        self._resolve_again_request_id += 1
+        request_id = self._resolve_again_request_id
+        worker = ContextResolveWorker(
+            request_id,
+            list(context.packages),
+            rxt_path=rxt_path,
+            mode="save",
+        )
+        worker.signals.finished.connect(
+            partial(self._apply_resolve_again_result, project_name, context_name)
+        )
+        self._resolve_again_workers[request_id] = worker
+        QThreadPool.globalInstance().start(worker)
+        clear_ui_error()
+        return True
+
+    def _apply_resolve_again_result(
+        self,
+        project_name: str,
+        context_name: str,
+        request_id: int,
+        result: object,
+    ) -> None:
+        self._resolve_again_workers.pop(request_id, None)
+        if request_id != self._resolve_again_request_id:
+            return
+        if isinstance(result, ContextInfo):
+            clear_ui_error()
+            self.resolveAgainCompleted.emit(project_name, context_name, "")
+            return
+        error_msg = (
+            str(result) if isinstance(result, RezAdapterError)
+            else "Failed to re-resolve context."
+        )
+        report_ui_error(error_msg)
+        self.resolveAgainCompleted.emit(project_name, context_name, error_msg)
 
     def _load_project(self, project_name: str, *, refresh: bool = False) -> bool:
         self._current_project_name = project_name

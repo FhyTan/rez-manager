@@ -120,8 +120,8 @@ See `docs/design.md` for the detailed architecture and UI specification.
 uvx ruff check src      # Lint
 uvx ruff format src     # Format
 uv run pytest           # Test
-pyside6-qml-stubgen.exe src --out-dir ./qmltypes
-pyside6-qmllint -I ./qmltypes <qml-files>
+uv run pyside6-qml-stubgen.exe src --out-dir ./qmltypes
+uv run pyside6-qmllint -I ./qmltypes <qml-files>
 ```
 
 `qmltypes/` is generated output and is intentionally not tracked in git.

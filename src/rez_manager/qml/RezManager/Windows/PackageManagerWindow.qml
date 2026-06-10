@@ -22,7 +22,6 @@ Window {
     property string contextName_: ""
     property string projectName_: ""
     readonly property bool repositoriesLoading: packageManagerController_.isLoadingRepositories
-    readonly property bool previewLoading: contextPreviewController_.isLoading
 
     signal saved(string projectName, string contextName)
     signal openLogsRequested
@@ -217,8 +216,7 @@ Window {
 
                 CardButton {
                     glyph: "◉"
-                    label: root.previewLoading ? qsTr("Resolving...") : qsTr("Preview Resolve")
-                    enabled: !root.previewLoading
+                    label: qsTr("Preview Resolve")
                     onClicked: {
                         if (!contextPreviewController_.loadPackageRequests(root.projectName_, root.contextName_, packageManagerController_.packageRequests))
                             return;

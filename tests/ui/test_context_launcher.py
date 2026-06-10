@@ -73,7 +73,6 @@ def test_context_launcher_controller_starts_resolve_job_with_command(tmp_path, m
     assert controller.launchContext("Pipeline", "Base")
     assert controller.projectName == "Pipeline"
     assert controller.contextName == "Base"
-    assert controller.isLaunching
     assert captured["package_requests"] == ["houdini-20.5", "python-3.11"]
     assert captured["command"] == 'start "" houdini'
     assert captured["rxt_path"].endswith("context.rxt")
@@ -117,7 +116,6 @@ def test_context_launcher_controller_launches_unsaved_package_requests_in_shell(
     assert controller.launchPackageRequests("Pipeline", "Draft", ["maya-2026.0", "python-3.11"])
     assert controller.projectName == "Pipeline"
     assert controller.contextName == "Draft"
-    assert controller.isLaunching
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
     assert captured["command"] is None
     assert captured["rxt_path"] is None
@@ -159,7 +157,6 @@ def test_context_launcher_controller_emits_success_after_completed_launch(tmp_pa
     controller.launchSucceeded.connect(lambda project, context: launched.append((project, context)))
 
     assert controller.launchContext("Pipeline", "Base")
-    assert not controller.isLaunching
     assert launched == [("Pipeline", "Base")]
 
 
@@ -188,7 +185,6 @@ def test_context_launcher_controller_rejects_blank_custom_command(tmp_path, monk
     controller = ContextLauncherController()
 
     assert not controller.launchContext("Pipeline", "Broken")
-    assert not controller.isLaunching
     assert app_error_hub.message == "Custom launch target requires a custom command."
 
 
@@ -264,7 +260,6 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
     controller = ContextLauncherController()
 
     assert controller.launchContext("Pipeline", "Base")
-    assert controller.isLaunching
     assert not controller.launchContext("Pipeline", "Missing")
     stale_result = ContextInfo(
         packages=["maya-2025.0"], environ={}, tools=[], _resolved_context=None
@@ -273,7 +268,6 @@ def test_context_launcher_controller_ignores_stale_worker_results_after_failed_r
 
     assert controller.projectName == ""
     assert controller.contextName == ""
-    assert not controller.isLaunching
     assert "not exist" in app_error_hub.message
 
 

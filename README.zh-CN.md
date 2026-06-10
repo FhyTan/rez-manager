@@ -87,8 +87,8 @@ uv run rez-manager
 uvx ruff check src      # 代码检查
 uvx ruff format src     # 代码格式化
 uv run pytest           # 测试
-pyside6-qml-stubgen.exe src --out-dir ./qmltypes
-pyside6-qmllint -I ./qmltypes <qml-files>
+uv run pyside6-qml-stubgen.exe src --out-dir ./qmltypes
+uv run pyside6-qmllint -I ./qmltypes <qml-files>
 ```
 
 `qmltypes/` 是生成产物，刻意不纳入 git 跟踪。

@@ -70,9 +70,18 @@ class ContextResolveWorker(QRunnable):
                 self.signals.finished.emit(self._request_id, exc)
                 return
 
+        if self._mode == "save":
+            try:
+                save_context(context, self._rxt_path)
+            except RezContextSaveError as exc:
+                self.signals.finished.emit(self._request_id, exc)
+
         self.signals.finished.emit(self._request_id, context)
 
     def _resolve_with_cache(self) -> ContextInfo:
+        if self._mode == "save":
+            return resolve_context(self._package_requests)
+
         if self._rxt_path:
             try:
                 return load_context(self._rxt_path)

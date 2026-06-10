@@ -331,6 +331,16 @@ ApplicationWindow {
             previewWin.requestActivate();
         }
     }
+    Connections {
+        target: contextModel_
+        function onResolveAgainCompleted(projectName, contextName, errorMessage) {
+            if (errorMessage.length > 0) {
+                statusToast_.show(errorMessage, Style.error);
+            } else {
+                statusToast_.show(qsTr("Resolved: ") + projectName + " / " + contextName, Style.success);
+            }
+        }
+    }
 
     // ── Menu bar ──────────────────────────────────────────────
     menuBar: MenuBar {
@@ -646,6 +656,7 @@ ApplicationWindow {
                                     required property string customCommand
                                     required property string builtinThumbnailSource
                                     required property string thumbnailSource
+                                    required property string contextPath
 
                                     width: contextCard_.width
                                     height: contextCard_.height
@@ -660,7 +671,7 @@ ApplicationWindow {
                                         packages: contextDelegate_.packages
                                         builtinThumbnailSource: contextDelegate_.builtinThumbnailSource
                                         thumbnailSource: contextDelegate_.thumbnailSource
-                                        previewBusy: contextPreviewController_.isLoading
+                                        contextPath: contextDelegate_.contextPath
 
                                         onEditInfoRequested: {
                                             root.openEditContextDialog({
@@ -702,6 +713,12 @@ ApplicationWindow {
                                             "name": contextDelegate_.name
                                         })
                                         onDeleteRequested: root.confirmDeleteContext(contextDelegate_.project, contextDelegate_.name)
+                                        onOpenFolderRequested: Qt.openUrlExternally("file:///" + contextDelegate_.contextPath)
+                                        onResolveAgainRequested: {
+                                            if (!contextModel_.resolveAgainContext(contextDelegate_.project, contextDelegate_.name))
+                                                return;
+                                            statusToast_.show(qsTr("Resolving again..."), Style.accent);
+                                        }
                                     }
                                 }
                             }

@@ -20,7 +20,7 @@ Rectangle {
     property string packages: ""        // comma-separated list
     property string builtinThumbnailSource: ""
     property string thumbnailSource: ""
-    property bool previewBusy: false
+    property string contextPath: ""
 
     signal editInfoRequested
     signal editPackagesRequested
@@ -28,6 +28,8 @@ Rectangle {
     signal launchRequested
     signal duplicateRequested
     signal deleteRequested
+    signal openFolderRequested
+    signal resolveAgainRequested
 
     // ── Internal ─────────────────────────────────────────────
 
@@ -106,6 +108,14 @@ Rectangle {
     // ── Context menu (right-click) ─────────────────────────────
     Menu {
         id: contextMenu_
+        MenuItem {
+            text: "Open Folder"
+            onTriggered: root.openFolderRequested()
+        }
+        MenuItem {
+            text: "Resolve Again"
+            onTriggered: root.resolveAgainRequested()
+        }
         MenuItem {
             text: "Duplicate"
             onTriggered: root.duplicateRequested()
@@ -318,9 +328,8 @@ Rectangle {
                 }
                 CardButton {
                     glyph: "◎"
-                    label: root.previewBusy ? "Resolving..." : "Preview"
+                    label: "Preview"
                     minimumWidth: 0
-                    enabled: !root.previewBusy
                     onClicked: root.previewRequested()
                 }
             }

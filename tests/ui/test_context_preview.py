@@ -99,7 +99,6 @@ def test_context_preview_controller_clears_stale_state_after_failed_load(tmp_pat
     assert controller.loadContext("Pipeline", "Base")
     assert controller.projectName == "Pipeline"
     assert controller.contextName == "Base"
-    assert not controller.isLoading
     assert controller.resolvedPackages == []
     assert controller.environmentSections == []
     assert app_error_hub.message == "Resolve failed."
@@ -241,7 +240,6 @@ def test_context_preview_controller_loads_unsaved_package_requests(tmp_path, mon
     assert controller.loadPackageRequests("Pipeline", "Draft", ["maya-2026.0", "python-3.11"])
     assert controller.projectName == "Pipeline"
     assert controller.contextName == "Draft"
-    assert controller.isLoading
     assert captured["package_requests"] == ["maya-2026.0", "python-3.11"]
     assert captured["rxt_path"] is None
 

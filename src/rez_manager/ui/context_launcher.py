@@ -31,7 +31,6 @@ class ContextLauncherController(QObject):
         super().__init__(parent)
         self._project_name = ""
         self._context_name = ""
-        self._is_launching = False
         self._request_id = 0
         self._thread_pool = QThreadPool.globalInstance()
         self._active_workers: dict[int, ContextResolveWorker] = {}
@@ -43,10 +42,6 @@ class ContextLauncherController(QObject):
     @Property(str, notify=stateChanged)
     def contextName(self) -> str:  # noqa: N802
         return self._context_name
-
-    @Property(bool, notify=stateChanged)
-    def isLaunching(self) -> bool:  # noqa: N802
-        return self._is_launching
 
     @Slot(str, str, result=bool)
     def launchContext(self, project_name: str, context_name: str) -> bool:  # noqa: N802
@@ -103,7 +98,6 @@ class ContextLauncherController(QObject):
     def _clear_state(self) -> None:
         self._project_name = ""
         self._context_name = ""
-        self._is_launching = False
         self.stateChanged.emit()
 
     def _start_resolve_job(
@@ -137,7 +131,6 @@ class ContextLauncherController(QObject):
     ) -> bool:
         self._project_name = project_name
         self._context_name = context_name
-        self._is_launching = True
         self.stateChanged.emit()
         clear_ui_error()
         self._start_resolve_job(
@@ -154,7 +147,6 @@ class ContextLauncherController(QObject):
         if request_id != self._request_id:
             return
 
-        self._is_launching = False
         self.stateChanged.emit()
         if isinstance(resolve_result, ContextInfo):
             clear_ui_error()
