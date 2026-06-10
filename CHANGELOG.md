@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0]
+
+- Use `.rxt` file to launch and preview rez context in main window.
+- Add `open folder` and `resolve again` in context card context menu.
+
+## [0.3.1]
+
+- refactor ci workflow
+- upgrade rez to 3.4.0
+
 ## [0.3.0]
 
 - Support package caching.
