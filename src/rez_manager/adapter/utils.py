@@ -13,8 +13,13 @@ from rez_manager.persistence.app_paths import default_rez_package_caches_dir
 from rez_manager.runtime import IS_COMPILED, IS_WINDOWS
 
 
-def initialize_rez():
-    # Ignore the user's home Rez config so the app resolves contexts from its own explicit settings.
+def initialize_rez() -> None:
+    """Initialize Rez with application settings and platform-specific configuration.
+
+    Disables the user's home Rez config, sets the Rez binary path for frozen
+    and development builds, forces cmd as the default shell on Windows, and
+    applies the current app settings to Rez's runtime configuration.
+    """
     os.environ["REZ_DISABLE_HOME_CONFIG"] = "1"
 
     from rez.system import system  # noqa: PLC0415
@@ -48,7 +53,12 @@ def initialize_rez():
 
 
 def apply_settings_to_rez(settings: AppSettings) -> None:
-    """Apply application settings (package cache, package paths) to Rez at runtime."""
+    """Apply application settings (package cache, package paths) to Rez at runtime.
+
+    Args:
+        settings: The application settings containing package cache and
+            repository configuration.
+    """
     from rez.config import config  # noqa: PLC0415
 
     pkg_cache = settings.package_cache

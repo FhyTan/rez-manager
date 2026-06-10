@@ -34,7 +34,17 @@ class RepositoryInfo:
 
 
 def list_repositories(repo_paths: list[str]) -> list[RepositoryInfo]:
-    """Build a RepositoryInfo list from configured repository paths."""
+    """Build a ``RepositoryInfo`` list from configured repository paths.
+
+    Args:
+        repo_paths: A list of filesystem paths to Rez package repositories.
+
+    Returns:
+        A list of ``RepositoryInfo`` objects, each describing a repository and its packages.
+
+    Raises:
+        RezRepositoryError: If any repository fails to load.
+    """
     from rez.packages import package_repository_manager
 
     repos: list[RepositoryInfo] = []
@@ -58,7 +68,20 @@ def clear_package_cache() -> None:
 
 
 def get_package_info(name: str, version: str, repo_paths: list[str]) -> PackageInfo | None:
-    """Retrieve detailed info for a specific package name and version."""
+    """Retrieve detailed info for a specific package name and version.
+
+    Args:
+        name: The package name.
+        version: The package version string.
+        repo_paths: A list of filesystem paths to Rez package repositories.
+
+    Returns:
+        A ``PackageInfo`` object with package details, or ``None`` if the
+        package is not found.
+
+    Raises:
+        RezPackageQueryError: If the package query fails.
+    """
     from rez.packages import Package, get_package  # noqa: PLC0415
     from rez.version import Version  # noqa: PLC0415
 
@@ -103,7 +126,18 @@ def get_package_info(name: str, version: str, repo_paths: list[str]) -> PackageI
 
 
 def get_package_versions(name: str, repo_paths: list[str]) -> list[str]:
-    """Return all available versions for a package name, newest first."""
+    """Return all available versions for a package name, newest first.
+
+    Args:
+        name: The package name.
+        repo_paths: A list of filesystem paths to Rez package repositories.
+
+    Returns:
+        A list of version strings sorted newest first.
+
+    Raises:
+        RezPackageQueryError: If the package query fails.
+    """
     from rez.packages import iter_packages  # noqa: PLC0415
 
     try:
@@ -120,11 +154,14 @@ def get_package_versions(name: str, repo_paths: list[str]) -> list[str]:
 def list_cached_variants(
     cache_path: str,
 ) -> list[tuple[object, str, int]]:
-    """
-    Query PackageCache.get_variants() and return all cached variants.
+    """Query ``PackageCache.get_variants()`` and return all cached variants.
 
-    Returns list of (Variant, cache_path, status) tuples.
-    Creates the cache directory if it does not exist.
+    Args:
+        cache_path: Path to the package cache root directory.
+
+    Returns:
+        A list of ``(Variant, cache_path, status)`` tuples. Creates the
+        cache directory if it does not exist.
     """
     from pathlib import Path
 
@@ -136,13 +173,12 @@ def list_cached_variants(
 
 
 def remove_cached_variant(cache_path: str, handle_dict: dict) -> None:
-    """
-    Remove a variant from the cache given its handle dict.
+    """Remove a variant from the cache given its handle dict.
 
     Args:
         cache_path: Path to the package cache root.
         handle_dict: Variant handle as stored in the cache JSON
-            (format: {"key": "...", "variables": {...}}).
+            (format: ``{"key": "...", "variables": {...}}``).
 
     Raises:
         RezCacheOperationError: If the variant handle cannot be reconstructed,

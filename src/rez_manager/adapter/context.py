@@ -42,7 +42,19 @@ class ContextInfo:
 
 
 def resolve_context(package_requests: list[str]) -> ContextInfo:
-    """Resolve a list of package requests using the Rez Python API."""
+    """Resolve a list of package requests using the Rez Python API.
+
+    Args:
+        package_requests: A list of Rez package request strings
+            (e.g. ``["python-3.10", "maya-2024"]``).
+
+    Returns:
+        A ``ContextInfo`` containing resolved packages, environment variables,
+        tools, and the opaque resolved context.
+
+    Raises:
+        RezResolveError: If the Rez resolve fails for any reason.
+    """
     logger.info("Resolving context for requests: {}", package_requests)
 
     from rez.config import config  # noqa: PLC0415
@@ -67,7 +79,18 @@ def resolve_context(package_requests: list[str]) -> ContextInfo:
 
 
 def load_context(path: str) -> ContextInfo:
-    """Load a serialized context from a .rxt file."""
+    """Load a serialized context from a .rxt file.
+
+    Args:
+        path: Filesystem path to the ``.rxt`` file.
+
+    Returns:
+        A ``ContextInfo`` containing resolved packages, environment variables,
+        tools, and the opaque resolved context.
+
+    Raises:
+        RezContextLoadError: If the ``.rxt`` file cannot be loaded.
+    """
     logger.info("Loading resolved context from {}", path)
 
     from rez.resolved_context import ResolvedContext  # noqa: PLC0415
@@ -87,7 +110,15 @@ def load_context(path: str) -> ContextInfo:
 
 
 def save_context(context: ContextInfo, path: str) -> None:
-    """Serialize an already-resolved context to a .rxt file at the given path."""
+    """Serialize an already-resolved context to a .rxt file at the given path.
+
+    Args:
+        context: The ``ContextInfo`` to serialize (must hold a live Rez ``ResolvedContext``).
+        path: Destination filesystem path for the ``.rxt`` file.
+
+    Raises:
+        RezContextSaveError: If the context cannot be saved to disk.
+    """
     logger.info("Saving resolved context to {}", path)
 
     try:
@@ -103,7 +134,20 @@ def launch_context(
     context: ContextInfo,
     command: str | None | Sequence[str],
 ) -> subprocess.Popen:
-    """Launch a subprocess inside an already-resolved Rez context."""
+    """Launch a subprocess inside an already-resolved Rez context.
+
+    Args:
+        context: The ``ContextInfo`` to use as the launch environment.
+        command: The command to execute; ``None`` for an interactive shell,
+            a string for a shell command, or a sequence of strings for a
+            direct subprocess invocation.
+
+    Returns:
+        A ``subprocess.Popen`` handle for the launched process.
+
+    Raises:
+        RezContextLaunchError: If the context cannot be launched.
+    """
     logger.info("Launching resolved context with command: {}", command)
 
     try:
@@ -123,13 +167,36 @@ def launch_context(
 
 
 def system_environment_variable_names(platform_name: str | None = None) -> list[str]:
-    """Return the curated system-environment allowlist for a platform."""
+    """Return the curated system-environment allowlist for a platform.
+
+    Args:
+        platform_name: An optional platform name (e.g. ``"windows"``, ``"linux"``,
+            ``"macos"``). If ``None``, the current platform is used.
+
+    Returns:
+        A list of environment variable names that are preserved for preview and launch.
+
+    Raises:
+        TypeError: If the allowlist catalog has an unexpected format.
+        ValueError: If the platform is not supported.
+    """
     return list(_cached_system_environment_variable_names(platform_name))
 
 
 @cache
 def _cached_system_environment_variable_names(platform_name: str | None = None) -> tuple[str, ...]:
-    """Return the immutable cached system-environment allowlist for a platform."""
+    """Return the immutable cached system-environment allowlist for a platform.
+
+    Args:
+        platform_name: An optional platform name. If ``None``, the current platform is used.
+
+    Returns:
+        A tuple of environment variable names for the given platform.
+
+    Raises:
+        TypeError: If the allowlist catalog has an unexpected format.
+        ValueError: If the platform is not supported.
+    """
     platform_key = _platform_key(platform_name)
     raw_catalog = (
         files("rez_manager.data").joinpath(_SYSTEM_ENV_CATALOG_NAME).read_text(encoding="utf-8")
@@ -149,7 +216,16 @@ def preserved_system_environment(
     process_environ: Mapping[str, str] | None = None,
     platform_name: str | None = None,
 ) -> dict[str, str]:
-    """Return the subset of host environment variables preserved for preview and launch."""
+    """Return the subset of host environment variables preserved for preview and launch.
+
+    Args:
+        process_environ: An optional environment mapping to filter.
+            If ``None``, ``os.environ`` is used.
+        platform_name: An optional platform name. If ``None``, the current platform is used.
+
+    Returns:
+        A dictionary of preserved environment variable names to their values.
+    """
     source_environ = process_environ if process_environ is not None else environ
     platform_key = _platform_key(platform_name)
     allowed_names = system_environment_variable_names(platform_name)
@@ -175,6 +251,21 @@ def _context_info_from_resolved_context(
     process_environ: Mapping[str, str] | None = None,
     platform_name: str | None = None,
 ) -> ContextInfo:
+    """Build a ``ContextInfo`` from a live Rez ``ResolvedContext``.
+
+    Args:
+        ctx: A live Rez ``ResolvedContext`` instance.
+        process_environ: An optional environment mapping for system variable
+            preservation. If ``None``, ``os.environ`` is used.
+        platform_name: An optional platform name. If ``None``, the current
+            platform is used.
+
+    Returns:
+        A ``ContextInfo`` with packages, environment, tools, and the opaque context.
+
+    Raises:
+        RezResolveError: If environment extraction fails.
+    """
     preserved_environ = preserved_system_environment(
         process_environ=process_environ,
         platform_name=platform_name,
@@ -195,6 +286,17 @@ def _context_info_from_resolved_context(
 
 
 def _platform_key(platform_name: str | None) -> str:
+    """Normalize a platform name or detect the current platform.
+
+    Args:
+        platform_name: A platform name string, or ``None`` for auto-detection.
+
+    Returns:
+        One of ``"windows"``, ``"macos"``, or ``"linux"``.
+
+    Raises:
+        ValueError: If the platform is not supported.
+    """
     if platform_name is None:
         if IS_WINDOWS:
             return _WINDOWS_PLATFORM
